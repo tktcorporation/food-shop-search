@@ -1,0 +1,84 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-sans bg-gradient-to-br from-primary-50 to-primary-100 min-h-screen;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-md font-semibold text-white transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+
+  .btn-primary {
+    @apply bg-primary-500 hover:bg-primary-600 focus:ring-primary-500;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary-500 hover:bg-secondary-600 focus:ring-secondary-500;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.animate-pulse {
+  animation: pulse 0.5s ease-in-out infinite;
+}
+
+@keyframes colorChange {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.bg-gradient-animation {
+  background: linear-gradient(270deg, #f0f9ff, #e0f2fe, #bae6fd);
+  background-size: 200% 200%;
+  animation: colorChange 3s ease infinite;
+}
+
+/* Responsive styles */
+@media (max-width: 640px) {
+  .btn {
+    @apply px-3 py-1.5 text-sm;
+  }
+}
+
+@media (max-width: 480px) {
+  .btn {
+    @apply px-2 py-1 text-xs;
+  }
+}
