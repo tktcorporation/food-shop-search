@@ -9,6 +9,8 @@ interface SearchFiltersProps {
   setMinReviews: (reviews: number) => void;
   isOpenNow: boolean;
   setIsOpenNow: (isOpen: boolean) => void;
+  searchRadius: number;
+  setSearchRadius: (radius: number) => void;
 }
 
 const PRICE_LEVELS = [
@@ -16,6 +18,16 @@ const PRICE_LEVELS = [
   { value: 2, label: '¥¥ (普通)' },
   { value: 3, label: '¥¥¥ (高価)' },
   { value: 4, label: '¥¥¥¥ (非常に高価)' },
+];
+
+const RADIUS_OPTIONS = [
+  { value: 300, label: '300m' },
+  { value: 500, label: '500m' },
+  { value: 800, label: '800m' },
+  { value: 1000, label: '1km' },
+  { value: 2000, label: '2km' },
+  { value: 3000, label: '3km' },
+  { value: 5000, label: '5km' },
 ];
 
 const SearchFilters: React.FC<SearchFiltersProps> = ({
@@ -27,12 +39,14 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
   setMinReviews,
   isOpenNow,
   setIsOpenNow,
+  searchRadius,
+  setSearchRadius,
 }) => {
   const togglePriceLevel = (level: number) => {
     setSelectedPriceLevels(prev =>
       prev.includes(level)
         ? prev.filter(l => l !== level)
-        : [...prev, level]
+        : [...prev, level].sort()
     );
   };
 
@@ -45,8 +59,28 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
   };
 
   return (
-    <>
-      <div className="mb-6">
+    <div className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          検索範囲
+        </label>
+        <div className="flex flex-wrap gap-2">
+          {RADIUS_OPTIONS.map((option) => (
+            <button
+              key={option.value}
+              onClick={() => setSearchRadius(option.value)}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200
+                ${searchRadius === option.value
+                  ? 'bg-primary-500 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           価格帯
         </label>
@@ -75,7 +109,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
         </div>
       </div>
 
-      <div className="mb-6">
+      <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           最低評価
         </label>
@@ -92,7 +126,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
         </select>
       </div>
 
-      <div className="mb-6">
+      <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           最低レビュー数
         </label>
@@ -109,18 +143,18 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
         </select>
       </div>
 
-      <div className="mb-6">
+      <div>
         <label className="flex items-center">
           <input
             type="checkbox"
             checked={isOpenNow}
             onChange={(e) => setIsOpenNow(e.target.checked)}
-            className="form-checkbox h-5 w-5 text-primary-600"
+            className="form-checkbox h-5 w-5 text-primary-600 rounded"
           />
           <span className="ml-2 text-sm text-gray-700">営業中のみ表示</span>
         </label>
       </div>
-    </>
+    </div>
   );
 };
 

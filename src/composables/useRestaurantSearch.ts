@@ -21,6 +21,11 @@ interface Station {
   prefecture: string;
 }
 
+interface Location {
+  lat: number;
+  lng: number;
+}
+
 const useRestaurantSearch = () => {
   const [allRestaurants, setAllRestaurants] = useState<Restaurant[]>([]);
   const [filteredRestaurants, setFilteredRestaurants] = useState<Restaurant[]>([]);
@@ -31,24 +36,36 @@ const useRestaurantSearch = () => {
     keywords: string[],
     minRating: number,
     minReviews: number,
-    selectedStation: Station
+    searchLocation: Station | Location,
+    isOpenNow: boolean,
+    searchRadius: number,
+    selectedPriceLevels: number[]
   ) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const geocoder = new google.maps.Geocoder();
-      const result = await new Promise((resolve, reject) => {
-        geocoder.geocode({ address: `${selectedStation.name}駅,${selectedStation.prefecture}` }, (results, status) => {
-          if (status === google.maps.GeocoderStatus.OK) {
-            resolve(results[0]);
-          } else {
-            reject(new Error('駅の位置を取得できませんでした。'));
-          }
-        });
-      });
+      let location: google.maps.LatLng;
 
-      const location = result.geometry.location;
+      if ('lat' in searchLocation) {
+        location = new google.maps.LatLng(searchLocation.lat, searchLocation.lng);
+      } else {
+        const geocoder = new google.maps.Geocoder();
+        const result = await new Promise<google.maps.GeocoderResult>((resolve, reject) => {
+          geocoder.geocode(
+            { address: `${searchLocation.name}駅,${searchLocation.prefecture}` },
+            (results, status) => {
+              if (status === google.maps.GeocoderStatus.OK && results?.[0]) {
+                resolve(results[0]);
+              } else {
+                reject(new Error('位置を取得できませんでした。'));
+              }
+            }
+          );
+        });
+        location = result.geometry.location;
+      }
+
       const service = new google.maps.places.PlacesService(document.createElement('div'));
 
       const searchPromises = keywords.map(keyword => 
@@ -56,12 +73,13 @@ const useRestaurantSearch = () => {
           const request = {
             keyword: keyword,
             location: location,
-            radius: 800,
-            type: 'food',
+            radius: searchRadius,
+            type: 'restaurant',
+            openNow: isOpenNow
           };
 
           service.nearbySearch(request, (results, status) => {
-            if (status === google.maps.places.PlacesServiceStatus.OK) {
+            if (status === google.maps.places.PlacesServiceStatus.OK && results) {
               resolve(results);
             } else {
               reject(new Error(`${keyword}の検索に失敗しました。`));
@@ -87,7 +105,7 @@ const useRestaurantSearch = () => {
           x.searchKeywords = [...new Set([...x.searchKeywords, ...current.searchKeywords])];
           return acc;
         }
-      }, []);
+      }, [] as (google.maps.places.PlaceResult & { searchKeywords: string[] })[]);
 
       const detailedResults = await Promise.all(
         uniqueResults.map(place =>
@@ -98,13 +116,13 @@ const useRestaurantSearch = () => {
             }, (result, status) => {
               if (status === google.maps.places.PlacesServiceStatus.OK && result) {
                 resolve({
-                  place_id: result.place_id,
-                  name: result.name,
-                  vicinity: result.vicinity,
-                  rating: result.rating,
-                  user_ratings_total: result.user_ratings_total,
-                  price_level: result.price_level,
-                  types: result.types,
+                  place_id: result.place_id!,
+                  name: result.name!,
+                  vicinity: result.vicinity!,
+                  rating: result.rating || 0,
+                  user_ratings_total: result.user_ratings_total || 0,
+                  price_level: result.price_level || 1,
+                  types: result.types || [],
                   photos: result.photos,
                   searchKeywords: place.searchKeywords,
                   opening_hours: result.opening_hours ? {
@@ -113,15 +131,14 @@ const useRestaurantSearch = () => {
                   } : undefined
                 });
               } else {
-                console.warn(`詳細情報の取得に失敗しました: ${place.name}, ステータス: ${status}`);
                 resolve({
-                  place_id: place.place_id,
-                  name: place.name,
-                  vicinity: place.vicinity,
-                  rating: place.rating,
-                  user_ratings_total: place.user_ratings_total,
-                  price_level: place.price_level,
-                  types: place.types,
+                  place_id: place.place_id!,
+                  name: place.name!,
+                  vicinity: place.vicinity!,
+                  rating: place.rating || 0,
+                  user_ratings_total: place.user_ratings_total || 0,
+                  price_level: place.price_level || 1,
+                  types: place.types || [],
                   searchKeywords: place.searchKeywords,
                   opening_hours: undefined
                 });
@@ -131,33 +148,27 @@ const useRestaurantSearch = () => {
         )
       );
 
-      const filteredResults = detailedResults.filter(
-        (place) => place.rating >= minRating && place.user_ratings_total >= minReviews
+      const filteredResults = detailedResults.filter(place => 
+        place.rating >= minRating &&
+        place.user_ratings_total >= minReviews &&
+        selectedPriceLevels.includes(place.price_level)
       );
 
       setAllRestaurants(filteredResults);
       setFilteredRestaurants(filteredResults);
     } catch (err) {
-      setError(err.message);
+      setError(err instanceof Error ? err.message : '検索中にエラーが発生しました。');
     } finally {
       setIsLoading(false);
     }
   }, []);
-
-  const filterRestaurants = useCallback((priceLevel: string) => {
-    const filtered = allRestaurants.filter(restaurant => 
-      priceLevel === '' || restaurant.price_level === parseInt(priceLevel)
-    );
-    setFilteredRestaurants(filtered);
-  }, [allRestaurants]);
 
   return {
     allRestaurants,
     filteredRestaurants,
     isLoading,
     error,
-    searchNearbyRestaurants,
-    filterRestaurants,
+    searchNearbyRestaurants
   };
 };
 
