@@ -85,7 +85,9 @@ const useRestaurantSearch = () => {
           };
 
           service.nearbySearch(request, (results, status) => {
-            if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+            if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
+              resolve([])
+            } else if (status === google.maps.places.PlacesServiceStatus.OK) {
               // Filter out permanently closed places
               const activeResults = results.filter(place => 
                 place.business_status === 'OPERATIONAL' || place.business_status === undefined

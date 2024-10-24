@@ -43,7 +43,7 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
   const [customKeywords, setCustomKeywords] = useState<string[]>([]);
   const [isOpenNow, setIsOpenNow] = useState(false);
   const [selectedPriceLevels, setSelectedPriceLevels] = useState<number[]>([1, 2, 3, 4]);
-  const [searchRadius, setSearchRadius] = useState<number>(100); // Changed default to 100m
+  const [searchRadius, setSearchRadius] = useState<number>(100);
   const [searchMethod, setSearchMethod] = useState<'location' | 'station'>('location');
 
   const handleSearch = () => {
@@ -163,9 +163,14 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
           <p className="text-red-500">{searchError}</p>
         )}
 
-        {restaurants.length > 0 && (
-          <SearchResults restaurants={restaurants} />
-        )}
+        <SearchResults 
+          restaurants={restaurants}
+          minRating={minRating}
+          minReviews={minReviews}
+          searchRadius={searchRadius}
+          isOpenNow={isOpenNow}
+          selectedPriceLevels={selectedPriceLevels}
+        />
 
         <CustomKeywordModal
           isOpen={isModalOpen}
