@@ -24,8 +24,7 @@ export const keywordCategories = [
   {
     name: '料理',
     keywords: [
-      { value: '定食', label: '定食' },
-      { value: 'ファミレス', label: 'ファミレス' },
+      { value: 'ラーメン', label: 'ラーメン' },
       { value: 'うどん,そば', label: 'うどん,そば' },
       { value: '天ぷら', label: '天ぷら' },
       { value: 'とんかつ', label: 'とんかつ' },
