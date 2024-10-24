@@ -16,9 +16,7 @@ export const keywordCategories = [
     name: '和食専門',
     keywords: [
       { value: '定食', label: '定食' },
-      { value: '寿司', label: '寿司' },
-      { value: 'うどん', label: 'うどん' },
-      { value: 'そば', label: 'そば' },
+      { value: 'うどん,そば', label: 'うどん,そば' },
       { value: '天ぷら', label: '天ぷら' },
       { value: 'とんかつ', label: 'とんかつ' },
       { value: '焼き鳥', label: '焼き鳥' },
@@ -34,26 +32,10 @@ export const keywordCategories = [
     ]
   },
   {
-    name: '粉物',
-    keywords: [
-      { value: 'お好み焼き', label: 'お好み焼き' },
-      { value: 'たこ焼き', label: 'たこ焼き' },
-    ]
-  },
-  {
     name: '軽食・カフェ',
     keywords: [
       { value: 'cafe', label: 'カフェ' },
-      { value: 'パン屋', label: 'パン屋' },
-      { value: 'スイーツ', label: 'スイーツ' },
       { value: 'ファストフード', label: 'ファストフード' },
-    ]
-  },
-  {
-    name: '居酒屋・バー',
-    keywords: [
-      { value: '居酒屋', label: '居酒屋' },
-      { value: 'bar', label: 'バー' },
     ]
   },
 ];

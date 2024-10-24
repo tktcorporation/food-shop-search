@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 interface Restaurant {
   place_id: string;
@@ -36,6 +36,18 @@ const useRestaurantSearch = () => {
   const [filteredRestaurants, setFilteredRestaurants] = useState<Restaurant[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cache, setCache] = useState<Map<string, google.maps.places.PlaceResult[]>>(() => {
+    const cachedData = localStorage.getItem('restaurantCache');
+    return cachedData ? new Map(JSON.parse(cachedData)) : new Map();
+  });
+
+  useEffect(() => {
+    localStorage.setItem('restaurantCache', JSON.stringify(Array.from(cache.entries())));
+  }, [cache]);
+
+  const generateCacheKey = (request: google.maps.places.PlaceSearchRequest) => {
+    return `${request.keyword}-${request.location.lat()}-${request.location.lng()}-${request.radius}-${request.openNow}`;
+  };
 
   const searchNearbyRestaurants = useCallback(async (
     keywords: string[],
@@ -84,14 +96,30 @@ const useRestaurantSearch = () => {
             openNow: isOpenNow
           };
 
+          const cacheKey = generateCacheKey(request);
+          if (cache.has(cacheKey)) {
+            resolve(cache.get(cacheKey)!);
+            return;
+          }
+
           service.nearbySearch(request, (results, status) => {
             if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
-              resolve([])
-            } else if (status === google.maps.places.PlacesServiceStatus.OK) {
+              setCache(prevCache => {
+                const newCache = new Map(prevCache);
+                newCache.set(cacheKey, []);
+                return newCache;
+              });
+              resolve([]);
+            } else if (status === google.maps.places.PlacesServiceStatus.OK && results) {
               // Filter out permanently closed places
               const activeResults = results.filter(place => 
                 place.business_status === 'OPERATIONAL' || place.business_status === undefined
               );
+              setCache(prevCache => {
+                const newCache = new Map(prevCache);
+                newCache.set(cacheKey, activeResults);
+                return newCache;
+              });
               resolve(activeResults);
             } else if (status === google.maps.places.PlacesServiceStatus.REQUEST_DENIED) {
               reject(new Error('Google Maps APIの認証に失敗しました。APIキーを確認してください。'));
@@ -220,7 +248,7 @@ const useRestaurantSearch = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [cache]);
 
   return {
     allRestaurants,
