@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useCache, CACHE_CONFIGS } from '../utils/cacheManager';
 
 interface Location {
   lat: number;
@@ -12,9 +13,10 @@ export const useLocationSearch = () => {
   const [error, setError] = useState<string | null>(null);
   const [hasPermissionError, setHasPermissionError] = useState(false);
 
+  const geocodeCache = useCache<Location>(CACHE_CONFIGS.GEOCODE);
+
   const checkHttps = useCallback(() => {
     if (typeof window !== 'undefined' && window.location.protocol !== 'https:') {
-      // localhost は例外として許可
       if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
         setError('位置情報の取得には HTTPS 接続が必要です。');
         return false;
@@ -24,18 +26,9 @@ export const useLocationSearch = () => {
   }, []);
 
   const getCurrentLocation = useCallback(() => {
-    // HTTPS チェック
     if (!checkHttps()) return;
-
-    // 既に権限エラーがある場合は、再度リクエストしない
-    if (hasPermissionError) {
-      return;
-    }
-
-    // 既にローディング中の場合は、重複リクエストを防ぐ
-    if (isLoading) {
-      return;
-    }
+    if (hasPermissionError) return;
+    if (isLoading) return;
 
     setIsLoading(true);
     setError(null);
@@ -83,6 +76,17 @@ export const useLocationSearch = () => {
       async (position) => {
         try {
           const { latitude, longitude } = position.coords;
+          const cacheKey = `${latitude},${longitude}`;
+
+          const cached = geocodeCache.getCached(cacheKey);
+          if (cached) {
+            setCurrentLocation(cached);
+            setIsLoading(false);
+            setError(null);
+            setHasPermissionError(false);
+            return;
+          }
+
           const geocoder = new google.maps.Geocoder();
           
           const result = await new Promise<google.maps.GeocoderResult>((resolve, reject) => {
@@ -98,11 +102,14 @@ export const useLocationSearch = () => {
             );
           });
 
-          setCurrentLocation({
+          const locationData = {
             lat: latitude,
             lng: longitude,
             address: result.formatted_address
-          });
+          };
+
+          geocodeCache.setCached(cacheKey, locationData);
+          setCurrentLocation(locationData);
           setIsLoading(false);
           setError(null);
           setHasPermissionError(false);
@@ -119,7 +126,7 @@ export const useLocationSearch = () => {
       handleError,
       options
     );
-  }, [checkHttps, hasPermissionError, isLoading]);
+  }, [checkHttps, hasPermissionError, isLoading, geocodeCache]);
 
   return {
     currentLocation,

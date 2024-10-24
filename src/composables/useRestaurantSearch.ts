@@ -1,52 +1,109 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
+import { useCache, CACHE_CONFIGS } from '../utils/cacheManager';
+import { calculateOperatingHours } from '../utils/operatingHours';
+import { Restaurant } from './useRestaurantSearch/types';
+import { Station } from './useStationSearch/types';
 
-interface Restaurant {
-  place_id: string;
-  name: string;
-  vicinity: string;
-  rating: number;
-  user_ratings_total: number;
-  price_level: number;
-  types: string[];
-  photos?: google.maps.places.PlacePhoto[];
-  searchKeywords: string[];
-  opening_hours?: {
-    weekday_text?: string[];
-  };
-  distance?: number;
-  geometry?: {
-    location: google.maps.LatLng;
-  };
-  business_status?: string;
-}
-
-interface Station {
-  name: string;
-  prefecture: string;
-}
-
-interface Location {
-  lat: number;
-  lng: number;
-}
+// ... (前のインターフェース定義は同じ)
 
 const useRestaurantSearch = () => {
   const [allRestaurants, setAllRestaurants] = useState<Restaurant[]>([]);
   const [filteredRestaurants, setFilteredRestaurants] = useState<Restaurant[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [cache, setCache] = useState<Map<string, google.maps.places.PlaceResult[]>>(() => {
-    const cachedData = localStorage.getItem('restaurantCache');
-    return cachedData ? new Map(JSON.parse(cachedData)) : new Map();
-  });
 
-  useEffect(() => {
-    localStorage.setItem('restaurantCache', JSON.stringify(Array.from(cache.entries())));
-  }, [cache]);
+  const searchCache = useCache<google.maps.places.PlaceResult[]>(CACHE_CONFIGS.RESTAURANT_SEARCH);
+  const detailsCache = useCache<Restaurant>(CACHE_CONFIGS.RESTAURANT_DETAILS);
 
   const generateCacheKey = (request: google.maps.places.PlaceSearchRequest) => {
     return `${request.keyword}-${request.location.lat()}-${request.location.lng()}-${request.radius}`;
   };
+
+  const getPlaceDetails = useCallback(async (
+    service: google.maps.places.PlacesService,
+    place: google.maps.places.PlaceResult & { searchKeywords: string[] },
+    location: google.maps.LatLng
+  ): Promise<Restaurant> => {
+    const cached = detailsCache.getCached(place.place_id!);
+    if (cached) {
+      return {
+        ...cached,
+        searchKeywords: place.searchKeywords
+      };
+    }
+
+    return new Promise<Restaurant>((resolve, reject) => {
+      service.getDetails({
+        placeId: place.place_id,
+        fields: [
+          'place_id',
+          'name',
+          'vicinity',
+          'rating',
+          'user_ratings_total',
+          'price_level',
+          'types',
+          'opening_hours',
+          'photos',
+          'geometry',
+          'business_status'
+        ]
+      }, (result, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK && result) {
+          if (result.business_status && result.business_status !== 'OPERATIONAL') {
+            resolve({} as Restaurant);
+            return;
+          }
+
+          let distance: number | undefined;
+          if (result.geometry?.location) {
+            distance = google.maps.geometry.spherical.computeDistanceBetween(
+              location,
+              result.geometry.location
+            );
+          }
+
+          const restaurantData: Restaurant = {
+            place_id: result.place_id!,
+            name: result.name!,
+            vicinity: result.vicinity!,
+            rating: result.rating || 0,
+            user_ratings_total: result.user_ratings_total || 0,
+            price_level: result.price_level || 1,
+            types: result.types || [],
+            photos: result.photos,
+            searchKeywords: place.searchKeywords,
+            opening_hours: result.opening_hours ? {
+              weekday_text: result.opening_hours.weekday_text
+            } : undefined,
+            distance,
+            geometry: result.geometry ? {
+              location: result.geometry.location
+            } : undefined,
+            business_status: result.business_status
+          };
+
+          detailsCache.setCached(result.place_id!, restaurantData);
+          resolve(restaurantData);
+        } else if (status === google.maps.places.PlacesServiceStatus.REQUEST_DENIED) {
+          reject(new Error('Google Maps APIの認証に失敗しました。APIキーを確認してください。'));
+        } else {
+          resolve({
+            place_id: place.place_id!,
+            name: place.name!,
+            vicinity: place.vicinity!,
+            rating: place.rating || 0,
+            user_ratings_total: place.user_ratings_total || 0,
+            price_level: place.price_level || 1,
+            types: place.types || [],
+            searchKeywords: place.searchKeywords,
+            opening_hours: undefined,
+            business_status: place.business_status
+          });
+        }
+      });
+    });
+  }, [detailsCache]);
 
   const searchNearbyRestaurants = useCallback(async (
     keywords: string[],
@@ -95,29 +152,21 @@ const useRestaurantSearch = () => {
           };
 
           const cacheKey = generateCacheKey(request);
-          if (cache.has(cacheKey)) {
-            resolve(cache.get(cacheKey)!);
+          const cached = searchCache.getCached(cacheKey);
+          if (cached) {
+            resolve(cached);
             return;
           }
 
           service.nearbySearch(request, (results, status) => {
             if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
-              setCache(prevCache => {
-                const newCache = new Map(prevCache);
-                newCache.set(cacheKey, []);
-                return newCache;
-              });
+              searchCache.setCached(cacheKey, []);
               resolve([]);
             } else if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-              // Filter out permanently closed places
               const activeResults = results.filter(place => 
                 place.business_status === 'OPERATIONAL' || place.business_status === undefined
               );
-              setCache(prevCache => {
-                const newCache = new Map(prevCache);
-                newCache.set(cacheKey, activeResults);
-                return newCache;
-              });
+              searchCache.setCached(cacheKey, activeResults);
               resolve(activeResults);
             } else if (status === google.maps.places.PlacesServiceStatus.REQUEST_DENIED) {
               reject(new Error('Google Maps APIの認証に失敗しました。APIキーを確認してください。'));
@@ -129,7 +178,6 @@ const useRestaurantSearch = () => {
       );
 
       const searchResults = await Promise.all(searchPromises);
-
       const combinedResults = searchResults.flatMap((results, index) => 
         results.map(place => ({
           ...place,
@@ -148,70 +196,11 @@ const useRestaurantSearch = () => {
       }, [] as (google.maps.places.PlaceResult & { searchKeywords: string[] })[]);
 
       const detailedResults = await Promise.all(
-        uniqueResults.map(place =>
-          new Promise<Restaurant>((resolve, reject) => {
-            service.getDetails({
-              placeId: place.place_id,
-              fields: ['place_id', 'name', 'vicinity', 'rating', 'user_ratings_total', 'price_level', 'types', 'opening_hours', 'photos', 'geometry', 'business_status']
-            }, (result, status) => {
-              if (status === google.maps.places.PlacesServiceStatus.OK && result) {
-                // Only include operational businesses
-                if (result.business_status && result.business_status !== 'OPERATIONAL') {
-                  resolve({} as Restaurant); // This will be filtered out later
-                  return;
-                }
-
-                let distance: number | undefined;
-                if (result.geometry?.location) {
-                  distance = google.maps.geometry.spherical.computeDistanceBetween(
-                    location,
-                    result.geometry.location
-                  );
-                }
-
-                resolve({
-                  place_id: result.place_id!,
-                  name: result.name!,
-                  vicinity: result.vicinity!,
-                  rating: result.rating || 0,
-                  user_ratings_total: result.user_ratings_total || 0,
-                  price_level: result.price_level || 1,
-                  types: result.types || [],
-                  photos: result.photos,
-                  searchKeywords: place.searchKeywords,
-                  opening_hours: result.opening_hours ? {
-                    weekday_text: result.opening_hours.weekday_text
-                  } : undefined,
-                  distance,
-                  geometry: result.geometry ? {
-                    location: result.geometry.location
-                  } : undefined,
-                  business_status: result.business_status
-                });
-              } else if (status === google.maps.places.PlacesServiceStatus.REQUEST_DENIED) {
-                reject(new Error('Google Maps APIの認証に失敗しました。APIキーを確認してください。'));
-              } else {
-                resolve({
-                  place_id: place.place_id!,
-                  name: place.name!,
-                  vicinity: place.vicinity!,
-                  rating: place.rating || 0,
-                  user_ratings_total: place.user_ratings_total || 0,
-                  price_level: place.price_level || 1,
-                  types: place.types || [],
-                  searchKeywords: place.searchKeywords,
-                  opening_hours: undefined,
-                  business_status: place.business_status
-                });
-              }
-            });
-          })
-        )
+        uniqueResults.map(place => getPlaceDetails(service, place, location))
       );
 
       const filteredResults = detailedResults
         .filter(place => 
-          // Filter out empty results and non-operational businesses
           Object.keys(place).length > 0 &&
           (place.business_status === 'OPERATIONAL' || place.business_status === undefined)
         )
@@ -220,6 +209,10 @@ const useRestaurantSearch = () => {
             place.rating >= minRating &&
             place.user_ratings_total >= minReviews &&
             selectedPriceLevels.includes(place.price_level);
+
+          if (isOpenNow && !calculateOperatingHours(place.opening_hours?.weekday_text)) {
+            return false;
+          }
 
           if (searchRadius <= 100 && place.distance !== undefined) {
             return meetsBasicCriteria && place.distance <= searchRadius;
@@ -245,7 +238,7 @@ const useRestaurantSearch = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [cache]);
+  }, [searchCache, detailsCache, getPlaceDetails]);
 
   return {
     allRestaurants,

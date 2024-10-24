@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useCache, CACHE_CONFIGS } from '../utils/cacheManager';
 
 interface Station {
   name: string;
@@ -11,10 +12,17 @@ const useStationSearch = (initialStation: string) => {
   const [stationCandidates, setStationCandidates] = useState<Station[]>([]);
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
 
-  // 駅名の入力を処理する関数
+  const predictionsCache = useCache<Station[]>(CACHE_CONFIGS.STATION_PREDICTIONS);
+  const nearbyStationsCache = useCache<Station[]>(CACHE_CONFIGS.NEARBY_STATIONS);
+
   const handleStationInput = useCallback(async (input: string) => {
-    if (selectedStation && selectedStation.name === input) {
-      // 選択された駅が入力と同じ場合は検索を行わない
+    if (!input.trim() || (selectedStation && selectedStation.name === input)) {
+      return;
+    }
+
+    const cached = predictionsCache.getCached(input);
+    if (cached) {
+      setStationCandidates(cached);
       return;
     }
 
@@ -31,18 +39,17 @@ const useStationSearch = (initialStation: string) => {
         return;
       }
 
-      // 検索結果を格納して、建物名と住所を分割
-      const candidates = predictions.map(prediction => {
-        const name = prediction.structured_formatting.main_text;
-        const address = prediction.structured_formatting.secondary_text || '';
-        return { name, address, rawPrediction: prediction };
-      });
+      const candidates = predictions.map(prediction => ({
+        name: prediction.structured_formatting.main_text,
+        address: prediction.structured_formatting.secondary_text || '',
+        rawPrediction: prediction
+      }));
 
+      predictionsCache.setCached(input, candidates);
       setStationCandidates(candidates);
     });
-  }, [selectedStation]);
+  }, [selectedStation, predictionsCache]);
 
-  // 入力値が変更されたときのディバウンス処理
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
       handleStationInput(station);
@@ -51,7 +58,6 @@ const useStationSearch = (initialStation: string) => {
     return () => clearTimeout(debounceTimer);
   }, [station, handleStationInput]);
 
-  // 駅を選択する関数
   const selectStation = (candidate: Station) => {
     setStation(candidate.name);
     setSelectedStation(candidate);

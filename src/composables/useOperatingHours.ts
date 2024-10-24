@@ -1,58 +1,28 @@
 import { useState, useEffect } from 'react';
+import { calculateOperatingHours } from '../utils/operatingHours';
 
-export const useOperatingHours = (weekdayText?: string[]) => {
+interface OpeningHours {
+  weekday_text?: string[];
+}
+
+export const useOperatingHours = (openingHours?: OpeningHours) => {
   const [isOpen, setIsOpen] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (!weekdayText) {
+    if (!openingHours?.weekday_text) {
       setIsOpen(null);
       return;
     }
 
-    const checkIsOpen = () => {
-      const now = new Date();
-      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-      const currentDay = days[now.getDay()];
-      const currentTime = now.getHours() * 100 + now.getMinutes();
-
-      const todaySchedule = weekdayText.find(text => text.startsWith(currentDay));
-      if (!todaySchedule) {
-        setIsOpen(null);
-        return;
-      }
-
-      const timeRanges = todaySchedule
-        .replace(`${currentDay}: `, '')
-        .split(', ')
-        .map(range => {
-          if (range.toLowerCase() === 'closed') return null;
-          const [start, end] = range.split('–').map(time => {
-            const [hours, minutes = '00'] = time.replace(/\s*(AM|PM)/i, '').split(':');
-            let hour = parseInt(hours);
-            if (time.toLowerCase().includes('pm') && hour !== 12) hour += 12;
-            if (time.toLowerCase().includes('am') && hour === 12) hour = 0;
-            return hour * 100 + parseInt(minutes);
-          });
-          return { start, end };
-        })
-        .filter(Boolean);
-
-      const isCurrentlyOpen = timeRanges.some(range => {
-        if (!range) return false;
-        if (range.end < range.start) {
-          return currentTime >= range.start || currentTime <= range.end;
-        }
-        return currentTime >= range.start && currentTime <= range.end;
-      });
-
-      setIsOpen(isCurrentlyOpen);
+    const updateIsOpen = () => {
+      setIsOpen(calculateOperatingHours(openingHours.weekday_text));
     };
 
-    checkIsOpen();
-    const interval = setInterval(checkIsOpen, 60000); // 1分ごとに更新
+    updateIsOpen();
+    const interval = setInterval(updateIsOpen, 60000); // 1分ごとに更新
 
     return () => clearInterval(interval);
-  }, [weekdayText]);
+  }, [openingHours]);
 
   return { isOpen };
 };

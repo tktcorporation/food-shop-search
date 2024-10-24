@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Star, DollarSign, Tag, Clock, Image as ImageIcon, ExternalLink, Search } from 'lucide-react';
+import { MapPin, Star, DollarSign, Clock, Image as ImageIcon, ExternalLink, AlertCircle } from 'lucide-react';
 import { getKeywordLabel } from '../../utils/keywordOptions';
 import { useOperatingHours } from '../../composables/useOperatingHours';
 import { useAnalytics } from '../../hooks/useAnalytics';
@@ -18,22 +18,42 @@ interface Restaurant {
   };
   distance?: number;
   searchKeywords: string[];
+  business_status?: string;
 }
 
 interface RestaurantCardProps {
   restaurant: Restaurant;
 }
 
+const getBusinessStatusInfo = (status?: string) => {
+  switch (status) {
+    case 'OPERATIONAL':
+      return null;
+    case 'CLOSED_TEMPORARILY':
+      return {
+        message: '一時休業中',
+        className: 'bg-yellow-100 text-yellow-800'
+      };
+    case 'CLOSED_PERMANENTLY':
+      return {
+        message: '閉店',
+        className: 'bg-red-100 text-red-800'
+      };
+    default:
+      return null;
+  }
+};
+
 const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
-  const { isOpen } = useOperatingHours(restaurant.opening_hours?.weekday_text);
+  const { isOpen } = useOperatingHours(restaurant.opening_hours);
   const { trackEvent } = useAnalytics();
+  const businessStatusInfo = getBusinessStatusInfo(restaurant.business_status);
 
   const openInGoogleMaps = (e: React.MouseEvent) => {
     e.stopPropagation();
     const searchQuery = encodeURIComponent(`${restaurant.name} ${restaurant.vicinity}`);
     const url = `https://www.google.com/maps/search/?api=1&query=${searchQuery}&query_place_id=${restaurant.place_id}`;
     
-    // Track the event
     trackEvent({
       action: 'view_restaurant',
       category: 'Restaurant',
@@ -53,7 +73,8 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
   return (
     <div
       onClick={openInGoogleMaps}
-      className="bg-white rounded-lg shadow-lg overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-[1.02] hover:shadow-xl group"
+      className={`bg-white rounded-lg shadow-lg overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-[1.02] hover:shadow-xl group
+        ${businessStatusInfo ? 'opacity-75' : ''}`}
     >
       <div className="relative">
         {restaurant.photos?.[0] ? (
@@ -73,6 +94,12 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
         <div className="absolute top-2 right-2 bg-white/90 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <ExternalLink size={16} className="text-primary-600" />
         </div>
+        {businessStatusInfo && (
+          <div className={`absolute top-2 left-2 px-2 py-1 rounded-md text-xs font-medium flex items-center gap-1 ${businessStatusInfo.className}`}>
+            <AlertCircle size={14} />
+            {businessStatusInfo.message}
+          </div>
+        )}
       </div>
 
       <div className="p-4">
@@ -134,7 +161,7 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
           </div>
         )}
 
-        {restaurant.opening_hours?.weekday_text && (
+        {restaurant.opening_hours?.weekday_text && !businessStatusInfo && (
           <div className="mt-2 border-t pt-2">
             {isOpen !== null && (
               <p className={`text-xs mb-1 ${isOpen ? 'text-green-600' : 'text-red-600'}`}>
