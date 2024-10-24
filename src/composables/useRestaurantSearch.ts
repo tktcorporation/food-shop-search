@@ -70,11 +70,11 @@ const useRestaurantSearch = () => {
 
       const searchPromises = keywords.map(keyword => 
         new Promise<google.maps.places.PlaceResult[]>((resolve, reject) => {
-          const request = {
+          const request: google.maps.places.PlaceSearchRequest = {
             keyword: keyword,
             location: location,
             radius: searchRadius,
-            type: 'restaurant',
+            // type: 'restaurant',
             openNow: isOpenNow
           };
 
