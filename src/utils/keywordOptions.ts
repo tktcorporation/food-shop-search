@@ -1,6 +1,6 @@
 export const keywordCategories = [
   {
-    name: '料理ジャンル',
+    name: 'ジャンル',
     keywords: [
       { value: '和食', label: '和食' },
       { value: '中華料理', label: '中華料理' },
@@ -13,29 +13,27 @@ export const keywordCategories = [
     ]
   },
   {
-    name: '和食専門',
+    name: 'スタイル',
     keywords: [
       { value: '定食', label: '定食' },
+      { value: 'ファストフード', label: 'ファストフード' },
+      { value: 'ファミレス', label: 'ファミレス' },
+      { value: 'カフェ', label: 'カフェ' },
+    ]
+  },
+  {
+    name: '料理',
+    keywords: [
+      { value: '定食', label: '定食' },
+      { value: 'ファミレス', label: 'ファミレス' },
       { value: 'うどん,そば', label: 'うどん,そば' },
       { value: '天ぷら', label: '天ぷら' },
       { value: 'とんかつ', label: 'とんかつ' },
       { value: '焼き鳥', label: '焼き鳥' },
       { value: '海鮮', label: '海鮮' },
-    ]
-  },
-  {
-    name: '肉料理',
-    keywords: [
       { value: '焼肉', label: '焼肉' },
       { value: 'ステーキ', label: 'ステーキ' },
       { value: 'ハンバーグ', label: 'ハンバーグ' },
-    ]
-  },
-  {
-    name: '軽食・カフェ',
-    keywords: [
-      { value: 'cafe', label: 'カフェ' },
-      { value: 'ファストフード', label: 'ファストフード' },
     ]
   },
 ];
