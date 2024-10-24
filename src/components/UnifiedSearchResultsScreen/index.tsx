@@ -12,9 +12,7 @@ interface UnifiedSearchResultsScreenProps {
   initialStation: string;
   restaurants: any[];
   setScreen: (screen: string) => void;
-  priceLevel: string;
-  setPriceLevel: (priceLevel: string) => void;
-  searchNearbyRestaurants: (types: string[], minRating: number, minReviews: number, selectedStation: { name: string; prefecture: string }, isOpenNow: boolean, priceLevel: string) => void;
+  searchNearbyRestaurants: (types: string[], minRating: number, minReviews: number, selectedStation: { name: string; prefecture: string }, isOpenNow: boolean) => void;
   isLoading: boolean;
   error: string | null;
 }
@@ -23,19 +21,19 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
   initialStation,
   restaurants,
   setScreen,
-  priceLevel,
-  setPriceLevel,
   searchNearbyRestaurants,
   isLoading,
   error,
 }) => {
   const { station, setStation, stationCandidates, selectedStation, selectStation } = useStationSearch(initialStation);
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>(keyWordOptions.map(option => option.value));
+  const [selectedPriceLevels, setSelectedPriceLevels] = useState<number[]>([1, 2, 3, 4]);
   const [minRating, setMinRating] = useState<number>(3.5);
   const [minReviews, setMinReviews] = useState<number>(100);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [customKeywords, setCustomKeywords] = useState<string[]>([]);
   const [isOpenNow, setIsOpenNow] = useState(false);
+  const [filteredRestaurants, setFilteredRestaurants] = useState(restaurants);
 
   const toggleKeyword = (keyword: string) => {
     setSelectedKeywords(prev =>
@@ -70,7 +68,7 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
 
   const handleSearch = () => {
     if (selectedStation) {
-      searchNearbyRestaurants(selectedKeywords, minRating, minReviews, selectedStation, isOpenNow, priceLevel);
+      searchNearbyRestaurants(selectedKeywords, minRating, minReviews, selectedStation, isOpenNow);
     }
   };
 
@@ -78,12 +76,18 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
     if (selectedStation) {
       handleSearch();
     }
-  }, [selectedKeywords, minRating, minReviews, selectedStation, isOpenNow, priceLevel]);
+  }, [selectedKeywords, minRating, minReviews, selectedStation, isOpenNow]);
+
+  // 価格帯フィルターの適用
+  useEffect(() => {
+    const filtered = restaurants.filter(restaurant => 
+      selectedPriceLevels.length === 0 || selectedPriceLevels.includes(restaurant.price_level)
+    );
+    setFilteredRestaurants(filtered);
+  }, [restaurants, selectedPriceLevels]);
 
   return (
     <div className="max-w-4xl mx-auto p-6 relative pb-20">
-      <h1 className="text-3xl font-bold text-primary-800 mb-8">駅周辺のレストラン検索</h1>
-      
       <StationSearch
         station={station}
         setStation={setStation}
@@ -101,8 +105,8 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
       />
 
       <SearchFilters
-        priceLevel={priceLevel}
-        setPriceLevel={setPriceLevel}
+        selectedPriceLevels={selectedPriceLevels}
+        setSelectedPriceLevels={setSelectedPriceLevels}
         minRating={minRating}
         setMinRating={setMinRating}
         minReviews={minReviews}
@@ -111,29 +115,15 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
         setIsOpenNow={setIsOpenNow}
       />
 
-      <button
-        onClick={handleSearch}
-        disabled={!selectedStation || isLoading}
-        className="w-full btn btn-primary mb-6"
-      >
-        {isLoading ? '検索中...' : '検索'}
-      </button>
+
+        
+        {isLoading && <p>検索中...</p>}
 
       {error && <p className="mt-4 text-red-500">{error}</p>}
 
-      {restaurants.length > 0 && (
+      {filteredRestaurants.length > 0 && (
         <div className="mt-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold">検索結果</h2>
-            <button
-              onClick={() => setScreen('map')}
-              className="btn btn-secondary flex items-center"
-            >
-              <MapPin size={20} className="mr-2" />
-              地図で見る
-            </button>
-          </div>
-          <SearchResults restaurants={restaurants} />
+          <SearchResults restaurants={filteredRestaurants} />
         </div>
       )}
 

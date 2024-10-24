@@ -5,7 +5,8 @@ import RouletteScreen from './components/RouletteScreen';
 import Map from './components/Map';
 import useRestaurantSearch from './composables/useRestaurantSearch';
 
-const libraries = ['places'];
+// Add geometry to the libraries array
+const libraries: ("places" | "geometry")[] = ['places', 'geometry'];
 
 function App() {
   const [screen, setScreen] = useState('search');

@@ -8,6 +8,7 @@ interface Restaurant {
   user_ratings_total: number;
   price_level: number;
   types: string[];
+  photos?: google.maps.places.PlacePhoto[];
   searchKeywords: string[];
   opening_hours?: {
     open_now: boolean;
@@ -93,7 +94,7 @@ const useRestaurantSearch = () => {
           new Promise<Restaurant>((resolve) => {
             service.getDetails({
               placeId: place.place_id,
-              fields: ['place_id', 'name', 'vicinity', 'rating', 'user_ratings_total', 'price_level', 'types', 'opening_hours']
+              fields: ['place_id', 'name', 'vicinity', 'rating', 'user_ratings_total', 'price_level', 'types', 'opening_hours', 'photos']
             }, (result, status) => {
               if (status === google.maps.places.PlacesServiceStatus.OK && result) {
                 resolve({
@@ -104,6 +105,7 @@ const useRestaurantSearch = () => {
                   user_ratings_total: result.user_ratings_total,
                   price_level: result.price_level,
                   types: result.types,
+                  photos: result.photos,
                   searchKeywords: place.searchKeywords,
                   opening_hours: result.opening_hours ? {
                     open_now: result.opening_hours.isOpen(),

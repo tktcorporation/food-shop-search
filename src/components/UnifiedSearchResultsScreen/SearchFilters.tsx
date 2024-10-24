@@ -1,8 +1,8 @@
 import React from 'react';
 
 interface SearchFiltersProps {
-  priceLevel: string;
-  setPriceLevel: (level: string) => void;
+  selectedPriceLevels: number[];
+  setSelectedPriceLevels: (levels: number[]) => void;
   minRating: number;
   setMinRating: (rating: number) => void;
   minReviews: number;
@@ -11,9 +11,16 @@ interface SearchFiltersProps {
   setIsOpenNow: (isOpen: boolean) => void;
 }
 
+const PRICE_LEVELS = [
+  { value: 1, label: '¥ (安価)' },
+  { value: 2, label: '¥¥ (普通)' },
+  { value: 3, label: '¥¥¥ (高価)' },
+  { value: 4, label: '¥¥¥¥ (非常に高価)' },
+];
+
 const SearchFilters: React.FC<SearchFiltersProps> = ({
-  priceLevel,
-  setPriceLevel,
+  selectedPriceLevels,
+  setSelectedPriceLevels,
   minRating,
   setMinRating,
   minReviews,
@@ -21,23 +28,51 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
   isOpenNow,
   setIsOpenNow,
 }) => {
+  const togglePriceLevel = (level: number) => {
+    setSelectedPriceLevels(prev =>
+      prev.includes(level)
+        ? prev.filter(l => l !== level)
+        : [...prev, level]
+    );
+  };
+
+  const toggleAllPriceLevels = () => {
+    if (selectedPriceLevels.length === PRICE_LEVELS.length) {
+      setSelectedPriceLevels([]);
+    } else {
+      setSelectedPriceLevels(PRICE_LEVELS.map(level => level.value));
+    }
+  };
+
   return (
     <>
       <div className="mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">
           価格帯
         </label>
-        <select
-          value={priceLevel}
-          onChange={(e) => setPriceLevel(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
-        >
-          <option value="">指定なし</option>
-          <option value="1">¥ (安価)</option>
-          <option value="2">¥¥ (普通)</option>
-          <option value="3">¥¥¥ (高価)</option>
-          <option value="4">¥¥¥¥ (非常に高価)</option>
-        </select>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={toggleAllPriceLevels}
+            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200
+              ${selectedPriceLevels.length === PRICE_LEVELS.length
+                ? 'bg-primary-500 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+          >
+            {selectedPriceLevels.length === PRICE_LEVELS.length ? '全解除' : '全選択'}
+          </button>
+          {PRICE_LEVELS.map((level) => (
+            <button
+              key={level.value}
+              onClick={() => togglePriceLevel(level.value)}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200
+                ${selectedPriceLevels.includes(level.value)
+                  ? 'bg-primary-500 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+            >
+              {level.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="mb-6">
