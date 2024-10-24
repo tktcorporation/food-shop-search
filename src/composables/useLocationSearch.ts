@@ -21,6 +21,34 @@ export const useLocationSearch = () => {
       return;
     }
 
+    const handleError = (error: GeolocationPositionError) => {
+      setIsLoading(false);
+      console.dir(error)
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+            setError('位置情報の利用が許可されていません。iOSの設定アプリから「Safari」→「位置情報」を「許可」に変更してください。');
+          } else {
+            setError('位置情報の利用が許可されていません。ブラウザの設定から位置情報の利用を許可してください。');
+          }
+          break;
+        case error.POSITION_UNAVAILABLE:
+          setError('位置情報を取得できませんでした。電波の良い場所で再度お試しください。');
+          break;
+        case error.TIMEOUT:
+          setError('位置情報の取得がタイムアウトしました。再度お試しください。');
+          break;
+        default:
+          setError('位置情報の取得に失敗しました。再度お試しください。');
+      }
+    };
+
+    const options: PositionOptions = {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    };
+
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         try {
@@ -45,17 +73,20 @@ export const useLocationSearch = () => {
             lng: longitude,
             address: result.formatted_address
           });
-        } catch (err) {
-          setError(err instanceof Error ? err.message : '位置情報の取得に失敗しました。');
-        } finally {
           setIsLoading(false);
+        } catch (err) {
+          console.log('============================', err)
+          handleError({
+            code: 2,
+            message: '位置情報の取得に失敗しました。',
+            PERMISSION_DENIED: 1,
+            POSITION_UNAVAILABLE: 2,
+            TIMEOUT: 3
+          });
         }
       },
-      (err) => {
-        setError('位置情報の取得に失敗しました。');
-        setIsLoading(false);
-      },
-      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+      handleError,
+      options
     );
   };
 

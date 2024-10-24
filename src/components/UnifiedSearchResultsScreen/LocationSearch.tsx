@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navigation, Loader2 } from 'lucide-react';
+import { Navigation, Loader2, AlertCircle } from 'lucide-react';
 
 interface LocationSearchProps {
   isLoading: boolean;
@@ -14,15 +14,26 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
   currentLocation,
   onGetCurrentLocation,
 }) => {
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+
   return (
     <div className="mb-6">
       <label className="block text-sm font-medium text-gray-700 mb-2">
         現在地から検索
       </label>
+      {isIOS && !currentLocation && (
+        <div className="mb-3 p-3 bg-blue-50 text-blue-700 rounded-md text-sm flex items-start">
+          <AlertCircle className="shrink-0 mt-0.5 mr-2" size={16} />
+          <p>
+            iOSをご利用の方は、位置情報の許可を求められた際に「許可」を選択してください。
+            既に「許可しない」を選択された場合は、設定アプリから変更が必要です。
+          </p>
+        </div>
+      )}
       <button
         onClick={onGetCurrentLocation}
         disabled={isLoading}
-        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary-100 text-primary-700 rounded-md hover:bg-primary-200 transition-colors duration-200"
+        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary-100 text-primary-700 rounded-md hover:bg-primary-200 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isLoading ? (
           <>
@@ -45,7 +56,10 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
       )}
 
       {error && (
-        <p className="mt-2 text-sm text-red-600">{error}</p>
+        <div className="mt-2 p-3 bg-red-50 text-red-700 rounded-md text-sm flex items-start">
+          <AlertCircle className="shrink-0 mt-0.5 mr-2" size={16} />
+          <p>{error}</p>
+        </div>
       )}
     </div>
   );
