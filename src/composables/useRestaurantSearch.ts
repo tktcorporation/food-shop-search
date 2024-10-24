@@ -11,7 +11,6 @@ interface Restaurant {
   photos?: google.maps.places.PlacePhoto[];
   searchKeywords: string[];
   opening_hours?: {
-    open_now: boolean;
     weekday_text?: string[];
   };
   distance?: number;
@@ -46,7 +45,7 @@ const useRestaurantSearch = () => {
   }, [cache]);
 
   const generateCacheKey = (request: google.maps.places.PlaceSearchRequest) => {
-    return `${request.keyword}-${request.location.lat()}-${request.location.lng()}-${request.radius}-${request.openNow}`;
+    return `${request.keyword}-${request.location.lat()}-${request.location.lng()}-${request.radius}`;
   };
 
   const searchNearbyRestaurants = useCallback(async (
@@ -92,8 +91,7 @@ const useRestaurantSearch = () => {
           const request: google.maps.places.PlaceSearchRequest = {
             keyword: keyword,
             location: location,
-            radius: searchRadius,
-            openNow: isOpenNow
+            radius: searchRadius
           };
 
           const cacheKey = generateCacheKey(request);
@@ -182,7 +180,6 @@ const useRestaurantSearch = () => {
                   photos: result.photos,
                   searchKeywords: place.searchKeywords,
                   opening_hours: result.opening_hours ? {
-                    open_now: result.opening_hours.isOpen(),
                     weekday_text: result.opening_hours.weekday_text
                   } : undefined,
                   distance,
