@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLoadScript } from '@react-google-maps/api';
 import UnifiedSearchResultsScreen from './components/UnifiedSearchResultsScreen';
 import useRestaurantSearch from './composables/useRestaurantSearch';
+import { ExternalLink } from 'lucide-react';
 
 const libraries: ("places" | "geometry")[] = ['places', 'geometry'];
 
@@ -39,6 +40,13 @@ function App() {
         isLoading={isLoading}
         error={error}
       />
+      {/* お問い合わせフォーム */}
+      <div className="flex items-center justify-center py-3 bg-primary-300 text-white text-sm">
+        <a href="https://forms.gle/MyyDc8ybQJcR5JYs9" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+          <span>お問い合わせ・要望・バグ報告</span>
+          <ExternalLink size={20} />
+        </a>
+      </div>
     </div>
   );
 }
