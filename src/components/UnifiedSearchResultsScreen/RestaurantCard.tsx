@@ -99,15 +99,11 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
         {/* Matched Search Keywords */}
         {restaurant.searchKeywords && restaurant.searchKeywords.length > 0 && (
           <div className="mb-2">
-            <div className="flex items-center gap-1 text-xs text-primary-600 mb-1">
-              <Search size={14} />
-              <span>検索タイプ:</span>
-            </div>
             <div className="flex flex-wrap gap-1">
               {restaurant.searchKeywords.map((keyword, index) => (
                 <span
                   key={index}
-                  className="text-xs px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full"
+                  className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full"
                 >
                   {getKeywordLabel(keyword)}
                 </span>
@@ -117,13 +113,13 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
         )}
 
         {/* Restaurant Types */}
-        <div className="flex flex-wrap gap-1 mb-2">
-          {restaurant.types.slice(0, 3).map((type, index) => (
+        <div className="flex flex-wrap mb-2">
+          {restaurant.types.map((type, index, array) => (
             <span
               key={index}
-              className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full"
+              className="text-xs text-gray-600 rounded-full"
             >
-              {getKeywordLabel(type)}
+              {type}{index < array.length - 1 && ', '}
             </span>
           ))}
         </div>
