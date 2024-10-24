@@ -23,7 +23,6 @@ export const useLocationSearch = () => {
 
     const handleError = (error: GeolocationPositionError) => {
       setIsLoading(false);
-      console.dir(error)
       switch (error.code) {
         case error.PERMISSION_DENIED:
           if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
@@ -75,7 +74,6 @@ export const useLocationSearch = () => {
           });
           setIsLoading(false);
         } catch (err) {
-          console.log('============================', err)
           handleError({
             code: 2,
             message: '位置情報の取得に失敗しました。',
