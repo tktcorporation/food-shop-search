@@ -21,10 +21,10 @@ const PRICE_LEVELS = [
 ];
 
 const RADIUS_OPTIONS = [
-  { value: 10.0, label: '10m' },
-  { value: 100.0, label: '100m' },
-  { value: 300.0, label: '300m' },
-  { value: 500.0, label: '500m' },
+  { value: 50, label: '50m' },
+  { value: 100, label: '100m' },
+  { value: 300, label: '300m' },
+  { value: 500, label: '500m' },
   { value: 800, label: '800m' },
   { value: 1000, label: '1km' },
   { value: 2000, label: '2km' },
