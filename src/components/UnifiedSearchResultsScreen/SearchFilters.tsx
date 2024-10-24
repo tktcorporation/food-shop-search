@@ -21,6 +21,7 @@ const PRICE_LEVELS = [
 ];
 
 const RADIUS_OPTIONS = [
+  { value: 100, label: '100m' },
   { value: 300, label: '300m' },
   { value: 500, label: '500m' },
   { value: 800, label: '800m' },
