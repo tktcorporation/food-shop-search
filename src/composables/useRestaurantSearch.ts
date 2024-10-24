@@ -14,6 +14,10 @@ interface Restaurant {
     open_now: boolean;
     weekday_text?: string[];
   };
+  distance?: number; // Add distance field
+  geometry?: {
+    location: google.maps.LatLng;
+  };
 }
 
 interface Station {
@@ -57,6 +61,8 @@ const useRestaurantSearch = () => {
             (results, status) => {
               if (status === google.maps.GeocoderStatus.OK && results?.[0]) {
                 resolve(results[0]);
+              } else if (status === google.maps.GeocoderStatus.REQUEST_DENIED) {
+                reject(new Error('Google Maps APIの認証に失敗しました。APIキーを確認してください。'));
               } else {
                 reject(new Error('位置を取得できませんでした。'));
               }
@@ -74,13 +80,14 @@ const useRestaurantSearch = () => {
             keyword: keyword,
             location: location,
             radius: searchRadius,
-            // type: 'restaurant',
             openNow: isOpenNow
           };
 
           service.nearbySearch(request, (results, status) => {
             if (status === google.maps.places.PlacesServiceStatus.OK && results) {
               resolve(results);
+            } else if (status === google.maps.places.PlacesServiceStatus.REQUEST_DENIED) {
+              reject(new Error('Google Maps APIの認証に失敗しました。APIキーを確認してください。'));
             } else {
               reject(new Error(`${keyword}の検索に失敗しました。`));
             }
@@ -109,12 +116,21 @@ const useRestaurantSearch = () => {
 
       const detailedResults = await Promise.all(
         uniqueResults.map(place =>
-          new Promise<Restaurant>((resolve) => {
+          new Promise<Restaurant>((resolve, reject) => {
             service.getDetails({
               placeId: place.place_id,
-              fields: ['place_id', 'name', 'vicinity', 'rating', 'user_ratings_total', 'price_level', 'types', 'opening_hours', 'photos']
+              fields: ['place_id', 'name', 'vicinity', 'rating', 'user_ratings_total', 'price_level', 'types', 'opening_hours', 'photos', 'geometry']
             }, (result, status) => {
               if (status === google.maps.places.PlacesServiceStatus.OK && result) {
+                // Calculate distance if geometry is available
+                let distance: number | undefined;
+                if (result.geometry?.location) {
+                  distance = google.maps.geometry.spherical.computeDistanceBetween(
+                    location,
+                    result.geometry.location
+                  );
+                }
+
                 resolve({
                   place_id: result.place_id!,
                   name: result.name!,
@@ -128,8 +144,14 @@ const useRestaurantSearch = () => {
                   opening_hours: result.opening_hours ? {
                     open_now: result.opening_hours.isOpen(),
                     weekday_text: result.opening_hours.weekday_text
+                  } : undefined,
+                  distance,
+                  geometry: result.geometry ? {
+                    location: result.geometry.location
                   } : undefined
                 });
+              } else if (status === google.maps.places.PlacesServiceStatus.REQUEST_DENIED) {
+                reject(new Error('Google Maps APIの認証に失敗しました。APIキーを確認してください。'));
               } else {
                 resolve({
                   place_id: place.place_id!,
@@ -148,16 +170,35 @@ const useRestaurantSearch = () => {
         )
       );
 
-      const filteredResults = detailedResults.filter(place => 
-        place.rating >= minRating &&
-        place.user_ratings_total >= minReviews &&
-        selectedPriceLevels.includes(place.price_level)
-      );
+      const filteredResults = detailedResults.filter(place => {
+        const meetsBasicCriteria = 
+          place.rating >= minRating &&
+          place.user_ratings_total >= minReviews &&
+          selectedPriceLevels.includes(place.price_level);
 
-      setAllRestaurants(filteredResults);
-      setFilteredRestaurants(filteredResults);
+        // Additional distance filtering for small radius searches
+        if (searchRadius <= 100 && place.distance !== undefined) {
+          return meetsBasicCriteria && place.distance <= searchRadius;
+        }
+
+        return meetsBasicCriteria;
+      });
+
+      // Sort by distance if available
+      const sortedResults = filteredResults.sort((a, b) => {
+        if (a.distance === undefined && b.distance === undefined) return 0;
+        if (a.distance === undefined) return 1;
+        if (b.distance === undefined) return -1;
+        return a.distance - b.distance;
+      });
+
+      setAllRestaurants(sortedResults);
+      setFilteredRestaurants(sortedResults);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '検索中にエラーが発生しました。');
+      const errorMessage = err instanceof Error ? err.message : '検索中にエラーが発生しました。';
+      setError(errorMessage);
+      setAllRestaurants([]);
+      setFilteredRestaurants([]);
     } finally {
       setIsLoading(false);
     }

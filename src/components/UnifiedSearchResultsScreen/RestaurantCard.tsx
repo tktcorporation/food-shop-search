@@ -15,6 +15,7 @@ interface Restaurant {
   opening_hours?: {
     weekday_text?: string[];
   };
+  distance?: number;
 }
 
 interface RestaurantCardProps {
@@ -29,6 +30,13 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
     const searchQuery = encodeURIComponent(`${restaurant.name} ${restaurant.vicinity}`);
     const url = `https://www.google.com/maps/search/?api=1&query=${searchQuery}&query_place_id=${restaurant.place_id}`;
     window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const formatDistance = (meters: number) => {
+    if (meters < 1000) {
+      return `${Math.round(meters)}m`;
+    }
+    return `${(meters / 1000).toFixed(1)}km`;
   };
 
   return (
@@ -77,7 +85,14 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
 
         <div className="text-xs text-gray-500 mb-2 flex items-start">
           <MapPin className="inline-block mr-1 shrink-0" size={14} />
-          <span className="line-clamp-2">{restaurant.vicinity}</span>
+          <span className="line-clamp-2">
+            {restaurant.vicinity}
+            {restaurant.distance !== undefined && (
+              <span className="ml-1 text-primary-600">
+                ({formatDistance(restaurant.distance)})
+              </span>
+            )}
+          </span>
         </div>
 
         <div className="flex flex-wrap gap-1 mb-2">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Navigation, Loader2 } from 'lucide-react';
+import { Search, Navigation, Loader2, AlertCircle } from 'lucide-react';
 
 interface Station {
   name: string;
@@ -45,7 +45,7 @@ const StationSearch: React.FC<StationSearchProps> = ({
         const service = new google.maps.places.PlacesService(document.createElement('div'));
         const request = {
           location: userLocation,
-          radius: 5000, // 5km
+          radius: 5000,
           type: 'train_station'
         };
 
@@ -88,6 +88,8 @@ const StationSearch: React.FC<StationSearchProps> = ({
               setStation(nearestStations[0].name);
               selectStation(nearestStations[0]);
             }
+          } else if (status === google.maps.places.PlacesServiceStatus.REQUEST_DENIED) {
+            setError('Google Maps APIの認証に失敗しました。APIキーを確認してください。');
           } else {
             setError('近くの駅を見つけることができませんでした。');
           }
@@ -101,7 +103,6 @@ const StationSearch: React.FC<StationSearchProps> = ({
     );
   };
 
-  // 初回レンダリング時に近くの駅を検索
   useEffect(() => {
     findNearbyStations();
   }, []);
@@ -159,7 +160,10 @@ const StationSearch: React.FC<StationSearchProps> = ({
       </div>
 
       {error && (
-        <p className="mt-2 text-sm text-red-600">{error}</p>
+        <div className="mt-2 p-3 bg-red-50 text-red-700 rounded-md text-sm flex items-start">
+          <AlertCircle className="shrink-0 mt-0.5 mr-2" size={16} />
+          <div>{error}</div>
+        </div>
       )}
 
       {stationCandidates.length > 0 && (
