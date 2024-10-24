@@ -2,6 +2,7 @@ import React from 'react';
 import { MapPin, Star, DollarSign, Tag, Clock, Image as ImageIcon, ExternalLink, Search } from 'lucide-react';
 import { getKeywordLabel } from '../../utils/keywordOptions';
 import { useOperatingHours } from '../../composables/useOperatingHours';
+import { useAnalytics } from '../../hooks/useAnalytics';
 
 interface Restaurant {
   place_id: string;
@@ -25,11 +26,20 @@ interface RestaurantCardProps {
 
 const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
   const { isOpen } = useOperatingHours(restaurant.opening_hours?.weekday_text);
+  const { trackEvent } = useAnalytics();
 
   const openInGoogleMaps = (e: React.MouseEvent) => {
     e.stopPropagation();
     const searchQuery = encodeURIComponent(`${restaurant.name} ${restaurant.vicinity}`);
     const url = `https://www.google.com/maps/search/?api=1&query=${searchQuery}&query_place_id=${restaurant.place_id}`;
+    
+    // Track the event
+    trackEvent({
+      action: 'view_restaurant',
+      category: 'Restaurant',
+      label: restaurant.name
+    });
+
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
@@ -96,7 +106,6 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
           </span>
         </div>
 
-        {/* Matched Search Keywords */}
         {restaurant.searchKeywords && restaurant.searchKeywords.length > 0 && (
           <div className="mb-2">
             <div className="flex flex-wrap gap-1">
@@ -112,17 +121,18 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
           </div>
         )}
 
-        {/* Restaurant Types */}
-        <div className="flex flex-wrap mb-2">
-          {restaurant.types.map((type, index, array) => (
-            <span
-              key={index}
-              className="text-xs text-gray-600 rounded-full"
-            >
-              {type}{index < array.length - 1 && ', '}
-            </span>
-          ))}
-        </div>
+        {restaurant.types && restaurant.types.length > 0 && (
+          <div className="flex flex-wrap mb-2">
+            {restaurant.types.map((type, index, array) => (
+              <span
+                key={index}
+                className="text-xs text-gray-600 rounded-full"
+              >
+                {type}{index < array.length - 1 && ', '}
+              </span>
+            ))}
+          </div>
+        )}
 
         {restaurant.opening_hours?.weekday_text && (
           <div className="mt-2 border-t pt-2">
