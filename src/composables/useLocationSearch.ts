@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
 interface Location {
   lat: number;
@@ -10,8 +10,33 @@ export const useLocationSearch = () => {
   const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasPermissionError, setHasPermissionError] = useState(false);
 
-  const getCurrentLocation = () => {
+  const checkHttps = useCallback(() => {
+    if (typeof window !== 'undefined' && window.location.protocol !== 'https:') {
+      // localhost は例外として許可
+      if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        setError('位置情報の取得には HTTPS 接続が必要です。');
+        return false;
+      }
+    }
+    return true;
+  }, []);
+
+  const getCurrentLocation = useCallback(() => {
+    // HTTPS チェック
+    if (!checkHttps()) return;
+
+    // 既に権限エラーがある場合は、再度リクエストしない
+    if (hasPermissionError) {
+      return;
+    }
+
+    // 既にローディング中の場合は、重複リクエストを防ぐ
+    if (isLoading) {
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -25,8 +50,14 @@ export const useLocationSearch = () => {
       setIsLoading(false);
       switch (error.code) {
         case error.PERMISSION_DENIED:
+          setHasPermissionError(true);
           if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
-            setError('位置情報の利用が許可されていません。iOSの設定アプリから「Safari」→「位置情報」を「許可」に変更してください。');
+            setError(
+              '位置情報の利用が許可されていません。\n' +
+              '1. iOSの設定アプリを開く\n' +
+              '2. プライバシーとセキュリティ > 位置情報サービス\n' +
+              '3. Safari > 「このWebサイトの使用中のみ許可」を選択'
+            );
           } else {
             setError('位置情報の利用が許可されていません。ブラウザの設定から位置情報の利用を許可してください。');
           }
@@ -73,6 +104,8 @@ export const useLocationSearch = () => {
             address: result.formatted_address
           });
           setIsLoading(false);
+          setError(null);
+          setHasPermissionError(false);
         } catch (err) {
           handleError({
             code: 2,
@@ -86,13 +119,14 @@ export const useLocationSearch = () => {
       handleError,
       options
     );
-  };
+  }, [checkHttps, hasPermissionError, isLoading]);
 
   return {
     currentLocation,
     setCurrentLocation,
     isLoading,
     error,
+    hasPermissionError,
     getCurrentLocation
   };
 };

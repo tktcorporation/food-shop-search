@@ -35,7 +35,7 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
   error: searchError,
 }) => {
   const { station, setStation, stationCandidates, selectedStation, selectStation } = useStationSearch(initialStation);
-  const { currentLocation, isLoading: isLocationLoading, error: locationError, getCurrentLocation } = useLocationSearch();
+  const { currentLocation, isLoading: isLocationLoading, error: locationError, hasPermissionError, getCurrentLocation } = useLocationSearch();
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>(keyWordOptions.map(option => option.value));
   const [minRating, setMinRating] = useState<number>(3.5);
   const [minReviews, setMinReviews] = useState<number>(100);
@@ -70,10 +70,10 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
 
   // 検索方法が現在地に切り替わった時に自動的に位置情報を取得
   useEffect(() => {
-    if (searchMethod === 'location' && !currentLocation && !isLocationLoading) {
+    if (searchMethod === 'location' && !currentLocation && !isLocationLoading && !hasPermissionError) {
       getCurrentLocation();
     }
-  }, [searchMethod, currentLocation, isLocationLoading]);
+  }, [searchMethod, currentLocation, isLocationLoading, hasPermissionError]);
 
   const handleAddCustomKeyword = (keyword: string) => {
     if (!customKeywords.includes(keyword)) {
