@@ -27,9 +27,6 @@ const RADIUS_OPTIONS = [
   { value: 500, label: '500m' },
   { value: 800, label: '800m' },
   { value: 1000, label: '1km' },
-  { value: 2000, label: '2km' },
-  { value: 3000, label: '3km' },
-  { value: 5000, label: '5km' },
 ];
 
 const SearchFilters: React.FC<SearchFiltersProps> = ({

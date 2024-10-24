@@ -43,7 +43,7 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
   const [customKeywords, setCustomKeywords] = useState<string[]>([]);
   const [isOpenNow, setIsOpenNow] = useState(false);
   const [selectedPriceLevels, setSelectedPriceLevels] = useState<number[]>([1, 2, 3, 4]);
-  const [searchRadius, setSearchRadius] = useState<number>(800);
+  const [searchRadius, setSearchRadius] = useState<number>(100); // Changed default to 100m
   const [searchMethod, setSearchMethod] = useState<'location' | 'station'>('location');
 
   const handleSearch = () => {
@@ -68,7 +68,6 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
     }
   }, [selectedKeywords, minRating, minReviews, selectedStation, currentLocation, isOpenNow, searchRadius, selectedPriceLevels, searchMethod]);
 
-  // 検索方法が現在地に切り替わった時に自動的に位置情報を取得
   useEffect(() => {
     if (searchMethod === 'location' && !currentLocation && !isLocationLoading && !hasPermissionError) {
       getCurrentLocation();

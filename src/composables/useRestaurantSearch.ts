@@ -14,10 +14,11 @@ interface Restaurant {
     open_now: boolean;
     weekday_text?: string[];
   };
-  distance?: number; // Add distance field
+  distance?: number;
   geometry?: {
     location: google.maps.LatLng;
   };
+  business_status?: string;
 }
 
 interface Station {
@@ -85,7 +86,11 @@ const useRestaurantSearch = () => {
 
           service.nearbySearch(request, (results, status) => {
             if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-              resolve(results);
+              // Filter out permanently closed places
+              const activeResults = results.filter(place => 
+                place.business_status === 'OPERATIONAL' || place.business_status === undefined
+              );
+              resolve(activeResults);
             } else if (status === google.maps.places.PlacesServiceStatus.REQUEST_DENIED) {
               reject(new Error('Google Maps APIの認証に失敗しました。APIキーを確認してください。'));
             } else {
@@ -119,10 +124,15 @@ const useRestaurantSearch = () => {
           new Promise<Restaurant>((resolve, reject) => {
             service.getDetails({
               placeId: place.place_id,
-              fields: ['place_id', 'name', 'vicinity', 'rating', 'user_ratings_total', 'price_level', 'types', 'opening_hours', 'photos', 'geometry']
+              fields: ['place_id', 'name', 'vicinity', 'rating', 'user_ratings_total', 'price_level', 'types', 'opening_hours', 'photos', 'geometry', 'business_status']
             }, (result, status) => {
               if (status === google.maps.places.PlacesServiceStatus.OK && result) {
-                // Calculate distance if geometry is available
+                // Only include operational businesses
+                if (result.business_status && result.business_status !== 'OPERATIONAL') {
+                  resolve({} as Restaurant); // This will be filtered out later
+                  return;
+                }
+
                 let distance: number | undefined;
                 if (result.geometry?.location) {
                   distance = google.maps.geometry.spherical.computeDistanceBetween(
@@ -148,7 +158,8 @@ const useRestaurantSearch = () => {
                   distance,
                   geometry: result.geometry ? {
                     location: result.geometry.location
-                  } : undefined
+                  } : undefined,
+                  business_status: result.business_status
                 });
               } else if (status === google.maps.places.PlacesServiceStatus.REQUEST_DENIED) {
                 reject(new Error('Google Maps APIの認証に失敗しました。APIキーを確認してください。'));
@@ -162,7 +173,8 @@ const useRestaurantSearch = () => {
                   price_level: place.price_level || 1,
                   types: place.types || [],
                   searchKeywords: place.searchKeywords,
-                  opening_hours: undefined
+                  opening_hours: undefined,
+                  business_status: place.business_status
                 });
               }
             });
@@ -170,21 +182,25 @@ const useRestaurantSearch = () => {
         )
       );
 
-      const filteredResults = detailedResults.filter(place => {
-        const meetsBasicCriteria = 
-          place.rating >= minRating &&
-          place.user_ratings_total >= minReviews &&
-          selectedPriceLevels.includes(place.price_level);
+      const filteredResults = detailedResults
+        .filter(place => 
+          // Filter out empty results and non-operational businesses
+          Object.keys(place).length > 0 &&
+          (place.business_status === 'OPERATIONAL' || place.business_status === undefined)
+        )
+        .filter(place => {
+          const meetsBasicCriteria = 
+            place.rating >= minRating &&
+            place.user_ratings_total >= minReviews &&
+            selectedPriceLevels.includes(place.price_level);
 
-        // Additional distance filtering for small radius searches
-        if (searchRadius <= 100 && place.distance !== undefined) {
-          return meetsBasicCriteria && place.distance <= searchRadius;
-        }
+          if (searchRadius <= 100 && place.distance !== undefined) {
+            return meetsBasicCriteria && place.distance <= searchRadius;
+          }
 
-        return meetsBasicCriteria;
-      });
+          return meetsBasicCriteria;
+        });
 
-      // Sort by distance if available
       const sortedResults = filteredResults.sort((a, b) => {
         if (a.distance === undefined && b.distance === undefined) return 0;
         if (a.distance === undefined) return 1;
