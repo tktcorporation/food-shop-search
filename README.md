@@ -156,9 +156,22 @@ npm run build
 - `/project:api-debug` - Google Maps API関連の問題デバッグ
 - `/project:add-feature <機能名>` - 新機能追加時のチェックリスト実行
 
+### プロンプトテンプレート
+
+`.claude/prompts/` ディレクトリに効果的なコミュニケーションのためのテンプレートが用意されています：
+
+- **feature-implementation.md** - 新機能実装の依頼テンプレート
+- **bug-fix.md** - バグ修正の依頼テンプレート（思考プロセス付き）
+- **code-review.md** - コードレビューの依頼テンプレート
+- **refactoring.md** - リファクタリングの依頼テンプレート
+- **README.md** - テンプレートの使い方とベストプラクティス
+
+これらのテンプレートは、XMLタグでの構造化、段階的思考、Few-shot examplesなど、
+Anthropicの最新プロンプトエンジニアリングベストプラクティスに基づいています。
+
 ### プロジェクト設定
 
-- **CLAUDE.md** - プロジェクト固有の開発ガイドライン
+- **CLAUDE.md** - プロジェクト固有の開発ガイドライン（コンテキスト最適化含む）
 - **.mcp.json** - MCP (Model Context Protocol) サーバー設定
 - **.claude/settings.json** - チーム共有の権限設定
 
