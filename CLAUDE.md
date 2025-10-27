@@ -11,6 +11,194 @@
 - **地図API**: Google Maps API
 - **状態管理**: React Hooks
 
+## 環境管理
+
+IMPORTANT: このプロジェクトは **mise** を使用してNode.jsバージョンを管理しています。
+
+```bash
+# 推奨セットアップ
+mise install        # Node.js 20 LTSを自動インストール
+npm install         # 依存関係のインストール
+npm run dev         # 開発サーバー起動
+```
+
+## よく使うコマンド
+
+### NPM コマンド
+
+```bash
+# 開発
+npm run dev         # 開発サーバー起動 (http://localhost:5173)
+npm run build       # 本番ビルド
+npm run preview     # ビルドしたアプリをプレビュー
+npm run lint        # ESLintでコードチェック
+
+# Git ワークフロー
+git status          # 変更状況を確認
+git add .           # すべての変更をステージング
+git commit -m "..." # コミット
+git push            # リモートにプッシュ
+
+# 依存関係の管理
+npm install <package>       # パッケージのインストール
+npm install <package> --save-dev  # 開発依存関係のインストール
+npm outdated                # 古いパッケージの確認
+```
+
+### Claude Code カスタムコマンド
+
+`.claude/commands/` ディレクトリに以下のカスタムコマンドが用意されています：
+
+- `/project:dev-check` - 開発環境のセットアップと動作確認を実施
+- `/project:build-check` - 本番ビルド前の総合チェックを実施
+- `/project:api-debug` - Google Maps API関連の問題をデバッグ
+- `/project:add-feature <機能名>` - 新機能追加時のチェックリストを実行
+
+これらのコマンドは繰り返し実行する作業を効率化します。
+
+### プロンプトテンプレート
+
+IMPORTANT: **効果的なコミュニケーションのため、`.claude/prompts/` ディレクトリのテンプレートを活用してください。**
+
+利用可能なテンプレート：
+- **feature-implementation.md** - 新機能実装時（XMLタグで構造化）
+- **bug-fix.md** - バグ修正時（段階的思考を活用）
+- **code-review.md** - コードレビュー依頼時（多角的な分析）
+- **refactoring.md** - リファクタリング時（段階的アプローチ）
+- **README.md** - テンプレートの使い方とベストプラクティス
+
+これらのテンプレートは、Anthropicの最新プロンプトエンジニアリングベストプラクティス
+（コンテキストエンジニアリング、XMLタグ構造化、思考タグ、Few-shot examples）に基づいています。
+
+## Claude Code とのコミュニケーション最適化
+
+このプロジェクトでは、Claude Codeと効果的にコミュニケーションするためのベストプラクティスを採用しています。
+
+### コンテキストエンジニアリングの原則
+
+IMPORTANT: **コンテキストは有限なリソースです**。以下の原則に従って最適化してください：
+
+> "望ましい結果の可能性を最大化する、最小限の高シグナルトークンのセットを見つける"
+
+#### 1. XMLタグで構造化
+
+Claudeはプロンプト内のXMLタグを認識して処理するため、明確な構造化が可能です：
+
+```markdown
+<instructions>
+この機能を実装してください：
+- レストラン検索APIを呼び出す
+- 結果をキャッシュする
+- エラーハンドリングを実装する
+</instructions>
+
+<context>
+現在のキャッシュ実装は src/utils/cacheManager.ts にあります。
+APIキーは環境変数 VITE_GOOGLE_MAPS_API_KEY から取得します。
+</context>
+
+<constraints>
+- キャッシュの有効期限は24時間
+- エラー時はユーザーフレンドリーなメッセージを表示
+</constraints>
+```
+
+#### 2. 段階的思考（Step-by-Step Thinking）
+
+複雑なタスクでは、Claudeに段階的に考えるよう指示すると精度が40%向上します：
+
+```markdown
+以下のバグを修正してください。まず <thinking> タグ内で：
+1. 問題の根本原因を分析
+2. 修正方法を検討
+3. 影響範囲を評価
+
+その後、<answer> タグ内で修正コードを提供してください。
+```
+
+#### 3. Few-Shot Examples（少数例示）
+
+期待する動作を示すには、網羅的なリストではなく、代表的な例を2-3個提示：
+
+```markdown
+以下のパターンでコミットメッセージを作成してください：
+
+<example>
+feat: Google Maps APIキャッシュ機能を追加
+
+- cacheManager.tsに24時間キャッシュを実装
+- API呼び出し回数を削減してコスト最適化
+</example>
+
+<example>
+fix: レストラン検索で営業時間フィルターが機能しない問題を修正
+
+- useOperatingHours.tsのタイムゾーン処理を修正
+- 深夜営業の判定ロジックを改善
+</example>
+```
+
+### 効果的なコンテキスト管理戦略
+
+#### 動的コンテキスト検索
+
+ファイルパス、関数名、変数名などの軽量な識別子を使用：
+
+```markdown
+❌ 悪い例：
+「src/components/Map.tsx の全コードをここに貼り付けて...」
+
+✅ 良い例：
+「src/components/Map.tsx:45-67 の useEffect フックを確認して、
+Google Maps APIの初期化ロジックを最適化してください」
+```
+
+#### ファイル構造をシグナルとして活用
+
+```markdown
+- composables/ → ビジネスロジックに関連
+- hooks/ → React固有の機能
+- utils/ → 汎用ユーティリティ
+
+この命名規則に従って、新しいレストラン検索ロジックを
+適切なディレクトリに配置してください。
+```
+
+### コンテキスト最適化のチェックリスト
+
+Claude Codeと対話する際は以下を意識してください：
+
+- [ ] **明確な指示**: 曖昧さを避け、具体的な要件を記述
+- [ ] **コンテキストの動機**: なぜその変更が必要か説明
+- [ ] **構造化**: XMLタグやMarkdownでセクション分け
+- [ ] **関連ファイルのパス**: 具体的なファイルパスと行番号を提示
+- [ ] **期待する動作**: 良い例・悪い例で明示
+- [ ] **制約条件**: 守るべきルールや制限を明記
+
+### コマンド実行時のベストプラクティス
+
+カスタムコマンドを効果的に使用するために：
+
+```bash
+# ❌ 悪い例：情報不足
+/project:add-feature 検索機能
+
+# ✅ 良い例：具体的で明確
+/project:add-feature 駅名の曖昧検索機能（東京→東京駅、新宿→新宿駅など）
+```
+
+これらのコマンドは繰り返し実行する作業を効率化します。
+
+## Git ブランチ規則
+
+IMPORTANT: このプロジェクトでは以下のブランチ命名規則を使用してください。
+
+- **feature/**: 新機能の開発 (例: `feature/add-favorite-restaurants`)
+- **fix/**: バグ修正 (例: `fix/map-rendering-issue`)
+- **refactor/**: リファクタリング (例: `refactor/cache-manager`)
+- **docs/**: ドキュメントの更新 (例: `docs/update-readme`)
+- **claude/**: Claude Codeによる自動生成ブランチ (例: `claude/setup-mise-environment-*`)
+
 ## プロジェクト構造
 
 ```
@@ -50,7 +238,10 @@ src/
 
 ### 2. Google Maps API の使用
 
+IMPORTANT: **APIキーの取り扱いに注意してください！**
+
 - **APIキー**: `.env`ファイルの`VITE_GOOGLE_MAPS_API_KEY`で管理
+- **セキュリティ**: `.env`ファイルは絶対にGitにコミットしないこと（`.gitignore`に含まれています）
 - **ライブラリ**: `@react-google-maps/api`を使用
 - **必要なライブラリ**: `places`, `geometry`
 

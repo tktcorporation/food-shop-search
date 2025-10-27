@@ -30,9 +30,10 @@
 
 ## 前提条件
 
-- Node.js (v16以上推奨)
+- Node.js (v18以上推奨、v20 LTS推奨)
 - npm または yarn
 - Google Maps API キー
+- (オプション) [mise](https://mise.jdx.dev/) - ツールバージョン管理
 
 ## セットアップ手順
 
@@ -43,13 +44,33 @@ git clone https://github.com/tktcorporation/food-shop-search.git
 cd food-shop-search
 ```
 
-### 2. 依存関係のインストール
+### 2. Node.js環境のセットアップ
+
+#### オプションA: miseを使用する場合（推奨）
+
+[mise](https://mise.jdx.dev/)を使用すると、プロジェクトで指定されたNode.jsバージョンを自動的に使用できます。
+
+```bash
+# miseのインストール（まだの場合）
+curl https://mise.run | sh
+
+# プロジェクトで指定されたNode.jsバージョンをインストール・有効化
+mise install
+```
+
+miseは `.mise.toml` ファイルを読み込み、Node.js 20 LTSを自動的にインストールして使用します。
+
+#### オプションB: 手動でNode.jsをインストールする場合
+
+Node.js v18以上（v20 LTS推奨）を[公式サイト](https://nodejs.org/)からインストールするか、nvmなどのバージョンマネージャーを使用してください。
+
+### 3. 依存関係のインストール
 
 ```bash
 npm install
 ```
 
-### 3. 環境変数の設定
+### 4. 環境変数の設定
 
 `.env.example` をコピーして `.env` ファイルを作成します：
 
@@ -75,7 +96,7 @@ VITE_GOOGLE_MAPS_API_KEY=your_actual_api_key_here
    - Geocoding API
 6. 作成したAPIキーを `.env` ファイルに貼り付け
 
-### 4. 開発サーバーの起動
+### 5. 開発サーバーの起動
 
 ```bash
 npm run dev
@@ -121,6 +142,40 @@ npm run build
 ## ライセンス
 
 このプロジェクトはプライベートプロジェクトです。
+
+## Claude Code との開発
+
+このプロジェクトは[Claude Code](https://claude.com/claude-code)に最適化されています。
+
+### カスタムコマンド
+
+`.claude/commands/` ディレクトリに以下のカスタムコマンドが用意されています：
+
+- `/project:dev-check` - 開発環境のセットアップと動作確認
+- `/project:build-check` - 本番ビルド前の総合チェック
+- `/project:api-debug` - Google Maps API関連の問題デバッグ
+- `/project:add-feature <機能名>` - 新機能追加時のチェックリスト実行
+
+### プロンプトテンプレート
+
+`.claude/prompts/` ディレクトリに効果的なコミュニケーションのためのテンプレートが用意されています：
+
+- **feature-implementation.md** - 新機能実装の依頼テンプレート
+- **bug-fix.md** - バグ修正の依頼テンプレート（思考プロセス付き）
+- **code-review.md** - コードレビューの依頼テンプレート
+- **refactoring.md** - リファクタリングの依頼テンプレート
+- **README.md** - テンプレートの使い方とベストプラクティス
+
+これらのテンプレートは、XMLタグでの構造化、段階的思考、Few-shot examplesなど、
+Anthropicの最新プロンプトエンジニアリングベストプラクティスに基づいています。
+
+### プロジェクト設定
+
+- **CLAUDE.md** - プロジェクト固有の開発ガイドライン（コンテキスト最適化含む）
+- **.mcp.json** - MCP (Model Context Protocol) サーバー設定
+- **.claude/settings.json** - チーム共有の権限設定
+
+個人用の設定は `CLAUDE.local.md` ファイルを作成してください（Gitには含まれません）。
 
 ## 開発
 

@@ -1,0 +1,6 @@
+[tools]
+node = "20"
+
+[env]
+# プロジェクト固有の環境変数をここに追加できます
+# 例: PATH = "{{config_root}}/bin:{{env.PATH}}"

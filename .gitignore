@@ -25,3 +25,7 @@ dist-ssr
 
 # Environment variables
 .env
+
+# Claude Code personal settings
+CLAUDE.local.md
+.claude/CLAUDE.local.md
