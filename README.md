@@ -30,9 +30,10 @@
 
 ## 前提条件
 
-- Node.js (v16以上推奨)
+- Node.js (v18以上推奨、v20 LTS推奨)
 - npm または yarn
 - Google Maps API キー
+- (オプション) [mise](https://mise.jdx.dev/) - ツールバージョン管理
 
 ## セットアップ手順
 
@@ -43,13 +44,33 @@ git clone https://github.com/tktcorporation/food-shop-search.git
 cd food-shop-search
 ```
 
-### 2. 依存関係のインストール
+### 2. Node.js環境のセットアップ
+
+#### オプションA: miseを使用する場合（推奨）
+
+[mise](https://mise.jdx.dev/)を使用すると、プロジェクトで指定されたNode.jsバージョンを自動的に使用できます。
+
+```bash
+# miseのインストール（まだの場合）
+curl https://mise.run | sh
+
+# プロジェクトで指定されたNode.jsバージョンをインストール・有効化
+mise install
+```
+
+miseは `.mise.toml` ファイルを読み込み、Node.js 20 LTSを自動的にインストールして使用します。
+
+#### オプションB: 手動でNode.jsをインストールする場合
+
+Node.js v18以上（v20 LTS推奨）を[公式サイト](https://nodejs.org/)からインストールするか、nvmなどのバージョンマネージャーを使用してください。
+
+### 3. 依存関係のインストール
 
 ```bash
 npm install
 ```
 
-### 3. 環境変数の設定
+### 4. 環境変数の設定
 
 `.env.example` をコピーして `.env` ファイルを作成します：
 
@@ -75,7 +96,7 @@ VITE_GOOGLE_MAPS_API_KEY=your_actual_api_key_here
    - Geocoding API
 6. 作成したAPIキーを `.env` ファイルに貼り付け
 
-### 4. 開発サーバーの起動
+### 5. 開発サーバーの起動
 
 ```bash
 npm run dev
