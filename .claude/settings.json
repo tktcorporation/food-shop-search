@@ -1,0 +1,18 @@
+{
+  "allowedTools": [
+    "Read",
+    "Write",
+    "Edit",
+    "Glob",
+    "Grep",
+    "Bash(npm:*)",
+    "Bash(git:*)",
+    "Bash(mise:*)",
+    "Bash(node:*)",
+    "Bash(ls:*)",
+    "Bash(cat:*)",
+    "Bash(pwd:*)",
+    "Bash(echo:*)"
+  ],
+  "description": "このプロジェクトのチーム共有権限設定。開発に必要な基本的なツールへのアクセスを許可します。"
+}

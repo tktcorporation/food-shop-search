@@ -1,0 +1,15 @@
+{
+  "$schema": "https://modelcontextprotocol.io/schemas/mcp.json",
+  "mcpServers": {
+    // プロジェクト固有のMCPサーバーをここに追加します
+    // 例:
+    // "puppeteer": {
+    //   "command": "npx",
+    //   "args": ["-y", "@modelcontextprotocol/server-puppeteer"]
+    // },
+    // "fetch": {
+    //   "command": "npx",
+    //   "args": ["-y", "@modelcontextprotocol/server-fetch"]
+    // }
+  }
+}

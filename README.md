@@ -143,6 +143,27 @@ npm run build
 
 このプロジェクトはプライベートプロジェクトです。
 
+## Claude Code との開発
+
+このプロジェクトは[Claude Code](https://claude.com/claude-code)に最適化されています。
+
+### カスタムコマンド
+
+`.claude/commands/` ディレクトリに以下のカスタムコマンドが用意されています：
+
+- `/project:dev-check` - 開発環境のセットアップと動作確認
+- `/project:build-check` - 本番ビルド前の総合チェック
+- `/project:api-debug` - Google Maps API関連の問題デバッグ
+- `/project:add-feature <機能名>` - 新機能追加時のチェックリスト実行
+
+### プロジェクト設定
+
+- **CLAUDE.md** - プロジェクト固有の開発ガイドライン
+- **.mcp.json** - MCP (Model Context Protocol) サーバー設定
+- **.claude/settings.json** - チーム共有の権限設定
+
+個人用の設定は `CLAUDE.local.md` ファイルを作成してください（Gitには含まれません）。
+
 ## 開発
 
 [Edit in StackBlitz next generation editor ⚡️](https://stackblitz.com/~/github.com/tktcorporation/food-shop-search)

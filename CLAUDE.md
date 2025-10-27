@@ -11,6 +11,61 @@
 - **地図API**: Google Maps API
 - **状態管理**: React Hooks
 
+## 環境管理
+
+IMPORTANT: このプロジェクトは **mise** を使用してNode.jsバージョンを管理しています。
+
+```bash
+# 推奨セットアップ
+mise install        # Node.js 20 LTSを自動インストール
+npm install         # 依存関係のインストール
+npm run dev         # 開発サーバー起動
+```
+
+## よく使うコマンド
+
+### NPM コマンド
+
+```bash
+# 開発
+npm run dev         # 開発サーバー起動 (http://localhost:5173)
+npm run build       # 本番ビルド
+npm run preview     # ビルドしたアプリをプレビュー
+npm run lint        # ESLintでコードチェック
+
+# Git ワークフロー
+git status          # 変更状況を確認
+git add .           # すべての変更をステージング
+git commit -m "..." # コミット
+git push            # リモートにプッシュ
+
+# 依存関係の管理
+npm install <package>       # パッケージのインストール
+npm install <package> --save-dev  # 開発依存関係のインストール
+npm outdated                # 古いパッケージの確認
+```
+
+### Claude Code カスタムコマンド
+
+`.claude/commands/` ディレクトリに以下のカスタムコマンドが用意されています：
+
+- `/project:dev-check` - 開発環境のセットアップと動作確認を実施
+- `/project:build-check` - 本番ビルド前の総合チェックを実施
+- `/project:api-debug` - Google Maps API関連の問題をデバッグ
+- `/project:add-feature <機能名>` - 新機能追加時のチェックリストを実行
+
+これらのコマンドは繰り返し実行する作業を効率化します。
+
+## Git ブランチ規則
+
+IMPORTANT: このプロジェクトでは以下のブランチ命名規則を使用してください。
+
+- **feature/**: 新機能の開発 (例: `feature/add-favorite-restaurants`)
+- **fix/**: バグ修正 (例: `fix/map-rendering-issue`)
+- **refactor/**: リファクタリング (例: `refactor/cache-manager`)
+- **docs/**: ドキュメントの更新 (例: `docs/update-readme`)
+- **claude/**: Claude Codeによる自動生成ブランチ (例: `claude/setup-mise-environment-*`)
+
 ## プロジェクト構造
 
 ```
@@ -50,7 +105,10 @@ src/
 
 ### 2. Google Maps API の使用
 
+IMPORTANT: **APIキーの取り扱いに注意してください！**
+
 - **APIキー**: `.env`ファイルの`VITE_GOOGLE_MAPS_API_KEY`で管理
+- **セキュリティ**: `.env`ファイルは絶対にGitにコミットしないこと（`.gitignore`に含まれています）
 - **ライブラリ**: `@react-google-maps/api`を使用
 - **必要なライブラリ**: `places`, `geometry`
 
