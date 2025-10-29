@@ -2,28 +2,33 @@
 description: 開発環境のセットアップと動作確認を実施
 ---
 
-開発環境が正しくセットアップされているか確認してください：
+<instructions>
+開発環境が正しくセットアップされているか確認してください。
+</instructions>
 
-1. **Node.jsバージョンの確認**
-   - `node --version` を実行してNode.js 18以上（推奨20）であることを確認
-   - miseを使用している場合は `mise current` で確認
+<checklist>
+## 確認項目
 
-2. **依存関係のチェック**
-   - `npm list` でインストールされているパッケージを確認
-   - 問題がある場合は `npm install` を再実行
+1. **Node.jsバージョン**
+   - `node --version` → Node.js 18以上（推奨20）
+   - miseの場合: `mise current`
 
-3. **環境変数の確認**
-   - `.env` ファイルが存在するか確認
-   - `VITE_GOOGLE_MAPS_API_KEY` が設定されているか確認
-   - APIキーが有効であることを確認
+2. **依存関係**
+   - `npm list` → エラーがないか確認
+   - 問題があれば `npm install`
 
-4. **開発サーバーの起動テスト**
-   - `npm run dev` を実行
-   - ブラウザで http://localhost:5173 にアクセス
+3. **環境変数**
+   - `.env` ファイル存在確認
+   - `VITE_GOOGLE_MAPS_API_KEY` 設定確認
+
+4. **開発サーバー**
+   - `npm run dev` → http://localhost:5173
    - エラーがないか確認
 
-5. **Lintチェック**
-   - `npm run lint` を実行
-   - エラーや警告がないか確認
+5. **Lint**
+   - `npm run lint` → エラー/警告なし
+</checklist>
 
-すべて問題なければ、開発を開始できます！
+<success_criteria>
+すべて問題なければ、開発を開始できます。
+</success_criteria>

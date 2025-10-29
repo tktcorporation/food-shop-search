@@ -1,258 +1,181 @@
 # プロンプトテンプレート集
 
-このディレクトリには、Claude Codeと効果的にコミュニケーションするためのプロンプトテンプレートが含まれています。
+<overview>
+このディレクトリには、Claude Codeと効果的にコミュニケーションするための
+プロンプトテンプレートが含まれています。
+
+これらはAnthropic最新ベストプラクティス（コンテキストエンジニアリング、
+XMLタグ構造化、思考タグ、Few-shot examples）に基づいています。
+</overview>
+
+---
 
 ## 📚 利用可能なテンプレート
 
-### 1. [feature-implementation.md](./feature-implementation.md)
-新機能の実装を依頼する際のテンプレート
+<templates>
+### feature-implementation.md
+新機能の実装依頼時に使用
 
-**使用するタイミング：**
-- 新しい機能やコンポーネントを追加する
-- 既存機能を拡張する
-- ビジネスロジックを実装する
+**使用タイミング**: 新機能追加、既存機能拡張、ビジネスロジック実装
 
-**特徴：**
-- XMLタグで構造化された明確な指示
-- コンテキストと制約条件の明示
-- 期待する動作の具体例
-- 実装後のテスト計画
+**特徴**: XMLタグ構造化、コンテキスト明示、期待動作の具体例
 
-### 2. [bug-fix.md](./bug-fix.md)
-バグ修正を依頼する際のテンプレート
+### bug-fix.md
+バグ修正依頼時に使用
 
-**使用するタイミング：**
-- 既存機能が正しく動作しない
-- エラーが発生している
-- 予期しない動作がある
+**使用タイミング**: 既存機能の不具合、エラー発生、予期しない動作
 
-**特徴：**
-- 段階的思考（thinking tags）を活用
-- 再現手順と期待動作の明確化
-- 根本原因の分析を促す
-- 修正後の検証項目
+**特徴**: 段階的思考（thinking tags）、再現手順、根本原因分析
 
-### 3. [code-review.md](./code-review.md)
-コードレビューを依頼する際のテンプレート
+### code-review.md
+コードレビュー依頼時に使用
 
-**使用するタイミング：**
-- プルリクエスト作成前
-- コードの品質チェック
-- リファクタリングの妥当性確認
+**使用タイミング**: PR作成前、コード品質チェック、リファクタリング妥当性確認
 
-**特徴：**
-- 複数の観点からのレビュー
-- プロジェクト規約との整合性チェック
-- 重要度別の改善提案
-- 代替実装案の提示
+**特徴**: 多角的分析、プロジェクト規約整合性、重要度別改善提案
 
-## 🎯 テンプレートの使い方
+### refactoring.md
+リファクタリング依頼時に使用
 
+**使用タイミング**: コード改善、構造最適化、パフォーマンス向上
+
+**特徴**: 段階的アプローチ、影響範囲評価、テスト計画
+</templates>
+
+---
+
+## 🎯 効果的な使い方
+
+<usage_guide>
 ### 基本的な使用方法
 
-1. **テンプレートをコピー**
-   ```bash
-   # 新機能実装の場合
-   cat .claude/prompts/feature-implementation.md
-   ```
-
-2. **プレースホルダーを埋める**
+1. テンプレートを参照（`cat .claude/prompts/feature-implementation.md`）
+2. プレースホルダーを実際の値で置換
    - `[機能の説明]` → 具体的な機能名
    - `[ファイルパス]` → 実際のファイルパス
-   - `[要件1]` → 具体的な要件
+3. Claude Codeに送信
 
-3. **Claude Codeに送信**
-   - テンプレートをそのままメッセージとして送信
-   - または、テンプレートを参考に自分の言葉で依頼
+### ベストプラクティス
 
-### 効果的な使い方のコツ
-
-#### ✅ DO（推奨）
-
-- **具体的に記述する**
-  ```markdown
-  ❌ 検索機能を実装してください
-  ✅ 駅名の曖昧検索機能を実装してください（「東京」→「東京駅」への自動変換）
-  ```
-
-- **ファイルパスを明示する**
-  ```markdown
-  ❌ 検索ロジックを修正してください
-  ✅ src/composables/useStationSearch.ts:42-58 の検索ロジックを修正してください
-  ```
-
-- **期待する動作を例示する**
-  ```markdown
-  <example>
-  入力: "東京"
-  期待: 東京駅として検索 → 周辺500mのレストランを表示
-  </example>
-  ```
-
-- **制約条件を明確にする**
-  ```markdown
-  <constraints>
-  - 既存のキャッシュ機構を壊さない
-  - API呼び出し回数を増やさない
-  - TypeScript strict mode を維持
-  </constraints>
-  ```
-
-#### ❌ DON'T（非推奨）
-
-- **曖昧な指示**
-  ```markdown
-  ❌ バグを直してください
-  ❌ もっと良くしてください
-  ❌ 何か問題があるので見てください
-  ```
-
-- **コンテキスト不足**
-  ```markdown
-  ❌ この機能を追加して（どの機能？どこに？）
-  ❌ エラーが出ます（何のエラー？どこで？）
-  ```
-
-- **過剰な情報**
-  ```markdown
-  ❌ ファイル全体のコードを貼り付けて長文で説明（必要な部分だけを示す）
-  ```
-
-## 🔧 プロンプトのカスタマイズ
-
-### プロジェクト固有の情報を追加
-
-テンプレートをプロジェクトに合わせてカスタマイズできます：
-
+✅ **推奨**:
 ```markdown
-<project_context>
-このプロジェクトの特徴：
-- グルメスポット検索アプリ
-- Google Maps API を使用
-- React 18 + TypeScript + Vite
-- キャッシュマネージャーで API 呼び出しを最適化
+<instructions>
+駅名の曖昧検索機能を実装してください（「東京」→「東京駅」への自動変換）
+</instructions>
 
-重要なファイル：
-- src/utils/cacheManager.ts: キャッシュ管理
-- src/composables/: ビジネスロジック
-- src/components/: UI コンポーネント
-</project_context>
+<context>
+src/composables/useStationSearch.ts:42-58 の検索ロジック
+src/utils/stationShortcuts.ts に駅名マッピング定義済み
+</context>
+
+<constraints>
+- 既存のキャッシュ機構を維持
+- API呼び出し回数を増やさない
+</constraints>
+
+<expected_behavior>
+<example>
+入力: "東京" → 出力: "東京駅として検索"
+</example>
+</expected_behavior>
 ```
 
-### よく使う制約条件をテンプレート化
+❌ **非推奨**:
+```markdown
+バグを直してください（曖昧）
+もっと良くしてください（不明確）
+全コードを貼り付け（過剰な情報）
+```
+</usage_guide>
+
+---
+
+## 🔧 コンテキスト最適化原則
+
+<optimization_principles>
+> "望ましい結果の可能性を最大化する、最小限の高シグナルトークンのセットを見つける"
+
+### 重要な原則
+
+1. **明確な指示** - 曖昧さを避け、具体的な要件を記述
+2. **コンテキストの動機** - なぜその変更が必要か説明
+3. **構造化** - XMLタグやMarkdownでセクション分け
+4. **ファイルパス指定** - 具体的なパスと行番号（例: `src/App.tsx:45-67`）
+5. **期待動作の例示** - 良い例・悪い例で明示（2-3個の代表例）
+6. **制約条件** - 守るべきルールを明記
+
+### ファイルパス参照の推奨方法
 
 ```markdown
-<standard_constraints>
-このプロジェクトの標準制約：
-- TypeScript strict mode 必須
-- any 型の使用禁止
-- エラーハンドリング必須
-- Google Maps API 呼び出しはキャッシュ必須
-- ユーザーフレンドリーなエラーメッセージ
-- モバイルファーストのレスポンシブデザイン
-</standard_constraints>
+❌ 悪い例: 「src/components/Map.tsx の全コードを貼り付けて...」
+✅ 良い例: 「src/components/Map.tsx:45-67 の useEffect フックを確認」
 ```
 
-## 📖 高度なテクニック
+### Few-Shot Examples（少数例示）
 
-### 1. 段階的思考（Thinking Tags）の活用
-
-複雑なタスクでは、Claudeに段階的に考えさせることで精度が向上します：
-
-```markdown
-まず <thinking> タグ内で以下を分析してください：
-1. 問題の根本原因
-2. 考えられる解決策とそれぞれの長所・短所
-3. 影響範囲の評価
-4. 推奨アプローチとその理由
-
-その後、<answer> タグ内で実装してください。
-```
-
-### 2. Few-Shot Examples（少数例示）
-
-期待する動作を2-3個の代表的な例で示す：
+網羅的なリストではなく、代表的な例を2-3個提示：
 
 ```markdown
 <example>
 良いコミットメッセージ:
 "feat: 駅名曖昧検索機能を追加
 
-- stationShortcuts.ts にマッピングを追加
-- useStationSearch.ts で自動変換ロジックを実装
-- 「東京」→「東京駅」などの変換に対応"
+- stationShortcuts.ts にマッピング追加
+- useStationSearch.ts で自動変換実装"
 </example>
 
 <example>
-悪いコミットメッセージ:
-"update"
-"fix bug"
-"WIP"
+悪いコミットメッセージ: "update", "fix bug", "WIP"
 </example>
 ```
+</optimization_principles>
 
-### 3. XMLタグでの構造化
+---
 
-Claudeが認識しやすい構造：
+## 📖 高度なテクニック
+
+<advanced_techniques>
+### 段階的思考（Thinking Tags）
+
+複雑なタスクでは精度が40%向上：
+
+```markdown
+まず <thinking> タグ内で：
+1. 問題の根本原因を分析
+2. 解決策の検討（長所・短所）
+3. 影響範囲の評価
+
+その後、<answer> タグ内で実装
+```
+
+### XMLタグでの構造化
 
 ```markdown
 <task>
-  <goal>最終的に達成したいこと</goal>
+  <goal>最終目標</goal>
   <approach>アプローチ方法</approach>
-  <deliverables>成果物</deliverables>
 </task>
 
 <resources>
   <file path="src/App.tsx">メインコンポーネント</file>
-  <documentation url="https://example.com">参考ドキュメント</documentation>
 </resources>
 
 <success_criteria>
-  <criterion>テストがすべて通る</criterion>
-  <criterion>TypeScriptエラーがない</criterion>
-  <criterion>ビルドが成功する</criterion>
+  <criterion>テストが通る</criterion>
+  <criterion>TypeScriptエラーなし</criterion>
 </success_criteria>
 ```
-
-## 🎓 学習リソース
-
-より深く学びたい場合は、以下のドキュメントを参照してください：
-
-- **CLAUDE.md**: プロジェクト固有のコンテキストエンジニアリングガイド
-- [Anthropic: Effective Context Engineering](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)
-- [Claude Code Best Practices](https://www.anthropic.com/engineering/claude-code-best-practices)
-
-## 💡 ヒント
-
-### コンテキストの原則
-
-> "望ましい結果の可能性を最大化する、最小限の高シグナルトークンのセットを見つける"
-
-- **必要十分な情報**: 多すぎず、少なすぎず
-- **構造化**: XMLタグやMarkdownで整理
-- **具体性**: 曖昧さを排除
-- **例示**: 良い例・悪い例で明示
-
-### プロンプトの反復改善
-
-1. **初回**: テンプレートをそのまま使用
-2. **フィードバック**: 結果を確認して改善点を特定
-3. **調整**: プロンプトを微調整
-4. **再実行**: 改善されたプロンプトで再試行
-
-プロンプトエンジニアリングは反復プロセスです。最初から完璧を目指すのではなく、徐々に改善していきましょう。
-
-## 🤝 チームでの活用
-
-これらのテンプレートはチーム全体で共有されています：
-
-- **一貫性**: 全員が同じ形式で依頼できる
-- **品質**: ベストプラクティスが組み込まれている
-- **効率**: テンプレートをコピーして即使える
-- **学習**: 良い依頼の仕方を学べる
-
-新しいメンバーがジョインした際は、まずこのREADMEを読んでもらいましょう！
+</advanced_techniques>
 
 ---
 
-**質問や改善提案がある場合は、プロジェクトのIssueで共有してください。**
+## 🎓 参考リソース
+
+- **CLAUDE.md** - プロジェクト全体のガイド
+- **.claude/context/** - プロジェクト固有のコンテキスト
+- [Anthropic: Effective Context Engineering](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)
+- [Claude Code Best Practices](https://www.anthropic.com/engineering/claude-code-best-practices)
+
+---
+
+**質問や改善提案**: プロジェクトのIssueで共有してください
