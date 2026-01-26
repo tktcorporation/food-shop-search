@@ -1,10 +1,24 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useCache, CACHE_CONFIGS } from '../utils/cacheManager';
 import { calculateOperatingHours } from '../utils/operatingHours';
 import { Restaurant } from './useRestaurantSearch/types';
 import { Station } from './useStationSearch/types';
 
-// ... (前のインターフェース定義は同じ)
+// getDetailsの最大呼び出し数（コスト制御）
+const MAX_DETAILS_REQUESTS = 20;
+
+interface Location {
+  lat: number;
+  lng: number;
+}
+
+interface FilterParams {
+  minRating: number;
+  minReviews: number;
+  isOpenNow: boolean;
+  searchRadius: number;
+  selectedPriceLevels: number[];
+}
 
 const useRestaurantSearch = () => {
   const [allRestaurants, setAllRestaurants] = useState<Restaurant[]>([]);
@@ -12,8 +26,12 @@ const useRestaurantSearch = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // 最後のフィルターパラメータを保持（applyFilters用）
+  const lastFilterParamsRef = useRef<FilterParams | null>(null);
+
   const searchCache = useCache<google.maps.places.PlaceResult[]>(CACHE_CONFIGS.RESTAURANT_SEARCH);
   const detailsCache = useCache<Restaurant>(CACHE_CONFIGS.RESTAURANT_DETAILS);
+  const geocodeForwardCache = useCache<{ lat: number; lng: number }>(CACHE_CONFIGS.GEOCODE_FORWARD);
 
   const generateCacheKey = (request: google.maps.places.PlaceSearchRequest) => {
     return `${request.keyword}-${request.location.lat()}-${request.location.lng()}-${request.radius}`;
@@ -105,6 +123,51 @@ const useRestaurantSearch = () => {
     });
   }, [detailsCache]);
 
+  // クライアント側フィルタリング（APIを呼ばない）
+  const applyFilters = useCallback((
+    restaurants: Restaurant[],
+    filterParams: FilterParams
+  ): Restaurant[] => {
+    const { minRating, minReviews, isOpenNow, searchRadius, selectedPriceLevels } = filterParams;
+
+    const filtered = restaurants
+      .filter(place =>
+        Object.keys(place).length > 0 &&
+        (place.business_status === 'OPERATIONAL' || place.business_status === undefined)
+      )
+      .filter(place => {
+        const meetsBasicCriteria =
+          place.rating >= minRating &&
+          place.user_ratings_total >= minReviews &&
+          selectedPriceLevels.includes(place.price_level);
+
+        if (isOpenNow && !calculateOperatingHours(place.opening_hours?.weekday_text)) {
+          return false;
+        }
+
+        if (searchRadius <= 100 && place.distance !== undefined) {
+          return meetsBasicCriteria && place.distance <= searchRadius;
+        }
+
+        return meetsBasicCriteria;
+      });
+
+    return filtered.sort((a, b) => {
+      if (a.distance === undefined && b.distance === undefined) return 0;
+      if (a.distance === undefined) return 1;
+      if (b.distance === undefined) return -1;
+      return a.distance - b.distance;
+    });
+  }, []);
+
+  // フィルターのみ再適用（API呼び出しなし）
+  const reapplyFilters = useCallback((filterParams: FilterParams) => {
+    lastFilterParamsRef.current = filterParams;
+    const sorted = applyFilters(allRestaurants, filterParams);
+    setFilteredRestaurants(sorted);
+  }, [allRestaurants, applyFilters]);
+
+  // 検索実行（API呼び出しが必要なパラメータ変更時のみ）
   const searchNearbyRestaurants = useCallback(async (
     keywords: string[],
     minRating: number,
@@ -117,33 +180,48 @@ const useRestaurantSearch = () => {
     setIsLoading(true);
     setError(null);
 
+    const filterParams: FilterParams = { minRating, minReviews, isOpenNow, searchRadius, selectedPriceLevels };
+    lastFilterParamsRef.current = filterParams;
+
     try {
       let location: google.maps.LatLng;
 
       if ('lat' in searchLocation) {
         location = new google.maps.LatLng(searchLocation.lat, searchLocation.lng);
       } else {
-        const geocoder = new google.maps.Geocoder();
-        const result = await new Promise<google.maps.GeocoderResult>((resolve, reject) => {
-          geocoder.geocode(
-            { address: `${searchLocation.name}駅,${searchLocation.prefecture}` },
-            (results, status) => {
-              if (status === google.maps.GeocoderStatus.OK && results?.[0]) {
-                resolve(results[0]);
-              } else if (status === google.maps.GeocoderStatus.REQUEST_DENIED) {
-                reject(new Error('Google Maps APIの認証に失敗しました。APIキーを確認してください。'));
-              } else {
-                reject(new Error('位置を取得できませんでした。'));
+        // Forward geocodingをキャッシュで最適化
+        const geocodeCacheKey = `${searchLocation.name}_${searchLocation.prefecture}`;
+        const cachedGeocode = geocodeForwardCache.getCached(geocodeCacheKey);
+
+        if (cachedGeocode) {
+          location = new google.maps.LatLng(cachedGeocode.lat, cachedGeocode.lng);
+        } else {
+          const geocoder = new google.maps.Geocoder();
+          const result = await new Promise<google.maps.GeocoderResult>((resolve, reject) => {
+            geocoder.geocode(
+              { address: `${searchLocation.name}駅,${searchLocation.prefecture}` },
+              (results, status) => {
+                if (status === google.maps.GeocoderStatus.OK && results?.[0]) {
+                  resolve(results[0]);
+                } else if (status === google.maps.GeocoderStatus.REQUEST_DENIED) {
+                  reject(new Error('Google Maps APIの認証に失敗しました。APIキーを確認してください。'));
+                } else {
+                  reject(new Error('位置を取得できませんでした。'));
+                }
               }
-            }
-          );
-        });
-        location = result.geometry.location;
+            );
+          });
+          location = result.geometry.location;
+          geocodeForwardCache.setCached(geocodeCacheKey, {
+            lat: location.lat(),
+            lng: location.lng()
+          });
+        }
       }
 
       const service = new google.maps.places.PlacesService(document.createElement('div'));
 
-      const searchPromises = keywords.map(keyword => 
+      const searchPromises = keywords.map(keyword =>
         new Promise<google.maps.places.PlaceResult[]>((resolve, reject) => {
           const request: google.maps.places.PlaceSearchRequest = {
             keyword: keyword,
@@ -163,7 +241,7 @@ const useRestaurantSearch = () => {
               searchCache.setCached(cacheKey, []);
               resolve([]);
             } else if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-              const activeResults = results.filter(place => 
+              const activeResults = results.filter(place =>
                 place.business_status === 'OPERATIONAL' || place.business_status === undefined
               );
               searchCache.setCached(cacheKey, activeResults);
@@ -178,7 +256,7 @@ const useRestaurantSearch = () => {
       );
 
       const searchResults = await Promise.all(searchPromises);
-      const combinedResults = searchResults.flatMap((results, index) => 
+      const combinedResults = searchResults.flatMap((results, index) =>
         results.map(place => ({
           ...place,
           searchKeywords: [keywords[index]]
@@ -195,40 +273,16 @@ const useRestaurantSearch = () => {
         }
       }, [] as (google.maps.places.PlaceResult & { searchKeywords: string[] })[]);
 
+      // getDetails呼び出し数を制限（コスト最適化）
+      const limitedResults = uniqueResults.slice(0, MAX_DETAILS_REQUESTS);
+
       const detailedResults = await Promise.all(
-        uniqueResults.map(place => getPlaceDetails(service, place, location))
+        limitedResults.map(place => getPlaceDetails(service, place, location))
       );
 
-      const filteredResults = detailedResults
-        .filter(place => 
-          Object.keys(place).length > 0 &&
-          (place.business_status === 'OPERATIONAL' || place.business_status === undefined)
-        )
-        .filter(place => {
-          const meetsBasicCriteria = 
-            place.rating >= minRating &&
-            place.user_ratings_total >= minReviews &&
-            selectedPriceLevels.includes(place.price_level);
+      setAllRestaurants(detailedResults);
 
-          if (isOpenNow && !calculateOperatingHours(place.opening_hours?.weekday_text)) {
-            return false;
-          }
-
-          if (searchRadius <= 100 && place.distance !== undefined) {
-            return meetsBasicCriteria && place.distance <= searchRadius;
-          }
-
-          return meetsBasicCriteria;
-        });
-
-      const sortedResults = filteredResults.sort((a, b) => {
-        if (a.distance === undefined && b.distance === undefined) return 0;
-        if (a.distance === undefined) return 1;
-        if (b.distance === undefined) return -1;
-        return a.distance - b.distance;
-      });
-
-      setAllRestaurants(sortedResults);
+      const sortedResults = applyFilters(detailedResults, filterParams);
       setFilteredRestaurants(sortedResults);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '検索中にエラーが発生しました。';
@@ -238,14 +292,15 @@ const useRestaurantSearch = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [searchCache, detailsCache, getPlaceDetails]);
+  }, [searchCache, getPlaceDetails, geocodeForwardCache, applyFilters]);
 
   return {
     allRestaurants,
     filteredRestaurants,
     isLoading,
     error,
-    searchNearbyRestaurants
+    searchNearbyRestaurants,
+    reapplyFilters
   };
 };
 

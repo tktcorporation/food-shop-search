@@ -20,6 +20,7 @@ function App() {
     isLoading,
     error,
     searchNearbyRestaurants,
+    reapplyFilters,
   } = useRestaurantSearch();
 
   if (loadError) {
@@ -37,6 +38,7 @@ function App() {
         restaurants={filteredRestaurants}
         setScreen={() => {}}
         searchNearbyRestaurants={searchNearbyRestaurants}
+        reapplyFilters={reapplyFilters}
         isLoading={isLoading}
         error={error}
       />

@@ -43,6 +43,11 @@ export const CACHE_CONFIGS = {
     version: '1',
     expiry: 48 * 60 * 60 * 1000, // 48時間
   },
+  GEOCODE_FORWARD: {
+    key: 'geocodeForwardCache',
+    version: '1',
+    expiry: 7 * 24 * 60 * 60 * 1000, // 7日間（駅の座標はほぼ変わらない）
+  },
 } as const;
 
 export function useCache<T>(config: CacheConfig) {

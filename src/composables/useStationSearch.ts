@@ -13,7 +13,6 @@ const useStationSearch = (initialStation: string) => {
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
 
   const predictionsCache = useCache<Station[]>(CACHE_CONFIGS.STATION_PREDICTIONS);
-  const nearbyStationsCache = useCache<Station[]>(CACHE_CONFIGS.NEARBY_STATIONS);
 
   const handleStationInput = useCallback(async (input: string) => {
     if (!input.trim() || (selectedStation && selectedStation.name === input)) {
