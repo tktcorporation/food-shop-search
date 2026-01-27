@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Navigation, Loader2, AlertCircle } from 'lucide-react';
+import { useCache, CACHE_CONFIGS } from '../../utils/cacheManager';
 
 interface Station {
   name: string;
@@ -8,12 +9,21 @@ interface Station {
   rawPrediction: google.maps.places.AutocompletePrediction;
 }
 
+interface NearbyStationCacheEntry {
+  stations: Station[];
+}
+
 interface StationSearchProps {
   station: string;
   setStation: (station: string) => void;
   stationCandidates: Station[];
   selectStation: (station: Station) => void;
 }
+
+// 位置をキャッシュキーに変換（小数3桁に丸めて近傍位置をまとめる ≈ 約100m精度）
+const positionToCacheKey = (lat: number, lng: number): string => {
+  return `${lat.toFixed(3)}_${lng.toFixed(3)}`;
+};
 
 const StationSearch: React.FC<StationSearchProps> = ({
   station,
@@ -24,6 +34,8 @@ const StationSearch: React.FC<StationSearchProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [nearbyStations, setNearbyStations] = useState<Station[]>([]);
+
+  const nearbyStationsCache = useCache<NearbyStationCacheEntry>(CACHE_CONFIGS.NEARBY_STATIONS);
 
   const findNearbyStations = () => {
     setIsLoading(true);
@@ -37,11 +49,22 @@ const StationSearch: React.FC<StationSearchProps> = ({
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const userLocation = new google.maps.LatLng(
-          position.coords.latitude,
-          position.coords.longitude
-        );
+        const { latitude, longitude } = position.coords;
+        const cacheKey = positionToCacheKey(latitude, longitude);
 
+        // キャッシュから取得を試行
+        const cached = nearbyStationsCache.getCached(cacheKey);
+        if (cached) {
+          setIsLoading(false);
+          setNearbyStations(cached.stations);
+          if (cached.stations.length > 0) {
+            setStation(cached.stations[0].name);
+            selectStation(cached.stations[0]);
+          }
+          return;
+        }
+
+        const userLocation = new google.maps.LatLng(latitude, longitude);
         const service = new google.maps.places.PlacesService(document.createElement('div'));
         const request = {
           location: userLocation,
@@ -55,7 +78,7 @@ const StationSearch: React.FC<StationSearchProps> = ({
             const stations = results.map(place => {
               const placeLocation = place.geometry?.location;
               let distance = 0;
-              
+
               if (placeLocation && google.maps.geometry) {
                 distance = google.maps.geometry.spherical.computeDistanceBetween(
                   userLocation,
@@ -81,6 +104,9 @@ const StationSearch: React.FC<StationSearchProps> = ({
             // 距離でソート
             const sortedStations = stations.sort((a, b) => (a.distance || 0) - (b.distance || 0));
             const nearestStations = sortedStations.slice(0, 5);
+
+            // キャッシュに保存
+            nearbyStationsCache.setCached(cacheKey, { stations: nearestStations });
             setNearbyStations(nearestStations);
 
             // 最寄り駅を自動選択
@@ -140,8 +166,8 @@ const StationSearch: React.FC<StationSearchProps> = ({
                     key={nearbyStation.name}
                     onClick={() => selectStation(nearbyStation)}
                     className={`px-3 py-1 text-sm rounded-full transition-colors duration-200 flex items-center gap-1
-                      ${station === nearbyStation.name 
-                        ? 'bg-primary-500 text-white' 
+                      ${station === nearbyStation.name
+                        ? 'bg-primary-500 text-white'
                         : 'bg-primary-100 text-primary-700 hover:bg-primary-200'}`}
                   >
                     <Navigation size={14} />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import StationSearch from './StationSearch';
 import LocationSearch from './LocationSearch';
 import StoreTypeSelection from './StoreTypeSelection';
@@ -9,6 +9,9 @@ import useStationSearch from '../../composables/useStationSearch';
 import { useLocationSearch } from '../../composables/useLocationSearch';
 import { keyWordOptions } from '../../utils/keywordOptions';
 import { MapPin, Train } from 'lucide-react';
+
+// API検索のデバウンス時間（ミリ秒）
+const SEARCH_DEBOUNCE_MS = 500;
 
 interface UnifiedSearchResultsScreenProps {
   initialStation: string;
@@ -23,6 +26,13 @@ interface UnifiedSearchResultsScreenProps {
     searchRadius: number,
     selectedPriceLevels: number[]
   ) => void;
+  reapplyFilters: (filterParams: {
+    minRating: number;
+    minReviews: number;
+    isOpenNow: boolean;
+    searchRadius: number;
+    selectedPriceLevels: number[];
+  }) => void;
   isLoading: boolean;
   error: string | null;
 }
@@ -31,6 +41,7 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
   initialStation,
   restaurants,
   searchNearbyRestaurants,
+  reapplyFilters,
   isLoading,
   error: searchError,
 }) => {
@@ -46,7 +57,12 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
   const [searchRadius, setSearchRadius] = useState<number>(100);
   const [searchMethod, setSearchMethod] = useState<'location' | 'station'>('location');
 
-  const handleSearch = () => {
+  // 初回検索済みフラグ
+  const hasSearchedRef = useRef(false);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // API呼び出しが必要な検索（キーワード・位置・半径変更時）
+  const triggerSearch = useCallback(() => {
     const searchLocation = searchMethod === 'location' ? currentLocation : selectedStation;
     if (searchLocation) {
       searchNearbyRestaurants(
@@ -58,15 +74,46 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
         searchRadius,
         selectedPriceLevels
       );
+      hasSearchedRef.current = true;
     }
-  };
+  }, [searchMethod, currentLocation, selectedStation, selectedKeywords, minRating, minReviews, isOpenNow, searchRadius, selectedPriceLevels, searchNearbyRestaurants]);
 
+  // API呼び出しが必要なパラメータ変更時（デバウンス付き）
+  // triggerSearchは意図的に依存から除外: フィルター変更ではAPI再呼び出ししない
   useEffect(() => {
     const searchLocation = searchMethod === 'location' ? currentLocation : selectedStation;
-    if (searchLocation) {
-      handleSearch();
+    if (!searchLocation) return;
+
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
     }
-  }, [selectedKeywords, minRating, minReviews, selectedStation, currentLocation, isOpenNow, searchRadius, selectedPriceLevels, searchMethod]);
+
+    searchDebounceRef.current = setTimeout(() => {
+      triggerSearch();
+    }, hasSearchedRef.current ? SEARCH_DEBOUNCE_MS : 0); // 初回は即実行
+
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedKeywords, selectedStation, currentLocation, searchRadius, searchMethod]);
+
+  // フィルターのみの変更時（API呼び出し不要、クライアント側で再フィルタリング）
+  // searchRadiusはAPI検索でも使うため、ここではreapplyFiltersに渡すが依存には含めない
+  useEffect(() => {
+    if (!hasSearchedRef.current) return;
+
+    reapplyFilters({
+      minRating,
+      minReviews,
+      isOpenNow,
+      searchRadius,
+      selectedPriceLevels,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [minRating, minReviews, isOpenNow, selectedPriceLevels]);
 
   useEffect(() => {
     if (searchMethod === 'location' && !currentLocation && !isLocationLoading && !hasPermissionError) {
@@ -84,10 +131,6 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
   const handleRemoveCustomKeyword = (keyword: string) => {
     setCustomKeywords(prev => prev.filter(k => k !== keyword));
     setSelectedKeywords(prev => prev.filter(k => k !== keyword));
-  };
-
-  const toggleSearchMethod = () => {
-    setSearchMethod(prev => prev === 'location' ? 'station' : 'location');
   };
 
   return (
@@ -163,7 +206,7 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
           <p className="text-red-500">{searchError}</p>
         )}
 
-        <SearchResults 
+        <SearchResults
           restaurants={restaurants}
           minRating={minRating}
           minReviews={minReviews}
