@@ -30,7 +30,7 @@ interface UnifiedSearchResultsScreenProps {
     isOpenNow: boolean,
     searchRadius: number,
     selectedPriceLevels: number[],
-  ) => Promise<void>;
+  ) => void;
   reapplyFilters: (filterParams: {
     minRating: number;
     minReviews: number;
@@ -89,7 +89,7 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
     const searchLocation =
       searchMethod === 'location' ? currentLocation : selectedStation;
     if (searchLocation) {
-      void searchNearbyRestaurants(
+      searchNearbyRestaurants(
         selectedKeywords,
         minRating,
         minReviews,
