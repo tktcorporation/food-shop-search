@@ -1,5 +1,3 @@
-import { useState, useEffect } from 'react';
-
 export interface CacheConfig {
   key: string;
   version: string;
@@ -49,64 +47,3 @@ export const CACHE_CONFIGS = {
     expiry: 7 * 24 * 60 * 60 * 1000, // 7日間（駅の座標はほぼ変わらない）
   },
 } as const;
-
-export function useCache<T>(config: CacheConfig) {
-  const [cache, setCache] = useState<Map<string, CacheData<T>>>(() => {
-    try {
-      const cached = localStorage.getItem(config.key);
-      if (!cached) return new Map();
-
-      const parsed = JSON.parse(cached) as CacheEntry<T>;
-      if (parsed.version !== config.version) return new Map();
-
-      return new Map(Object.entries(parsed.data));
-    } catch {
-      return new Map();
-    }
-  });
-
-  useEffect(() => {
-    const cacheEntry: CacheEntry<T> = {
-      version: config.version,
-      data: Object.fromEntries(cache),
-    };
-    localStorage.setItem(config.key, JSON.stringify(cacheEntry));
-  }, [cache, config.key, config.version]);
-
-  const getCached = (key: string): T | null => {
-    const now = Date.now();
-    const cached = cache.get(key);
-
-    if (cached && now - cached.timestamp < config.expiry) {
-      return cached.data;
-    }
-
-    if (cached) {
-      // 期限切れのエントリーを削除
-      const newCache = new Map(cache);
-      newCache.delete(key);
-      setCache(newCache);
-    }
-
-    return null;
-  };
-
-  const setCached = (key: string, data: T) => {
-    setCache((prev) => {
-      const newCache = new Map(prev);
-      newCache.set(key, { data, timestamp: Date.now() });
-      return newCache;
-    });
-  };
-
-  const clearCache = () => {
-    setCache(new Map());
-    localStorage.removeItem(config.key);
-  };
-
-  return {
-    getCached,
-    setCached,
-    clearCache,
-  };
-}

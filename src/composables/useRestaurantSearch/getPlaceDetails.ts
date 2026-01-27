@@ -78,7 +78,7 @@ export const getPlaceDetailsEffect = (
   cacheService: CacheService,
   place: google.maps.places.PlaceResult & { searchKeywords: string[] },
   location: google.maps.LatLng,
-): Effect.Effect<Restaurant, GoogleMapsAuthError | PlaceDetailsError> =>
+): Effect.Effect<Restaurant | null, GoogleMapsAuthError | PlaceDetailsError> =>
   Effect.gen(function* () {
     const cached = yield* cacheService.get<Restaurant>(
       CACHE_CONFIGS.RESTAURANT_DETAILS,
@@ -102,7 +102,7 @@ export const getPlaceDetailsEffect = (
     }
 
     if (result.business_status && result.business_status !== 'OPERATIONAL') {
-      return {} as Restaurant;
+      return null;
     }
 
     const restaurantData = placeResultToRestaurant(

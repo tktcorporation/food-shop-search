@@ -19,9 +19,7 @@ import type { Station } from '../../composables/useStationSearch/types';
 const SEARCH_DEBOUNCE_MS = 500;
 
 interface UnifiedSearchResultsScreenProps {
-  initialStation: string;
   restaurants: Restaurant[];
-  setScreen: (screen: string) => void;
   searchNearbyRestaurants: (
     types: string[],
     minRating: number,
@@ -43,7 +41,6 @@ interface UnifiedSearchResultsScreenProps {
 }
 
 const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
-  initialStation,
   restaurants,
   searchNearbyRestaurants,
   reapplyFilters,
@@ -56,7 +53,7 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
     stationCandidates,
     selectedStation,
     selectStation,
-  } = useStationSearch(initialStation);
+  } = useStationSearch();
   const {
     currentLocation,
     isLoading: isLocationLoading,

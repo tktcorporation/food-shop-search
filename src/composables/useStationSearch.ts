@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Effect, Cause } from 'effect';
+import { Effect } from 'effect';
 import type { Station } from './useStationSearch/types';
 import { searchStationsProgram } from '../programs/searchStations';
+import { extractFirstFailure } from '../utils/effectErrors';
 import { GoogleMapsPlacesService, CacheService, AppLive } from '../services';
 
-const useStationSearch = (initialStation: string) => {
+const useStationSearch = (initialStation = '') => {
   const [station, setStation] = useState(initialStation);
   const [stationCandidates, setStationCandidates] = useState<Station[]>([]);
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
@@ -32,8 +33,7 @@ const useStationSearch = (initialStation: string) => {
           setStationCandidates(exit.value);
         } else {
           // 駅検索のエラーは静かに処理（空リストを表示）
-          const failures = Cause.failures(exit.cause);
-          const firstFailure = Array.from(failures)[0];
+          const firstFailure = extractFirstFailure(exit.cause);
           if (firstFailure) {
             console.warn('駅検索エラー:', firstFailure);
           }

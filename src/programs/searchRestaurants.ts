@@ -172,5 +172,6 @@ export const searchRestaurantsProgram = (
       { concurrency: 'unbounded' },
     );
 
-    return detailedResults;
+    // 非OPERATIONALな店舗 (null) を除外
+    return detailedResults.filter((r): r is Restaurant => r !== null);
   });

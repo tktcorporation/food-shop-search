@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useLoadScript } from '@react-google-maps/api';
 import UnifiedSearchResultsScreen from './components/UnifiedSearchResultsScreen';
 import useRestaurantSearch from './composables/useRestaurantSearch';
@@ -7,8 +6,6 @@ import { ExternalLink } from 'lucide-react';
 const libraries: ('places' | 'geometry')[] = ['places', 'geometry'];
 
 function App() {
-  const [initialStation] = useState('');
-
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
     libraries,
@@ -33,9 +30,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100">
       <UnifiedSearchResultsScreen
-        initialStation={initialStation}
         restaurants={filteredRestaurants}
-        setScreen={() => {}}
         searchNearbyRestaurants={searchNearbyRestaurants}
         reapplyFilters={reapplyFilters}
         isLoading={isLoading}

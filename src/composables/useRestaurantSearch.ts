@@ -1,20 +1,16 @@
 import { useState, useCallback, useRef } from 'react';
-import { Effect, Cause } from 'effect';
-import type { Restaurant } from './useRestaurantSearch/types';
+import { Effect } from 'effect';
+import type { Restaurant, Location } from './useRestaurantSearch/types';
 import type { Station } from './useStationSearch/types';
 import { filterRestaurants, sortByDistance } from './useRestaurantSearch/utils';
 import { searchRestaurantsProgram } from '../programs/searchRestaurants';
+import { extractErrorMessage } from '../utils/effectErrors';
 import {
   GoogleMapsGeocoderService,
   GoogleMapsPlacesService,
   CacheService,
   AppLive,
 } from '../services';
-
-interface Location {
-  lat: number;
-  lng: number;
-}
 
 interface FilterParams {
   minRating: number;
@@ -23,21 +19,6 @@ interface FilterParams {
   searchRadius: number;
   selectedPriceLevels: number[];
 }
-
-/** Effect のエラーからユーザー向けメッセージを抽出 */
-const extractErrorMessage = (cause: Cause.Cause<unknown>): string => {
-  const failures = Cause.failures(cause);
-  const firstFailure = Array.from(failures)[0];
-  if (
-    firstFailure &&
-    typeof firstFailure === 'object' &&
-    firstFailure !== null &&
-    'message' in firstFailure
-  ) {
-    return (firstFailure as { message: string }).message;
-  }
-  return '検索中にエラーが発生しました。';
-};
 
 const useRestaurantSearch = () => {
   const [allRestaurants, setAllRestaurants] = useState<Restaurant[]>([]);
@@ -115,7 +96,10 @@ const useRestaurantSearch = () => {
           const filtered = filterRestaurants(detailedResults, filterParams);
           setFilteredRestaurants(sortByDistance(filtered));
         } else {
-          const errorMessage = extractErrorMessage(exit.cause);
+          const errorMessage = extractErrorMessage(
+            exit.cause,
+            '検索中にエラーが発生しました。',
+          );
           setError(errorMessage);
           setAllRestaurants([]);
           setFilteredRestaurants([]);

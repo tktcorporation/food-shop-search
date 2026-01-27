@@ -1,5 +1,6 @@
 import type React from 'react';
 import type { Dispatch, SetStateAction } from 'react';
+import ToggleChip from '../ui/ToggleChip';
 
 interface SearchFiltersProps {
   selectedPriceLevels: number[];
@@ -64,18 +65,13 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
         </label>
         <div className="flex flex-wrap gap-2">
           {RADIUS_OPTIONS.map((option) => (
-            <button
+            <ToggleChip
               key={option.value}
+              selected={searchRadius === option.value}
               onClick={() => setSearchRadius(option.value)}
-              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200
-                ${
-                  searchRadius === option.value
-                    ? 'bg-primary-500 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
             >
               {option.label}
-            </button>
+            </ToggleChip>
           ))}
         </div>
       </div>
@@ -85,32 +81,22 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
           価格帯
         </label>
         <div className="flex flex-wrap gap-2">
-          <button
+          <ToggleChip
+            selected={selectedPriceLevels.length === PRICE_LEVELS.length}
             onClick={toggleAllPriceLevels}
-            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200
-              ${
-                selectedPriceLevels.length === PRICE_LEVELS.length
-                  ? 'bg-primary-500 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
           >
             {selectedPriceLevels.length === PRICE_LEVELS.length
               ? '全解除'
               : '全選択'}
-          </button>
+          </ToggleChip>
           {PRICE_LEVELS.map((level) => (
-            <button
+            <ToggleChip
               key={level.value}
+              selected={selectedPriceLevels.includes(level.value)}
               onClick={() => togglePriceLevel(level.value)}
-              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200
-                ${
-                  selectedPriceLevels.includes(level.value)
-                    ? 'bg-primary-500 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
             >
               {level.label}
-            </button>
+            </ToggleChip>
           ))}
         </div>
       </div>

@@ -30,9 +30,8 @@ export const filterRestaurants = (
   return restaurants
     .filter(
       (place) =>
-        Object.keys(place).length > 0 &&
-        (place.business_status === 'OPERATIONAL' ||
-          place.business_status === undefined),
+        place.business_status === 'OPERATIONAL' ||
+        place.business_status === undefined,
     )
     .filter((place) => {
       const meetsBasicCriteria =

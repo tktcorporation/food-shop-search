@@ -1,5 +1,6 @@
 import React from 'react';
 import { Navigation, Loader2, AlertCircle, Lock } from 'lucide-react';
+import ErrorAlert from '../ui/ErrorAlert';
 
 interface LocationSearchProps {
   isLoading: boolean;
@@ -78,12 +79,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
         </div>
       )}
 
-      {error && (
-        <div className="mt-2 p-3 bg-red-50 text-red-700 rounded-md text-sm flex items-start">
-          <AlertCircle className="shrink-0 mt-0.5 mr-2" size={16} />
-          <div className="whitespace-pre-line">{error}</div>
-        </div>
-      )}
+      {error && <ErrorAlert message={error} className="mt-2" />}
     </div>
   );
 };
