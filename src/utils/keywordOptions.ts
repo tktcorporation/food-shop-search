@@ -10,7 +10,7 @@ export const keywordCategories = [
       { value: 'タイ料理', label: 'タイ料理' },
       { value: 'ベトナム料理', label: 'ベトナム料理' },
       { value: 'インド料理', label: 'インド料理' },
-    ]
+    ],
   },
   {
     name: 'スタイル',
@@ -19,7 +19,7 @@ export const keywordCategories = [
       { value: 'ファストフード', label: 'ファストフード' },
       { value: 'ファミレス', label: 'ファミレス' },
       { value: 'カフェ', label: 'カフェ' },
-    ]
+    ],
   },
   {
     name: '料理',
@@ -33,26 +33,28 @@ export const keywordCategories = [
       { value: '焼肉', label: '焼肉' },
       { value: 'ステーキ', label: 'ステーキ' },
       { value: 'ハンバーグ', label: 'ハンバーグ' },
-    ]
+    ],
   },
 ];
 
 // Flatten all keywords for backward compatibility
-export const keyWordOptions = keywordCategories.flatMap(category => category.keywords);
+export const keyWordOptions = keywordCategories.flatMap(
+  (category) => category.keywords,
+);
 
 export const getKeywordLabel = (value: string): string => {
-  const option = keyWordOptions.find(opt => opt.value === value);
+  const option = keyWordOptions.find((opt) => opt.value === value);
   return option ? option.label : value;
 };
 
 export const addCustomKeyword = (keyword: string) => {
-  if (!keyWordOptions.some(option => option.value === keyword)) {
+  if (!keyWordOptions.some((option) => option.value === keyword)) {
     keyWordOptions.push({ value: keyword, label: keyword });
   }
 };
 
 export const removeCustomKeyword = (keyword: string) => {
-  const index = keyWordOptions.findIndex(option => option.value === keyword);
+  const index = keyWordOptions.findIndex((option) => option.value === keyword);
   if (index !== -1) {
     keyWordOptions.splice(index, 1);
   }

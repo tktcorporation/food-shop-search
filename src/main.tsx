@@ -6,7 +6,7 @@ import './index.css';
 // 必須の環境変数をチェック
 const requiredEnvVars = ['VITE_GOOGLE_MAPS_API_KEY'];
 const missingEnvVars = requiredEnvVars.filter(
-  varName => !import.meta.env[varName]
+  (varName) => !import.meta.env[varName],
 );
 
 if (missingEnvVars.length > 0) {
@@ -17,12 +17,12 @@ if (missingEnvVars.length > 0) {
     .env ファイルに以下の変数を設定してください:
     VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
   `;
-  
+
   throw new Error(errorMessage);
 }
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
-  </StrictMode>
+  </StrictMode>,
 );

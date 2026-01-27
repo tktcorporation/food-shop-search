@@ -6,18 +6,22 @@
 
 ```markdown
 <refactoring_request>
+
 ## リファクタリングの目的
+
 [なぜリファクタリングが必要か]
 
 ## 対象コード
+
 ファイルパス: [ファイルパス]
 対象範囲: [行番号または関数名]
 
 ## 現在の問題点
+
 - [問題点1]
 - [問題点2]
 - [問題点3]
-</refactoring_request>
+  </refactoring_request>
 
 <instructions>
 以下の観点でリファクタリングしてください：
@@ -33,7 +37,7 @@
 
 4. **型安全性の強化**（TypeScriptの場合）
    - [具体的な改善ポイント]
-</instructions>
+     </instructions>
 
 <constraints>
 リファクタリングの制約：
@@ -57,13 +61,14 @@
 
 <success_criteria>
 リファクタリング後の成功基準：
+
 - [ ] コードの意図が明確になっている
 - [ ] 重複コードが削減されている
 - [ ] 関数が単一責任の原則に従っている
 - [ ] TypeScriptの型が適切に定義されている
 - [ ] 既存のテストが通る
 - [ ] [その他のプロジェクト固有の基準]
-</success_criteria>
+      </success_criteria>
 ```
 
 ## 使用例
@@ -72,20 +77,24 @@
 
 ```markdown
 <refactoring_request>
+
 ## リファクタリングの目的
+
 useRestaurantSearch.ts の searchRestaurants 関数が複雑になりすぎて、
 可読性と保守性が低下している。複数の責務を持っているため分割したい。
 
 ## 対象コード
+
 ファイルパス: src/composables/useRestaurantSearch.ts
 対象範囲: searchRestaurants 関数（120-280行）
 
 ## 現在の問題点
+
 - 1つの関数が200行以上ある
 - キャッシュ処理、API呼び出し、フィルタリング、エラーハンドリングが混在
 - テストが困難
 - 部分的な再利用ができない
-</refactoring_request>
+  </refactoring_request>
 
 <instructions>
 以下の観点でリファクタリングしてください：
@@ -104,7 +113,7 @@ useRestaurantSearch.ts の searchRestaurants 関数が複雑になりすぎて�
 3. **型安全性の強化**
    - 各関数の引数と戻り値の型を明示
    - 中間データの型を定義
-</instructions>
+     </instructions>
 
 <constraints>
 リファクタリングの制約：
@@ -131,35 +140,41 @@ Google Maps Places APIで検索し、各種フィルターを適用して結果�
 
 <success_criteria>
 リファクタリング後の成功基準：
+
 - [x] 各関数が50行以下
 - [x] 各関数が単一の責務を持つ
 - [x] 関数名が処理内容を明確に表している
 - [x] TypeScriptの型が適切に定義されている
 - [x] 既存のテストが通る
 - [x] 新しく分割された関数が個別にテスト可能
-</success_criteria>
+      </success_criteria>
 ```
 
 ### 例2: 重複コードの削減
 
 ```markdown
 <refactoring_request>
+
 ## リファクタリングの目的
+
 useLocationSearch.ts と useStationSearch.ts に重複した
 レストラン検索ロジックが存在する。DRY原則に違反しているため、
 共通化したい。
 
 ## 対象コード
+
 ファイルパス:
+
 - src/composables/useLocationSearch.ts（85-120行）
 - src/composables/useStationSearch.ts（92-127行）
 
 ## 現在の問題点
+
 - 同じレストラン検索ロジックが2箇所に存在
 - 片方を修正しても、もう片方に反映されない
 - バグ修正やメンテナンスが二重の手間
 - コードの総量が不必要に多い
-</refactoring_request>
+  </refactoring_request>
 
 <instructions>
 以下の観点でリファクタリングしてください：
@@ -177,7 +192,7 @@ useLocationSearch.ts と useStationSearch.ts に重複した
 3. **保守性の向上**
    - 1箇所の修正で両方に反映される構造
    - テストが容易な構造
-</instructions>
+     </instructions>
 
 <constraints>
 リファクタリングの制約：
@@ -194,51 +209,59 @@ useLocationSearch.ts と useStationSearch.ts に重複した
 - src/components/UnifiedSearchResultsScreen/StationSearch.tsx: 駅検索画面
 
 このコードの役割：
+
 - useLocationSearch: 現在地から周辺レストランを検索
 - useStationSearch: 駅名から座標を取得し、周辺レストランを検索
 
 共通している処理：
+
 - Google Maps Places API の呼び出し
 - 結果のフィルタリング（価格帯、評価など）
 - キャッシュ処理
 - エラーハンドリング
 
 異なる処理：
+
 - useLocationSearch: Geolocation APIで現在地取得
 - useStationSearch: Geocoding APIで駅名→座標変換
-</context>
+  </context>
 
 <success_criteria>
 リファクタリング後の成功基準：
+
 - [x] 重複コードが削減されている
 - [x] 共通ロジックが1箇所に集約されている
 - [x] 両方のフックが共通ロジックを利用している
 - [x] 外部インターフェースが変わっていない
 - [x] 既存のテストが通る
 - [x] 新しい共通関数が単独でテスト可能
-</success_criteria>
+      </success_criteria>
 ```
 
 ### 例3: 型安全性の強化
 
 ```markdown
 <refactoring_request>
+
 ## リファクタリングの目的
+
 Google Maps API のレスポンスを any 型で扱っているため、
 型安全性が低く、実行時エラーが発生しやすい。
 適切な型定義を追加して型安全性を向上させたい。
 
 ## 対象コード
+
 ファイルパス: src/composables/useRestaurantSearch.ts
 対象範囲: 全体（特に API レスポンスの型定義）
 
 ## 現在の問題点
+
 - APIレスポンスが any 型
 - プロパティへのアクセスが型チェックされない
 - 存在しないプロパティへのアクセスがコンパイル時に検出されない
 - IDEの補完が効かない
 - リファクタリングが困難
-</refactoring_request>
+  </refactoring_request>
 
 <instructions>
 以下の観点でリファクタリングしてください：
@@ -257,7 +280,7 @@ Google Maps API のレスポンスを any 型で扱っているため、
    - IDE の補完が効くようにする
    - 型エラーをコンパイル時に検出
    - リファクタリングしやすい構造
-</instructions>
+     </instructions>
 
 <constraints>
 リファクタリングの制約：
@@ -276,20 +299,22 @@ Google Maps API のレスポンスを any 型で扱っているため、
 Google Maps Places API を呼び出し、レストラン情報を取得・加工して返す。
 
 現在の実装：
+
 - API レスポンスを any として受け取り
 - プロパティアクセス時に型チェックなし
 - runtime で undefined チェックをしている箇所もある
-</context>
+  </context>
 
 <success_criteria>
 リファクタリング後の成功基準：
+
 - [x] any 型が排除されている
 - [x] 適切な型定義が追加されている
 - [x] TypeScript strict mode でエラーがない
 - [x] IDE の補完が正常に動作する
 - [x] 存在しないプロパティへのアクセスがコンパイルエラーになる
 - [x] 既存のテストが通る
-</success_criteria>
+      </success_criteria>
 ```
 
 ## リファクタリングのベストプラクティス
@@ -318,11 +343,12 @@ Google Maps Places API を呼び出し、レストラン情報を取得・加工
 ```markdown
 <pre_refactoring_checks>
 リファクタリング前の確認事項：
+
 1. 既存のテストが通ることを確認
 2. テストがない場合は、まずテストを追加
 3. カバレッジが十分か確認
 4. エッジケースがテストされているか確認
-</pre_refactoring_checks>
+   </pre_refactoring_checks>
 ```
 
 ### 3. 動作を変更しない
@@ -357,5 +383,5 @@ IMPORTANT: リファクタリングは「内部構造の改善」であり、
 - [ ] コードレビューの準備ができている
 - [ ] コミットメッセージが適切
 - [ ] 変更内容が文書化されている
-</post_refactoring_checklist>
+      </post_refactoring_checklist>
 ```

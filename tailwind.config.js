@@ -52,7 +52,12 @@ export default {
           'sans-serif',
           '"Segoe UI Emoji"',
         ],
-        serif: ['"Hiragino Kaku Gothic ProN"', '"Hiragino Sans"', 'Meiryo', 'sans-serif'],
+        serif: [
+          '"Hiragino Kaku Gothic ProN"',
+          '"Hiragino Sans"',
+          'Meiryo',
+          'sans-serif',
+        ],
       },
       boxShadow: {
         'inner-lg': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)',

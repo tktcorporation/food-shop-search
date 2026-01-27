@@ -92,7 +92,7 @@ export function useCache<T>(config: CacheConfig) {
   };
 
   const setCached = (key: string, data: T) => {
-    setCache(prev => {
+    setCache((prev) => {
       const newCache = new Map(prev);
       newCache.set(key, { data, timestamp: Date.now() });
       return newCache;

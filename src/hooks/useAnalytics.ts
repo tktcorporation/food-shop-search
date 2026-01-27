@@ -11,7 +11,7 @@ export const useAnalytics = () => {
       window.gtag('event', action, {
         event_category: category,
         event_label: label,
-        value: value
+        value: value,
       });
     }
   };
@@ -29,8 +29,8 @@ declare global {
         event_category?: string;
         event_label?: string;
         value?: number;
-        [key: string]: any;
-      }
+        [key: string]: string | number | undefined;
+      },
     ) => void;
   }
 }

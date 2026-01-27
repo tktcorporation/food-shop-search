@@ -10,10 +10,11 @@
 [機能の簡潔な説明]
 
 具体的な要件：
+
 - [要件1]
 - [要件2]
 - [要件3]
-</instructions>
+  </instructions>
 
 <context>
 関連するファイル：
@@ -21,6 +22,7 @@
 - [ファイルパス2]: [役割の説明]
 
 プロジェクトのアーキテクチャ：
+
 - composables/: ビジネスロジック
 - components/: UIコンポーネント
 - utils/: ユーティリティ関数
@@ -38,6 +40,7 @@
 
 <expected_behavior>
 期待する動作：
+
 1. [ステップ1]
 2. [ステップ2]
 3. [ステップ3]
@@ -53,11 +56,12 @@
 
 <test_plan>
 実装後、以下を確認してください：
+
 - [ ] TypeScriptエラーがない
 - [ ] ESLintの警告がない
 - [ ] 既存機能に影響がない
 - [ ] ビルドが成功する
-</test_plan>
+      </test_plan>
 ```
 
 ## 使用例
@@ -67,11 +71,12 @@
 駅名の曖昧検索機能を実装してください。
 
 具体的な要件：
+
 - ユーザーが「東京」と入力した場合、「東京駅」として認識
 - 「新宿」→「新宿駅」のように自動変換
 - 既に「駅」が含まれている場合は変換しない
 - 変換できない場合はそのまま検索
-</instructions>
+  </instructions>
 
 <context>
 関連するファイル：
@@ -92,6 +97,7 @@ useStationSearch フックは駅名を受け取り、Google Maps Geocoding API�
 
 <expected_behavior>
 期待する動作：
+
 1. ユーザーが駅名を入力（「東京」）
 2. stationShortcuts で変換チェック（「東京」→「東京駅」）
 3. 変換後の駅名でGeocoding API呼び出し
@@ -111,10 +117,11 @@ useStationSearch フックは駅名を受け取り、Google Maps Geocoding API�
 
 <test_plan>
 実装後、以下を確認してください：
+
 - [ ] 主要駅名（東京、新宿、渋谷など）が正しく変換される
 - [ ] 既に「駅」が付いている場合は重複しない
 - [ ] 変換できない駅名はそのまま検索される
 - [ ] キャッシュが正しく機能する
 - [ ] TypeScriptエラーがない
-</test_plan>
+      </test_plan>
 ```

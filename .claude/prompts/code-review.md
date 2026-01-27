@@ -9,13 +9,14 @@
 以下のコードをレビューしてください：
 
 レビュー観点：
+
 - [ ] TypeScript型安全性
 - [ ] エラーハンドリング
 - [ ] パフォーマンス
 - [ ] コーディング規約の遵守
 - [ ] セキュリティ
 - [ ] 保守性・可読性
-</instructions>
+      </instructions>
 
 <code_context>
 ファイルパス: [ファイルパス]
@@ -25,49 +26,57 @@
 
 <project_standards>
 このプロジェクトの規約：
+
 - TypeScript厳格モード
 - `any` 型の使用禁止
 - コンポーネントは単一責任
 - XMLタグでのコメント構造化
 - エラー時はユーザーフレンドリーなメッセージ
 - API呼び出しは必ずキャッシュを検討
-</project_standards>
+  </project_standards>
 
 <review_format>
 以下の形式で回答してください：
 
 ## 良い点
+
 [コードの優れている部分]
 
 ## 改善提案
+
 ### 重要度: 高
+
 [必ず修正すべき問題]
 
 ### 重要度: 中
+
 [修正を推奨する問題]
 
 ### 重要度: 低
+
 [任意の改善提案]
 
 ## 代替実装案
+
 [より良い実装方法があれば提示]
 </review_format>
 ```
 
 ## 使用例
 
-```markdown
+````markdown
 <instructions>
 以下のコードをレビューしてください：
 
 レビュー観点：
+
 - [x] TypeScript型安全性
 - [x] エラーハンドリング
 - [x] パフォーマンス
 - [x] コーディング規約の遵守
 - [x] セキュリティ
 - [x] 保守性・可読性
-</instructions>
+      </instructions>
 
 <code_context>
 ファイルパス: src/composables/useRestaurantSearch.ts
@@ -100,42 +109,52 @@ export const useRestaurantSearch = () => {
 
     localStorage.setItem(cacheKey, JSON.stringify(results));
     return results;
-  };
 
-  return { searchRestaurants };
 };
-```
+
+return { searchRestaurants };
+};
+````
+
 </code>
 
 <project_standards>
 このプロジェクトの規約：
+
 - TypeScript厳格モード
 - `any` 型の使用禁止
 - キャッシュは src/utils/cacheManager.ts を使用
 - エラーハンドリングは必須
 - Google Maps APIの呼び出しは適切にラップ
-</project_standards>
+  </project_standards>
 
 <review_format>
 以下の形式で回答してください：
 
 ## 良い点
+
 [コードの優れている部分]
 
 ## 改善提案
+
 ### 重要度: 高
+
 [必ず修正すべき問題]
 
 ### 重要度: 中
+
 [修正を推奨する問題]
 
 ### 重要度: 低
+
 [任意の改善提案]
 
 ## 代替実装案
+
 [より良い実装方法があれば提示]
 </review_format>
-```
+
+````
 
 ## 期待されるレビュー例
 
@@ -231,5 +250,8 @@ export const useRestaurantSearch = () => {
 
   return { searchRestaurants };
 };
+````
+
 ```
+
 ```
