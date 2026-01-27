@@ -1,6 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
   "plugins": ["typescript", "react", "import"],
+  "jsPlugins": ["./eslint-plugin-effect-enforce.js"],
   "env": {
     "browser": true
   },
@@ -17,7 +18,26 @@
     "typescript/no-misused-promises": "error",
     "typescript/await-thenable": "error",
     "typescript/no-unnecessary-type-assertion": "warn",
-    "import/no-duplicates": "warn"
+    "import/no-duplicates": "warn",
+    "effect-enforce/no-promise-constructor": "error",
+    "effect-enforce/no-promise-static-methods": "error",
+    "effect-enforce/no-throw-statement": "error"
   },
+  "overrides": [
+    {
+      "files": ["src/main.tsx"],
+      "rules": {
+        "effect-enforce/no-throw-statement": "off"
+      }
+    },
+    {
+      "files": ["src/utils/cacheManager.ts"],
+      "rules": {
+        "effect-enforce/no-promise-constructor": "off",
+        "effect-enforce/no-promise-static-methods": "off",
+        "effect-enforce/no-throw-statement": "off"
+      }
+    }
+  ],
   "ignorePatterns": ["dist", "node_modules"]
 }
