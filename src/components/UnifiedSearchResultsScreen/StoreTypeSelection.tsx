@@ -3,6 +3,7 @@ import type React from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { Plus, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { keywordCategories } from '../../utils/keywordOptions';
+import ToggleChip from '../ui/ToggleChip';
 
 interface StoreTypeSelectionProps {
   selectedKeywords: string[];
@@ -81,21 +82,19 @@ const StoreTypeSelection: React.FC<StoreTypeSelectionProps> = ({
         店舗タイプ
       </label>
 
-      <button
+      <ToggleChip
+        selected={
+          selectedKeywords.length ===
+          keywordCategories.flatMap((c) => c.keywords).length
+        }
         onClick={toggleAllKeywords}
-        className={`mb-2 px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200
-          ${
-            selectedKeywords.length ===
-            keywordCategories.flatMap((c) => c.keywords).length
-              ? 'bg-primary-500 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
+        className="mb-2"
       >
         {selectedKeywords.length ===
         keywordCategories.flatMap((c) => c.keywords).length
           ? '全解除'
           : '全選択'}
-      </button>
+      </ToggleChip>
 
       <div className="space-y-2">
         {keywordCategories.map((category) => {
@@ -163,18 +162,13 @@ const StoreTypeSelection: React.FC<StoreTypeSelectionProps> = ({
                 <div className="p-2 bg-white">
                   <div className="flex flex-wrap gap-2">
                     {category.keywords.map((keyword) => (
-                      <button
+                      <ToggleChip
                         key={keyword.value}
+                        selected={selectedKeywords.includes(keyword.value)}
                         onClick={() => toggleKeyword(keyword.value)}
-                        className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200
-                          ${
-                            selectedKeywords.includes(keyword.value)
-                              ? 'bg-primary-500 text-white'
-                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                          }`}
                       >
                         {keyword.label}
-                      </button>
+                      </ToggleChip>
                     ))}
                   </div>
                 </div>
@@ -191,15 +185,11 @@ const StoreTypeSelection: React.FC<StoreTypeSelectionProps> = ({
           </h4>
           <div className="flex flex-wrap gap-2">
             {customKeywords.map((keyword) => (
-              <button
+              <ToggleChip
                 key={keyword}
+                selected={selectedKeywords.includes(keyword)}
                 onClick={() => toggleKeyword(keyword)}
-                className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200 group
-                  ${
-                    selectedKeywords.includes(keyword)
-                      ? 'bg-primary-500 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
+                className="group"
               >
                 {keyword}
                 <X
@@ -210,7 +200,7 @@ const StoreTypeSelection: React.FC<StoreTypeSelectionProps> = ({
                     onRemoveCustomKeyword(keyword);
                   }}
                 />
-              </button>
+              </ToggleChip>
             ))}
           </div>
         </div>

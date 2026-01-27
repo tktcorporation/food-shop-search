@@ -46,16 +46,3 @@ export const getKeywordLabel = (value: string): string => {
   const option = keyWordOptions.find((opt) => opt.value === value);
   return option ? option.label : value;
 };
-
-export const addCustomKeyword = (keyword: string) => {
-  if (!keyWordOptions.some((option) => option.value === keyword)) {
-    keyWordOptions.push({ value: keyword, label: keyword });
-  }
-};
-
-export const removeCustomKeyword = (keyword: string) => {
-  const index = keyWordOptions.findIndex((option) => option.value === keyword);
-  if (index !== -1) {
-    keyWordOptions.splice(index, 1);
-  }
-};

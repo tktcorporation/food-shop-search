@@ -1,7 +1,12 @@
 import { useState, useCallback } from 'react';
-import { Effect, Cause } from 'effect';
+import { Effect } from 'effect';
 import { getLocationProgram } from '../programs/getLocation';
 import type { LocationData } from '../programs/getLocation';
+import {
+  extractErrorMessage,
+  extractFirstFailure,
+  getErrorCode,
+} from '../utils/effectErrors';
 import {
   GeolocationService,
   GoogleMapsGeocoderService,
@@ -44,35 +49,16 @@ export const useLocationSearch = () => {
         setError(null);
         setHasPermissionError(false);
       } else {
-        const failures = Cause.failures(exit.cause);
-        const firstFailure = Array.from(failures)[0];
-        let errorMessage = '位置情報の取得に失敗しました。再度お試しください。';
+        const errorMessage = extractErrorMessage(
+          exit.cause,
+          '位置情報の取得に失敗しました。再度お試しください。',
+        );
 
-        if (
-          firstFailure &&
-          typeof firstFailure === 'object' &&
-          firstFailure !== null
-        ) {
-          if ('message' in firstFailure) {
-            errorMessage = (firstFailure as { message: string }).message;
-          }
-          // GeolocationError の場合、PERMISSION_DENIED (code: 1) をチェック
-          if ('code' in firstFailure) {
-            const code = (firstFailure as { code: number }).code;
-            if (code === 1) {
-              setHasPermissionError(true);
-            }
-          }
-          // HttpsRequiredError / GeolocationUnsupportedError も message で対応済み
-          if ('_tag' in firstFailure) {
-            const tag = (firstFailure as { _tag: string })._tag;
-            if (
-              tag === 'HttpsRequiredError' ||
-              tag === 'GeolocationUnsupportedError'
-            ) {
-              // これらは再試行不可のためフラグは不要
-            }
-          }
+        // GeolocationError の場合、PERMISSION_DENIED (code: 1) をチェック
+        const firstFailure = extractFirstFailure(exit.cause);
+        const code = getErrorCode(firstFailure);
+        if (code === 1) {
+          setHasPermissionError(true);
         }
 
         setError(errorMessage);
