@@ -1,151 +1,85 @@
 import { useState, useCallback } from 'react';
-import { useCache, CACHE_CONFIGS } from '../utils/cacheManager';
-
-interface Location {
-  lat: number;
-  lng: number;
-  address: string;
-}
+import { Effect, Cause } from 'effect';
+import { getLocationProgram } from '../programs/getLocation';
+import type { LocationData } from '../programs/getLocation';
+import {
+  GeolocationService,
+  GoogleMapsGeocoderService,
+  CacheService,
+  AppLive,
+} from '../services';
 
 export const useLocationSearch = () => {
-  const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<LocationData | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasPermissionError, setHasPermissionError] = useState(false);
 
-  const geocodeCache = useCache<Location>(CACHE_CONFIGS.GEOCODE);
-
-  const checkHttps = useCallback(() => {
-    if (
-      typeof window !== 'undefined' &&
-      window.location.protocol !== 'https:'
-    ) {
-      if (
-        window.location.hostname !== 'localhost' &&
-        window.location.hostname !== '127.0.0.1'
-      ) {
-        setError('位置情報の取得には HTTPS 接続が必要です。');
-        return false;
-      }
-    }
-    return true;
-  }, []);
-
   const getCurrentLocation = useCallback(() => {
-    if (!checkHttps()) return;
     if (hasPermissionError) return;
     if (isLoading) return;
 
     setIsLoading(true);
     setError(null);
 
-    if (!navigator.geolocation) {
-      setError('お使いのブラウザは位置情報をサポートしていません。');
-      setIsLoading(false);
-      return;
-    }
+    // Effect プログラムを構築して実行
+    const program = Effect.gen(function* () {
+      const geolocationService = yield* GeolocationService;
+      const geocoderService = yield* GoogleMapsGeocoderService;
+      const cacheService = yield* CacheService;
+      return yield* getLocationProgram(
+        geolocationService,
+        geocoderService,
+        cacheService,
+      );
+    });
 
-    const handleError = (error: GeolocationPositionError) => {
-      setIsLoading(false);
-      switch (error.code) {
-        case error.PERMISSION_DENIED:
-          setHasPermissionError(true);
-          if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
-            setError(
-              '位置情報の利用が許可されていません。\n' +
-                '1. iOSの設定アプリを開く\n' +
-                '2. プライバシーとセキュリティ > 位置情報サービス\n' +
-                '3. Safari > 「このWebサイトの使用中のみ許可」を選択',
-            );
-          } else {
-            setError(
-              '位置情報の利用が許可されていません。ブラウザの設定から位置情報の利用を許可してください。',
-            );
+    const runnable = Effect.provide(program, AppLive);
+
+    void Effect.runPromiseExit(runnable).then((exit) => {
+      if (exit._tag === 'Success') {
+        setCurrentLocation(exit.value);
+        setError(null);
+        setHasPermissionError(false);
+      } else {
+        const failures = Cause.failures(exit.cause);
+        const firstFailure = Array.from(failures)[0];
+        let errorMessage = '位置情報の取得に失敗しました。再度お試しください。';
+
+        if (
+          firstFailure &&
+          typeof firstFailure === 'object' &&
+          firstFailure !== null
+        ) {
+          if ('message' in firstFailure) {
+            errorMessage = (firstFailure as { message: string }).message;
           }
-          break;
-        case error.POSITION_UNAVAILABLE:
-          setError(
-            '位置情報を取得できませんでした。電波の良い場所で再度お試しください。',
-          );
-          break;
-        case error.TIMEOUT:
-          setError(
-            '位置情報の取得がタイムアウトしました。再度お試しください。',
-          );
-          break;
-        default:
-          setError('位置情報の取得に失敗しました。再度お試しください。');
-      }
-    };
-
-    const options: PositionOptions = {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0,
-    };
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        void (async () => {
-          try {
-            const { latitude, longitude } = position.coords;
-            const cacheKey = `${latitude},${longitude}`;
-
-            const cached = geocodeCache.getCached(cacheKey);
-            if (cached) {
-              setCurrentLocation(cached);
-              setIsLoading(false);
-              setError(null);
-              setHasPermissionError(false);
-              return;
+          // GeolocationError の場合、PERMISSION_DENIED (code: 1) をチェック
+          if ('code' in firstFailure) {
+            const code = (firstFailure as { code: number }).code;
+            if (code === 1) {
+              setHasPermissionError(true);
             }
-
-            const geocoder = new google.maps.Geocoder();
-
-            const result = await new Promise<google.maps.GeocoderResult>(
-              (resolve, reject) => {
-                void geocoder.geocode(
-                  { location: { lat: latitude, lng: longitude } },
-                  (results, status) => {
-                    if (
-                      status === google.maps.GeocoderStatus.OK &&
-                      results?.[0]
-                    ) {
-                      resolve(results[0]);
-                    } else {
-                      reject(new Error('住所の取得に失敗しました。'));
-                    }
-                  },
-                );
-              },
-            );
-
-            const locationData = {
-              lat: latitude,
-              lng: longitude,
-              address: result.formatted_address,
-            };
-
-            geocodeCache.setCached(cacheKey, locationData);
-            setCurrentLocation(locationData);
-            setIsLoading(false);
-            setError(null);
-            setHasPermissionError(false);
-          } catch {
-            handleError({
-              code: 2,
-              message: '位置情報の取得に失敗しました。',
-              PERMISSION_DENIED: 1,
-              POSITION_UNAVAILABLE: 2,
-              TIMEOUT: 3,
-            });
           }
-        })();
-      },
-      handleError,
-      options,
-    );
-  }, [checkHttps, hasPermissionError, isLoading, geocodeCache]);
+          // HttpsRequiredError / GeolocationUnsupportedError も message で対応済み
+          if ('_tag' in firstFailure) {
+            const tag = (firstFailure as { _tag: string })._tag;
+            if (
+              tag === 'HttpsRequiredError' ||
+              tag === 'GeolocationUnsupportedError'
+            ) {
+              // これらは再試行不可のためフラグは不要
+            }
+          }
+        }
+
+        setError(errorMessage);
+      }
+      setIsLoading(false);
+    });
+  }, [hasPermissionError, isLoading]);
 
   return {
     currentLocation,
