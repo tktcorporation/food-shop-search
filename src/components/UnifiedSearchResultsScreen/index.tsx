@@ -9,23 +9,28 @@ import useStationSearch from '../../composables/useStationSearch';
 import { useLocationSearch } from '../../composables/useLocationSearch';
 import { keyWordOptions } from '../../utils/keywordOptions';
 import { MapPin, Train } from 'lucide-react';
+import type {
+  Restaurant,
+  Location,
+} from '../../composables/useRestaurantSearch/types';
+import type { Station } from '../../composables/useStationSearch/types';
 
 // API検索のデバウンス時間（ミリ秒）
 const SEARCH_DEBOUNCE_MS = 500;
 
 interface UnifiedSearchResultsScreenProps {
   initialStation: string;
-  restaurants: any[];
+  restaurants: Restaurant[];
   setScreen: (screen: string) => void;
   searchNearbyRestaurants: (
     types: string[],
     minRating: number,
     minReviews: number,
-    searchLocation: any,
+    searchLocation: Station | Location,
     isOpenNow: boolean,
     searchRadius: number,
-    selectedPriceLevels: number[]
-  ) => void;
+    selectedPriceLevels: number[],
+  ) => Promise<void>;
   reapplyFilters: (filterParams: {
     minRating: number;
     minReviews: number;
@@ -45,17 +50,35 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
   isLoading,
   error: searchError,
 }) => {
-  const { station, setStation, stationCandidates, selectedStation, selectStation } = useStationSearch(initialStation);
-  const { currentLocation, isLoading: isLocationLoading, error: locationError, hasPermissionError, getCurrentLocation } = useLocationSearch();
-  const [selectedKeywords, setSelectedKeywords] = useState<string[]>(keyWordOptions.map(option => option.value));
+  const {
+    station,
+    setStation,
+    stationCandidates,
+    selectedStation,
+    selectStation,
+  } = useStationSearch(initialStation);
+  const {
+    currentLocation,
+    isLoading: isLocationLoading,
+    error: locationError,
+    hasPermissionError,
+    getCurrentLocation,
+  } = useLocationSearch();
+  const [selectedKeywords, setSelectedKeywords] = useState<string[]>(
+    keyWordOptions.map((option) => option.value),
+  );
   const [minRating, setMinRating] = useState<number>(3.5);
   const [minReviews, setMinReviews] = useState<number>(100);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [customKeywords, setCustomKeywords] = useState<string[]>([]);
   const [isOpenNow, setIsOpenNow] = useState(false);
-  const [selectedPriceLevels, setSelectedPriceLevels] = useState<number[]>([1, 2, 3, 4]);
+  const [selectedPriceLevels, setSelectedPriceLevels] = useState<number[]>([
+    1, 2, 3, 4,
+  ]);
   const [searchRadius, setSearchRadius] = useState<number>(100);
-  const [searchMethod, setSearchMethod] = useState<'location' | 'station'>('location');
+  const [searchMethod, setSearchMethod] = useState<'location' | 'station'>(
+    'location',
+  );
 
   // 初回検索済みフラグ
   const hasSearchedRef = useRef(false);
@@ -63,42 +86,64 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
 
   // API呼び出しが必要な検索（キーワード・位置・半径変更時）
   const triggerSearch = useCallback(() => {
-    const searchLocation = searchMethod === 'location' ? currentLocation : selectedStation;
+    const searchLocation =
+      searchMethod === 'location' ? currentLocation : selectedStation;
     if (searchLocation) {
-      searchNearbyRestaurants(
+      void searchNearbyRestaurants(
         selectedKeywords,
         minRating,
         minReviews,
         searchLocation,
         isOpenNow,
         searchRadius,
-        selectedPriceLevels
+        selectedPriceLevels,
       );
       hasSearchedRef.current = true;
     }
-  }, [searchMethod, currentLocation, selectedStation, selectedKeywords, minRating, minReviews, isOpenNow, searchRadius, selectedPriceLevels, searchNearbyRestaurants]);
+  }, [
+    searchMethod,
+    currentLocation,
+    selectedStation,
+    selectedKeywords,
+    minRating,
+    minReviews,
+    isOpenNow,
+    searchRadius,
+    selectedPriceLevels,
+    searchNearbyRestaurants,
+  ]);
 
   // API呼び出しが必要なパラメータ変更時（デバウンス付き）
   // triggerSearchは意図的に依存から除外: フィルター変更ではAPI再呼び出ししない
   useEffect(() => {
-    const searchLocation = searchMethod === 'location' ? currentLocation : selectedStation;
+    const searchLocation =
+      searchMethod === 'location' ? currentLocation : selectedStation;
     if (!searchLocation) return;
 
     if (searchDebounceRef.current) {
       clearTimeout(searchDebounceRef.current);
     }
 
-    searchDebounceRef.current = setTimeout(() => {
-      triggerSearch();
-    }, hasSearchedRef.current ? SEARCH_DEBOUNCE_MS : 0); // 初回は即実行
+    searchDebounceRef.current = setTimeout(
+      () => {
+        triggerSearch();
+      },
+      hasSearchedRef.current ? SEARCH_DEBOUNCE_MS : 0,
+    ); // 初回は即実行
 
     return () => {
       if (searchDebounceRef.current) {
         clearTimeout(searchDebounceRef.current);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedKeywords, selectedStation, currentLocation, searchRadius, searchMethod]);
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    selectedKeywords,
+    selectedStation,
+    currentLocation,
+    searchRadius,
+    searchMethod,
+  ]);
 
   // フィルターのみの変更時（API呼び出し不要、クライアント側で再フィルタリング）
   // searchRadiusはAPI検索でも使うため、ここではreapplyFiltersに渡すが依存には含めない
@@ -112,25 +157,31 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
       searchRadius,
       selectedPriceLevels,
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [minRating, minReviews, isOpenNow, selectedPriceLevels]);
 
   useEffect(() => {
-    if (searchMethod === 'location' && !currentLocation && !isLocationLoading && !hasPermissionError) {
+    if (
+      searchMethod === 'location' &&
+      !currentLocation &&
+      !isLocationLoading &&
+      !hasPermissionError
+    ) {
       getCurrentLocation();
     }
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- getCurrentLocationは安定参照のため除外
   }, [searchMethod, currentLocation, isLocationLoading, hasPermissionError]);
 
   const handleAddCustomKeyword = (keyword: string) => {
     if (!customKeywords.includes(keyword)) {
-      setCustomKeywords(prev => [...prev, keyword]);
-      setSelectedKeywords(prev => [...prev, keyword]);
+      setCustomKeywords((prev) => [...prev, keyword]);
+      setSelectedKeywords((prev) => [...prev, keyword]);
     }
   };
 
   const handleRemoveCustomKeyword = (keyword: string) => {
-    setCustomKeywords(prev => prev.filter(k => k !== keyword));
-    setSelectedKeywords(prev => prev.filter(k => k !== keyword));
+    setCustomKeywords((prev) => prev.filter((k) => k !== keyword));
+    setSelectedKeywords((prev) => prev.filter((k) => k !== keyword));
   };
 
   return (
@@ -202,9 +253,7 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
 
         {isLoading && <p>Loading...</p>}
 
-        {searchError && (
-          <p className="text-red-500">{searchError}</p>
-        )}
+        {searchError && <p className="text-red-500">{searchError}</p>}
 
         <SearchResults
           restaurants={restaurants}

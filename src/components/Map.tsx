@@ -1,5 +1,10 @@
 import React, { useState, useCallback } from 'react';
-import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
+import {
+  GoogleMap,
+  useJsApiLoader,
+  Marker,
+  InfoWindow,
+} from '@react-google-maps/api';
 import { ArrowLeft, Star, DollarSign } from 'lucide-react';
 
 interface Restaurant {
@@ -24,23 +29,28 @@ interface MapProps {
 
 const containerStyle = {
   width: '100%',
-  height: '400px'
+  height: '400px',
 };
 
 const defaultCenter = { lat: 35.6762, lng: 139.6503 }; // デフォルトは東京
 
 const Map: React.FC<MapProps> = ({ restaurants, setScreen }) => {
-  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
+  const [selectedRestaurant, setSelectedRestaurant] =
+    useState<Restaurant | null>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
 
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
   });
 
-  const center = restaurants.length > 0 && restaurants[0].geometry
-    ? { lat: restaurants[0].geometry.location.lat, lng: restaurants[0].geometry.location.lng }
-    : defaultCenter;
+  const center =
+    restaurants.length > 0 && restaurants[0].geometry
+      ? {
+          lat: restaurants[0].geometry.location.lat,
+          lng: restaurants[0].geometry.location.lng,
+        }
+      : defaultCenter;
 
   const onLoad = useCallback((map: google.maps.Map) => {
     setMap(map);
@@ -53,17 +63,24 @@ const Map: React.FC<MapProps> = ({ restaurants, setScreen }) => {
   const handleRestaurantSelect = (restaurant: Restaurant) => {
     setSelectedRestaurant(restaurant);
     if (map && restaurant.geometry) {
-      map.panTo({ lat: restaurant.geometry.location.lat, lng: restaurant.geometry.location.lng });
+      map.panTo({
+        lat: restaurant.geometry.location.lat,
+        lng: restaurant.geometry.location.lng,
+      });
       map.setZoom(16);
     }
   };
 
-  const validRestaurants = restaurants.filter(restaurant => restaurant.geometry);
+  const validRestaurants = restaurants.filter(
+    (restaurant) => restaurant.geometry,
+  );
 
   return (
     <div className="max-w-6xl mx-auto p-6">
       <div className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-semibold text-primary-800">レストランマップ</h2>
+        <h2 className="text-3xl font-semibold text-primary-800">
+          レストランマップ
+        </h2>
         <button
           onClick={() => setScreen('results')}
           className="btn btn-secondary flex items-center"
@@ -91,9 +108,13 @@ const Map: React.FC<MapProps> = ({ restaurants, setScreen }) => {
                 <p className="text-sm text-gray-600">{restaurant.vicinity}</p>
                 <div className="flex items-center mt-2">
                   <Star size={16} className="text-yellow-400 mr-1" />
-                  <span className="text-sm">{restaurant.rating} ({restaurant.user_ratings_total})</span>
+                  <span className="text-sm">
+                    {restaurant.rating} ({restaurant.user_ratings_total})
+                  </span>
                   <DollarSign size={16} className="ml-2 mr-1" />
-                  <span className="text-sm">{"¥".repeat(restaurant.price_level)}</span>
+                  <span className="text-sm">
+                    {'¥'.repeat(restaurant.price_level)}
+                  </span>
                 </div>
               </div>
             ))}
@@ -114,7 +135,7 @@ const Map: React.FC<MapProps> = ({ restaurants, setScreen }) => {
                   key={restaurant.place_id}
                   position={{
                     lat: restaurant.geometry!.location.lat,
-                    lng: restaurant.geometry!.location.lng
+                    lng: restaurant.geometry!.location.lng,
                   }}
                   onClick={() => handleRestaurantSelect(restaurant)}
                 />
@@ -123,7 +144,7 @@ const Map: React.FC<MapProps> = ({ restaurants, setScreen }) => {
                 <InfoWindow
                   position={{
                     lat: selectedRestaurant.geometry.location.lat,
-                    lng: selectedRestaurant.geometry.location.lng
+                    lng: selectedRestaurant.geometry.location.lng,
                   }}
                   onCloseClick={() => setSelectedRestaurant(null)}
                 >
@@ -132,9 +153,14 @@ const Map: React.FC<MapProps> = ({ restaurants, setScreen }) => {
                     <p className="text-sm">{selectedRestaurant.vicinity}</p>
                     <div className="flex items-center mt-2">
                       <Star size={16} className="text-yellow-400 mr-1" />
-                      <span className="text-sm">{selectedRestaurant.rating} ({selectedRestaurant.user_ratings_total})</span>
+                      <span className="text-sm">
+                        {selectedRestaurant.rating} (
+                        {selectedRestaurant.user_ratings_total})
+                      </span>
                       <DollarSign size={16} className="ml-2 mr-1" />
-                      <span className="text-sm">{"¥".repeat(selectedRestaurant.price_level)}</span>
+                      <span className="text-sm">
+                        {'¥'.repeat(selectedRestaurant.price_level)}
+                      </span>
                     </div>
                   </div>
                 </InfoWindow>

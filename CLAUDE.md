@@ -10,6 +10,9 @@
 - **スタイリング**: Tailwind CSS
 - **地図API**: Google Maps API
 - **状態管理**: React Hooks
+- **リント**: oxlint (OXC toolchain) + oxlint-tsgolint (type-aware)
+- **フォーマット**: oxfmt (OXC toolchain)
+- **型チェック**: tsgo (TypeScript Go / TypeScript 7 native preview)
 
 ## 環境管理
 
@@ -28,10 +31,17 @@ npm run dev         # 開発サーバー起動
 
 ```bash
 # 開発
-npm run dev         # 開発サーバー起動 (http://localhost:5173)
-npm run build       # 本番ビルド
-npm run preview     # ビルドしたアプリをプレビュー
-npm run lint        # ESLintでコードチェック
+npm run dev           # 開発サーバー起動 (http://localhost:5173)
+npm run build         # 本番ビルド (tsgo型チェック + vite build)
+npm run preview       # ビルドしたアプリをプレビュー
+
+# コード品質
+npm run lint          # oxlint (type-aware linting via tsgolint)
+npm run lint:quick    # oxlint (型情報なしの高速lint)
+npm run format        # oxfmt でコードフォーマット
+npm run format:check  # oxfmt でフォーマットチェック
+npm run typecheck     # tsgo で型チェック
+npm run check         # lint + format:check + typecheck を一括実行
 
 # Git ワークフロー
 git status          # 変更状況を確認
@@ -61,6 +71,7 @@ npm outdated                # 古いパッケージの確認
 IMPORTANT: **効果的なコミュニケーションのため、`.claude/prompts/` ディレクトリのテンプレートを活用してください。**
 
 利用可能なテンプレート：
+
 - **feature-implementation.md** - 新機能実装時（XMLタグで構造化）
 - **bug-fix.md** - バグ修正時（段階的思考を活用）
 - **code-review.md** - コードレビュー依頼時（多角的な分析）
@@ -109,6 +120,7 @@ APIキーは環境変数 VITE_GOOGLE_MAPS_API_KEY から取得します。
 
 ```markdown
 以下のバグを修正してください。まず <thinking> タグ内で：
+
 1. 問題の根本原因を分析
 2. 修正方法を検討
 3. 影響範囲を評価
@@ -128,14 +140,14 @@ feat: Google Maps APIキャッシュ機能を追加
 
 - cacheManager.tsに24時間キャッシュを実装
 - API呼び出し回数を削減してコスト最適化
-</example>
+  </example>
 
 <example>
 fix: レストラン検索で営業時間フィルターが機能しない問題を修正
 
 - useOperatingHours.tsのタイムゾーン処理を修正
 - 深夜営業の判定ロジックを改善
-</example>
+  </example>
 ```
 
 ### 効果的なコンテキスト管理戦略
@@ -247,12 +259,13 @@ IMPORTANT: **APIキーの取り扱いに注意してください！**
 
 ```typescript
 // App.tsx:7
-const libraries: ("places" | "geometry")[] = ['places', 'geometry'];
+const libraries: ('places' | 'geometry')[] = ['places', 'geometry'];
 ```
 
 ### 3. キャッシュ管理
 
 `src/utils/cacheManager.ts`でGoogle Maps APIのレスポンスをキャッシュしています。
+
 - APIコールの削減
 - パフォーマンス向上
 - コスト最適化
@@ -260,6 +273,7 @@ const libraries: ("places" | "geometry")[] = ['places', 'geometry'];
 ### 4. 検索フィルター
 
 以下のフィルターオプションが実装されています：
+
 - **価格帯**: リーズナブル、中価格帯、高価格帯
 - **評価**: 星の数でフィルタリング
 - **レビュー数**: 最小レビュー数の設定
@@ -328,23 +342,31 @@ npm run build
 ```
 
 ビルド前に以下を確認：
-- TypeScriptエラーがないこと
-- ESLintの警告がないこと
-- 環境変数が正しく設定されていること
 
-### リント
+- TypeScriptエラーがないこと（`npm run typecheck` / tsgo）
+- oxlintの警告がないこと（`npm run lint`）
+- コードフォーマットが統一されていること（`npm run format:check` / oxfmt）
+- 環境変数が正しく設定されていること
+- または `npm run check` で一括確認
+
+### リント・フォーマット
 
 ```bash
-npm run lint
+npm run lint          # oxlint --type-aware (tsgoベースの型情報付きリント)
+npm run format        # oxfmt --write . (フォーマット適用)
+npm run check         # 全チェック一括実行
 ```
 
-ESLint設定は`eslint.config.js`で管理。
+- oxlint設定は`.oxlintrc.json`で管理
+- oxfmt設定は`.oxfmtrc.json`で管理（Prettier互換）
+- 抑制コメント: `// oxlint-disable-next-line rule-name`
 
 ## デバッグのヒント
 
 ### Google Maps API関連
 
 1. **APIキーが正しく設定されているか確認**
+
    ```bash
    cat .env
    ```
@@ -371,8 +393,8 @@ ESLint設定は`eslint.config.js`で管理。
 - [ ] エラーハンドリングを実装
 - [ ] 必要に応じてキャッシュ戦略を検討
 - [ ] レスポンシブデザインを確認
-- [ ] ESLintエラーがないことを確認
-- [ ] ビルドが成功することを確認
+- [ ] oxlint + oxfmt エラーがないことを確認（`npm run check`）
+- [ ] ビルドが成功することを確認（`npm run build`）
 
 ## トラブルシューティング
 
@@ -399,6 +421,9 @@ ESLint設定は`eslint.config.js`で管理。
 - [React Google Maps API](https://react-google-maps-api-docs.netlify.app/)
 - [Tailwind CSS](https://tailwindcss.com/docs)
 - [Vite](https://vitejs.dev/)
+- [OXC (oxlint)](https://oxc.rs/)
+- [oxfmt](https://oxc.rs/docs/guide/usage/formatter)
+- [tsgo (TypeScript Native Preview)](https://devblogs.microsoft.com/typescript/announcing-typescript-native-previews/)
 
 ## お問い合わせ
 

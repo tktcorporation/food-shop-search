@@ -24,14 +24,16 @@ const CustomKeywordModal: React.FC<CustomKeywordModalProps> = ({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0, y: "100%" }}
+          initial={{ opacity: 0, y: '100%' }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: "100%" }}
-          transition={{ type: "spring", damping: 25, stiffness: 500 }}
+          exit={{ opacity: 0, y: '100%' }}
+          transition={{ type: 'spring', damping: 25, stiffness: 500 }}
           className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center p-4"
         >
           <div className="bg-white rounded-t-2xl p-6 w-full max-w-lg">
-            <h3 className="text-xl font-semibold mb-4">新しい店舗タイプを追加</h3>
+            <h3 className="text-xl font-semibold mb-4">
+              新しい店舗タイプを追加
+            </h3>
             <input
               type="text"
               value={newKeyword}

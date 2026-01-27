@@ -1,13 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import type React from 'react';
 import { Search, Navigation, Loader2, AlertCircle } from 'lucide-react';
 import { useCache, CACHE_CONFIGS } from '../../utils/cacheManager';
-
-interface Station {
-  name: string;
-  address: string;
-  distance?: number;
-  rawPrediction: google.maps.places.AutocompletePrediction;
-}
+import type { Station } from '../../composables/useStationSearch/types';
 
 interface NearbyStationCacheEntry {
   stations: Station[];
@@ -35,7 +30,9 @@ const StationSearch: React.FC<StationSearchProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [nearbyStations, setNearbyStations] = useState<Station[]>([]);
 
-  const nearbyStationsCache = useCache<NearbyStationCacheEntry>(CACHE_CONFIGS.NEARBY_STATIONS);
+  const nearbyStationsCache = useCache<NearbyStationCacheEntry>(
+    CACHE_CONFIGS.NEARBY_STATIONS,
+  );
 
   const findNearbyStations = () => {
     setIsLoading(true);
@@ -65,29 +62,33 @@ const StationSearch: React.FC<StationSearchProps> = ({
         }
 
         const userLocation = new google.maps.LatLng(latitude, longitude);
-        const service = new google.maps.places.PlacesService(document.createElement('div'));
+        const service = new google.maps.places.PlacesService(
+          document.createElement('div'),
+        );
         const request = {
           location: userLocation,
           radius: 5000,
-          type: 'train_station'
+          type: 'train_station',
         };
 
         service.nearbySearch(request, (results, status) => {
           setIsLoading(false);
           if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-            const stations = results.map(place => {
+            const stations = results.map((place) => {
               const placeLocation = place.geometry?.location;
               let distance = 0;
 
               if (placeLocation && google.maps.geometry) {
-                distance = google.maps.geometry.spherical.computeDistanceBetween(
-                  userLocation,
-                  placeLocation
-                );
+                distance =
+                  google.maps.geometry.spherical.computeDistanceBetween(
+                    userLocation,
+                    placeLocation,
+                  );
               }
 
               return {
                 name: place.name?.replace(/駅$/, '') || '',
+                prefecture: place.vicinity || '',
                 address: place.vicinity || '',
                 distance: Math.round(distance),
                 rawPrediction: {
@@ -95,18 +96,22 @@ const StationSearch: React.FC<StationSearchProps> = ({
                   description: place.name || '',
                   structured_formatting: {
                     main_text: place.name || '',
-                    secondary_text: place.vicinity || ''
-                  }
-                } as google.maps.places.AutocompletePrediction
+                    secondary_text: place.vicinity || '',
+                  },
+                } as google.maps.places.AutocompletePrediction,
               };
             });
 
             // 距離でソート
-            const sortedStations = stations.sort((a, b) => (a.distance || 0) - (b.distance || 0));
+            const sortedStations = stations.sort(
+              (a, b) => (a.distance || 0) - (b.distance || 0),
+            );
             const nearestStations = sortedStations.slice(0, 5);
 
             // キャッシュに保存
-            nearbyStationsCache.setCached(cacheKey, { stations: nearestStations });
+            nearbyStationsCache.setCached(cacheKey, {
+              stations: nearestStations,
+            });
             setNearbyStations(nearestStations);
 
             // 最寄り駅を自動選択
@@ -114,8 +119,12 @@ const StationSearch: React.FC<StationSearchProps> = ({
               setStation(nearestStations[0].name);
               selectStation(nearestStations[0]);
             }
-          } else if (status === google.maps.places.PlacesServiceStatus.REQUEST_DENIED) {
-            setError('Google Maps APIの認証に失敗しました。APIキーを確認してください。');
+          } else if (
+            status === google.maps.places.PlacesServiceStatus.REQUEST_DENIED
+          ) {
+            setError(
+              'Google Maps APIの認証に失敗しました。APIキーを確認してください。',
+            );
           } else {
             setError('近くの駅を見つけることができませんでした。');
           }
@@ -125,17 +134,20 @@ const StationSearch: React.FC<StationSearchProps> = ({
         setIsLoading(false);
         setError('位置情報の取得に失敗しました。');
         console.error('Geolocation error:', err);
-      }
+      },
     );
   };
 
   useEffect(() => {
     findNearbyStations();
-  }, []);
+  }, []); // oxlint-disable-line react-hooks/exhaustive-deps -- mount時に一度だけ実行
 
   return (
     <div className="mb-6">
-      <label htmlFor="station" className="block text-sm font-medium text-gray-700 mb-2">
+      <label
+        htmlFor="station"
+        className="block text-sm font-medium text-gray-700 mb-2"
+      >
         駅名
       </label>
       <div className="relative">
@@ -166,9 +178,11 @@ const StationSearch: React.FC<StationSearchProps> = ({
                     key={nearbyStation.name}
                     onClick={() => selectStation(nearbyStation)}
                     className={`px-3 py-1 text-sm rounded-full transition-colors duration-200 flex items-center gap-1
-                      ${station === nearbyStation.name
-                        ? 'bg-primary-500 text-white'
-                        : 'bg-primary-100 text-primary-700 hover:bg-primary-200'}`}
+                      ${
+                        station === nearbyStation.name
+                          ? 'bg-primary-500 text-white'
+                          : 'bg-primary-100 text-primary-700 hover:bg-primary-200'
+                      }`}
                   >
                     <Navigation size={14} />
                     {nearbyStation.name}

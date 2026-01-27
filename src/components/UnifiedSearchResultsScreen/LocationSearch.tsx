@@ -15,10 +15,11 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
   onGetCurrentLocation,
 }) => {
   const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-  const isHttps = typeof window !== 'undefined' && 
-    (window.location.protocol === 'https:' || 
-     window.location.hostname === 'localhost' || 
-     window.location.hostname === '127.0.0.1');
+  const isHttps =
+    typeof window !== 'undefined' &&
+    (window.location.protocol === 'https:' ||
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1');
 
   return (
     <div className="mb-6">

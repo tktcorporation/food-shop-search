@@ -1,8 +1,9 @@
-import React from 'react';
+import type React from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 
 interface SearchFiltersProps {
   selectedPriceLevels: number[];
-  setSelectedPriceLevels: (levels: number[]) => void;
+  setSelectedPriceLevels: Dispatch<SetStateAction<number[]>>;
   minRating: number;
   setMinRating: (rating: number) => void;
   minReviews: number;
@@ -40,10 +41,10 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
   setSearchRadius,
 }) => {
   const togglePriceLevel = (level: number) => {
-    setSelectedPriceLevels(prev =>
+    setSelectedPriceLevels((prev) =>
       prev.includes(level)
-        ? prev.filter(l => l !== level)
-        : [...prev, level].sort()
+        ? prev.filter((l) => l !== level)
+        : [...prev, level].sort((a, b) => a - b),
     );
   };
 
@@ -51,7 +52,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
     if (selectedPriceLevels.length === PRICE_LEVELS.length) {
       setSelectedPriceLevels([]);
     } else {
-      setSelectedPriceLevels(PRICE_LEVELS.map(level => level.value));
+      setSelectedPriceLevels(PRICE_LEVELS.map((level) => level.value));
     }
   };
 
@@ -67,9 +68,11 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
               key={option.value}
               onClick={() => setSearchRadius(option.value)}
               className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200
-                ${searchRadius === option.value
-                  ? 'bg-primary-500 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                ${
+                  searchRadius === option.value
+                    ? 'bg-primary-500 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
             >
               {option.label}
             </button>
@@ -85,20 +88,26 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
           <button
             onClick={toggleAllPriceLevels}
             className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200
-              ${selectedPriceLevels.length === PRICE_LEVELS.length
-                ? 'bg-primary-500 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+              ${
+                selectedPriceLevels.length === PRICE_LEVELS.length
+                  ? 'bg-primary-500 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
           >
-            {selectedPriceLevels.length === PRICE_LEVELS.length ? '全解除' : '全選択'}
+            {selectedPriceLevels.length === PRICE_LEVELS.length
+              ? '全解除'
+              : '全選択'}
           </button>
           {PRICE_LEVELS.map((level) => (
             <button
               key={level.value}
               onClick={() => togglePriceLevel(level.value)}
               className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200
-                ${selectedPriceLevels.includes(level.value)
-                  ? 'bg-primary-500 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                ${
+                  selectedPriceLevels.includes(level.value)
+                    ? 'bg-primary-500 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
             >
               {level.label}
             </button>

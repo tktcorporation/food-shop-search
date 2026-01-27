@@ -1,5 +1,12 @@
 import React from 'react';
-import { MapPin, Star, DollarSign, Clock, Image as ImageIcon, ExternalLink, AlertCircle } from 'lucide-react';
+import {
+  MapPin,
+  Star,
+  Clock,
+  Image as ImageIcon,
+  ExternalLink,
+  AlertCircle,
+} from 'lucide-react';
 import { getKeywordLabel } from '../../utils/keywordOptions';
 import { useOperatingHours } from '../../composables/useOperatingHours';
 import { useAnalytics } from '../../hooks/useAnalytics';
@@ -32,12 +39,12 @@ const getBusinessStatusInfo = (status?: string) => {
     case 'CLOSED_TEMPORARILY':
       return {
         message: '一時休業中',
-        className: 'bg-yellow-100 text-yellow-800'
+        className: 'bg-yellow-100 text-yellow-800',
       };
     case 'CLOSED_PERMANENTLY':
       return {
         message: '閉店',
-        className: 'bg-red-100 text-red-800'
+        className: 'bg-red-100 text-red-800',
       };
     default:
       return null;
@@ -51,13 +58,15 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
 
   const openInGoogleMaps = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const searchQuery = encodeURIComponent(`${restaurant.name} ${restaurant.vicinity}`);
+    const searchQuery = encodeURIComponent(
+      `${restaurant.name} ${restaurant.vicinity}`,
+    );
     const url = `https://www.google.com/maps/search/?api=1&query=${searchQuery}&query_place_id=${restaurant.place_id}`;
-    
+
     trackEvent({
       action: 'view_restaurant',
       category: 'Restaurant',
-      label: restaurant.name
+      label: restaurant.name,
     });
 
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -80,7 +89,10 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
         {restaurant.photos?.[0] ? (
           <div className="aspect-video w-full relative bg-gray-100">
             <img
-              src={restaurant.photos[0].getUrl({ maxWidth: 400, maxHeight: 300 })}
+              src={restaurant.photos[0].getUrl({
+                maxWidth: 400,
+                maxHeight: 300,
+              })}
               alt={restaurant.name}
               className="w-full h-full object-cover"
               loading="lazy"
@@ -95,7 +107,9 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
           <ExternalLink size={16} className="text-primary-600" />
         </div>
         {businessStatusInfo && (
-          <div className={`absolute top-2 left-2 px-2 py-1 rounded-md text-xs font-medium flex items-center gap-1 ${businessStatusInfo.className}`}>
+          <div
+            className={`absolute top-2 left-2 px-2 py-1 rounded-md text-xs font-medium flex items-center gap-1 ${businessStatusInfo.className}`}
+          >
             <AlertCircle size={14} />
             {businessStatusInfo.message}
           </div>
@@ -106,7 +120,7 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
         <h3 className="text-lg font-semibold mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors duration-200">
           {restaurant.name}
         </h3>
-        
+
         <div className="flex items-center gap-2 mb-2">
           <div className="flex items-center text-yellow-500">
             <Star className="inline-block mr-1" size={16} />
@@ -117,7 +131,7 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
           </span>
           <span className="text-gray-400">|</span>
           <span className="text-gray-600">
-            {"¥".repeat(restaurant.price_level)}
+            {'¥'.repeat(restaurant.price_level)}
           </span>
         </div>
 
@@ -151,11 +165,9 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
         {restaurant.types && restaurant.types.length > 0 && (
           <div className="flex flex-wrap mb-2">
             {restaurant.types.map((type, index, array) => (
-              <span
-                key={index}
-                className="text-xs text-gray-600 rounded-full"
-              >
-                {type}{index < array.length - 1 && ', '}
+              <span key={index} className="text-xs text-gray-600 rounded-full">
+                {type}
+                {index < array.length - 1 && ', '}
               </span>
             ))}
           </div>
@@ -164,12 +176,14 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
         {restaurant.opening_hours?.weekday_text && !businessStatusInfo && (
           <div className="mt-2 border-t pt-2">
             {isOpen !== null && (
-              <p className={`text-xs mb-1 ${isOpen ? 'text-green-600' : 'text-red-600'}`}>
+              <p
+                className={`text-xs mb-1 ${isOpen ? 'text-green-600' : 'text-red-600'}`}
+              >
                 <Clock className="inline-block mr-1" size={14} />
                 {isOpen ? '営業中' : '営業時間外'}
               </p>
             )}
-            <details className="text-xs" onClick={e => e.stopPropagation()}>
+            <details className="text-xs" onClick={(e) => e.stopPropagation()}>
               <summary className="cursor-pointer text-primary-600">
                 営業時間を表示
               </summary>
