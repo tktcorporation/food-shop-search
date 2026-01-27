@@ -1,19 +1,17 @@
 import { useState, useCallback } from 'react';
 import { useCache, CACHE_CONFIGS } from '../utils/cacheManager';
-
-interface Location {
-  lat: number;
-  lng: number;
-  address: string;
-}
+import type { GeoLocation } from '../schemas';
+import { GeoLocationSchema } from '../schemas';
 
 export const useLocationSearch = () => {
-  const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<GeoLocation | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasPermissionError, setHasPermissionError] = useState(false);
 
-  const geocodeCache = useCache<Location>(CACHE_CONFIGS.GEOCODE);
+  const geocodeCache = useCache<GeoLocation>(CACHE_CONFIGS.GEOCODE);
 
   const checkHttps = useCallback(() => {
     if (
@@ -120,11 +118,11 @@ export const useLocationSearch = () => {
               },
             );
 
-            const locationData = {
+            const locationData = GeoLocationSchema.parse({
               lat: latitude,
               lng: longitude,
               address: result.formatted_address,
-            };
+            });
 
             geocodeCache.setCached(cacheKey, locationData);
             setCurrentLocation(locationData);

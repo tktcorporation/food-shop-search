@@ -10,23 +10,7 @@ import {
 import { getKeywordLabel } from '../../utils/keywordOptions';
 import { useOperatingHours } from '../../composables/useOperatingHours';
 import { useAnalytics } from '../../hooks/useAnalytics';
-
-interface Restaurant {
-  place_id: string;
-  name: string;
-  vicinity: string;
-  rating: number;
-  user_ratings_total: number;
-  price_level: number;
-  types: string[];
-  photos?: google.maps.places.PlacePhoto[];
-  opening_hours?: {
-    weekday_text?: string[];
-  };
-  distance?: number;
-  searchKeywords: string[];
-  business_status?: string;
-}
+import type { Restaurant } from '../../schemas';
 
 interface RestaurantCardProps {
   restaurant: Restaurant;

@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useCache, CACHE_CONFIGS } from '../../utils/cacheManager';
-import { Restaurant, SearchParams } from './types';
+import type { Restaurant, SearchParams } from './types';
 import { generateCacheKey, filterRestaurants, sortByDistance } from './utils';
 import { getPlaceDetails } from './getPlaceDetails';
 
@@ -148,10 +148,13 @@ const useRestaurantSearch = () => {
           })[],
         );
 
-        const detailedResults = await Promise.all(
+        const detailedResultsRaw = await Promise.all(
           uniqueResults.map((place) =>
             getPlaceDetails(service, place, location, detailsCache),
           ),
+        );
+        const detailedResults = detailedResultsRaw.filter(
+          (r): r is Restaurant => r !== null,
         );
 
         const filteredResults = filterRestaurants(detailedResults, {

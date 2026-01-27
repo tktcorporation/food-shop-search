@@ -6,21 +6,7 @@ import {
   InfoWindow,
 } from '@react-google-maps/api';
 import { ArrowLeft, Star, DollarSign } from 'lucide-react';
-
-interface Restaurant {
-  place_id: string;
-  name: string;
-  vicinity: string;
-  rating: number;
-  user_ratings_total: number;
-  price_level: number;
-  geometry?: {
-    location: {
-      lat: number;
-      lng: number;
-    };
-  };
-}
+import type { Restaurant } from '../schemas';
 
 interface MapProps {
   restaurants: Restaurant[];
@@ -47,8 +33,8 @@ const Map: React.FC<MapProps> = ({ restaurants, setScreen }) => {
   const center =
     restaurants.length > 0 && restaurants[0].geometry
       ? {
-          lat: restaurants[0].geometry.location.lat,
-          lng: restaurants[0].geometry.location.lng,
+          lat: restaurants[0].geometry.location.lat(),
+          lng: restaurants[0].geometry.location.lng(),
         }
       : defaultCenter;
 
@@ -64,8 +50,8 @@ const Map: React.FC<MapProps> = ({ restaurants, setScreen }) => {
     setSelectedRestaurant(restaurant);
     if (map && restaurant.geometry) {
       map.panTo({
-        lat: restaurant.geometry.location.lat,
-        lng: restaurant.geometry.location.lng,
+        lat: restaurant.geometry.location.lat(),
+        lng: restaurant.geometry.location.lng(),
       });
       map.setZoom(16);
     }
@@ -134,8 +120,8 @@ const Map: React.FC<MapProps> = ({ restaurants, setScreen }) => {
                 <Marker
                   key={restaurant.place_id}
                   position={{
-                    lat: restaurant.geometry!.location.lat,
-                    lng: restaurant.geometry!.location.lng,
+                    lat: restaurant.geometry!.location.lat(),
+                    lng: restaurant.geometry!.location.lng(),
                   }}
                   onClick={() => handleRestaurantSelect(restaurant)}
                 />
@@ -143,8 +129,8 @@ const Map: React.FC<MapProps> = ({ restaurants, setScreen }) => {
               {selectedRestaurant && selectedRestaurant.geometry && (
                 <InfoWindow
                   position={{
-                    lat: selectedRestaurant.geometry.location.lat,
-                    lng: selectedRestaurant.geometry.location.lng,
+                    lat: selectedRestaurant.geometry.location.lat(),
+                    lng: selectedRestaurant.geometry.location.lng(),
                   }}
                   onCloseClick={() => setSelectedRestaurant(null)}
                 >

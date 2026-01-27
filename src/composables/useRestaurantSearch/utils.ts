@@ -1,4 +1,5 @@
-import { Restaurant } from './types';
+import type { Restaurant } from './types';
+import { FilterParamsSchema } from './types';
 import { calculateOperatingHours } from '../../utils/operatingHours';
 
 export const generateCacheKey = (
@@ -13,13 +14,7 @@ export const generateCacheKey = (
 
 export const filterRestaurants = (
   restaurants: Restaurant[],
-  {
-    minRating,
-    minReviews,
-    isOpenNow,
-    searchRadius,
-    selectedPriceLevels,
-  }: {
+  rawParams: {
     minRating: number;
     minReviews: number;
     isOpenNow: boolean;
@@ -27,12 +22,19 @@ export const filterRestaurants = (
     selectedPriceLevels: number[];
   },
 ): Restaurant[] => {
+  const {
+    minRating,
+    minReviews,
+    isOpenNow,
+    searchRadius,
+    selectedPriceLevels,
+  } = FilterParamsSchema.parse(rawParams);
+
   return restaurants
     .filter(
       (place) =>
-        Object.keys(place).length > 0 &&
-        (place.business_status === 'OPERATIONAL' ||
-          place.business_status === undefined),
+        place.business_status === 'OPERATIONAL' ||
+        place.business_status === undefined,
     )
     .filter((place) => {
       const meetsBasicCriteria =

@@ -3,6 +3,7 @@ import type React from 'react';
 import { Search, Navigation, Loader2, AlertCircle } from 'lucide-react';
 import { useCache, CACHE_CONFIGS } from '../../utils/cacheManager';
 import type { Station } from '../../composables/useStationSearch/types';
+import { StationSchema } from '../../composables/useStationSearch/types';
 
 interface NearbyStationCacheEntry {
   stations: Station[];
@@ -86,7 +87,7 @@ const StationSearch: React.FC<StationSearchProps> = ({
                   );
               }
 
-              return {
+              return StationSchema.parse({
                 name: place.name?.replace(/駅$/, '') || '',
                 prefecture: place.vicinity || '',
                 address: place.vicinity || '',
@@ -99,7 +100,7 @@ const StationSearch: React.FC<StationSearchProps> = ({
                     secondary_text: place.vicinity || '',
                   },
                 } as google.maps.places.AutocompletePrediction,
-              };
+              });
             });
 
             // 距離でソート

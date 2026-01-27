@@ -1,9 +1,4 @@
-interface AnalyticsEvent {
-  action: string;
-  category: string;
-  label?: string;
-  value?: number;
-}
+import type { AnalyticsEvent } from '../schemas';
 
 export const useAnalytics = () => {
   const trackEvent = ({ action, category, label, value }: AnalyticsEvent) => {

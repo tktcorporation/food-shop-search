@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react';
 import { calculateOperatingHours } from '../utils/operatingHours';
-
-interface OpeningHours {
-  weekday_text?: string[];
-}
+import type { OpeningHours } from '../schemas';
 
 export const useOperatingHours = (openingHours?: OpeningHours) => {
   const [isOpen, setIsOpen] = useState<boolean | null>(null);

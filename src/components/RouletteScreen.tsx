@@ -10,16 +10,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { getKeywordLabel } from '../utils/keywordOptions';
-
-interface Restaurant {
-  name: string;
-  vicinity: string;
-  rating: number;
-  user_ratings_total: number;
-  price_level: number;
-  types: string[];
-  searchKeywords: string[]; // Changed from searchTypes to searchKeywords
-}
+import type { Restaurant } from '../schemas';
 
 interface RouletteScreenProps {
   restaurants: Restaurant[];

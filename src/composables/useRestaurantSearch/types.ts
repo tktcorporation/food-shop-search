@@ -1,36 +1,23 @@
-import { Station } from '../useStationSearch/types';
+export type {
+  Location,
+  Restaurant,
+  SearchParams,
+  FilterParams,
+  Rating,
+  PriceLevel,
+  ReviewCount,
+  Distance,
+  SearchRadius,
+  PlaceId,
+  OpeningHours,
+} from '../../schemas';
 
-export interface Location {
-  lat: number;
-  lng: number;
-}
+export {
+  LocationSchema,
+  RestaurantSchema,
+  SearchParamsSchema,
+  FilterParamsSchema,
+  OpeningHoursSchema,
+} from '../../schemas';
 
-export interface Restaurant {
-  place_id: string;
-  name: string;
-  vicinity: string;
-  rating: number;
-  user_ratings_total: number;
-  price_level: number;
-  types: string[];
-  photos?: google.maps.places.PlacePhoto[];
-  searchKeywords: string[];
-  opening_hours?: {
-    weekday_text?: string[];
-  };
-  distance?: number;
-  geometry?: {
-    location: google.maps.LatLng;
-  };
-  business_status?: string;
-}
-
-export interface SearchParams {
-  keywords: string[];
-  minRating: number;
-  minReviews: number;
-  searchLocation: Station | Location;
-  isOpenNow: boolean;
-  searchRadius: number;
-  selectedPriceLevels: number[];
-}
+export type { Station } from '../useStationSearch/types';

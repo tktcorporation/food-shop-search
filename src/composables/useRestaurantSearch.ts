@@ -1,24 +1,16 @@
 import { useState, useCallback, useRef } from 'react';
 import { useCache, CACHE_CONFIGS } from '../utils/cacheManager';
 import { calculateOperatingHours } from '../utils/operatingHours';
-import { Restaurant } from './useRestaurantSearch/types';
-import { Station } from './useStationSearch/types';
+import type { Restaurant } from './useRestaurantSearch/types';
+import {
+  RestaurantSchema,
+  FilterParamsSchema,
+} from './useRestaurantSearch/types';
+import type { Station } from './useStationSearch/types';
+import type { Location, FilterParams } from '../schemas';
 
 // getDetailsの最大呼び出し数（コスト制御）
 const MAX_DETAILS_REQUESTS = 20;
-
-interface Location {
-  lat: number;
-  lng: number;
-}
-
-interface FilterParams {
-  minRating: number;
-  minReviews: number;
-  isOpenNow: boolean;
-  searchRadius: number;
-  selectedPriceLevels: number[];
-}
 
 const useRestaurantSearch = () => {
   const [allRestaurants, setAllRestaurants] = useState<Restaurant[]>([]);
@@ -52,16 +44,16 @@ const useRestaurantSearch = () => {
       service: google.maps.places.PlacesService,
       place: google.maps.places.PlaceResult & { searchKeywords: string[] },
       location: google.maps.LatLng,
-    ): Promise<Restaurant> => {
+    ): Promise<Restaurant | null> => {
       const cached = detailsCache.getCached(place.place_id!);
       if (cached) {
-        return {
+        return RestaurantSchema.parse({
           ...cached,
           searchKeywords: place.searchKeywords,
-        };
+        });
       }
 
-      return new Promise<Restaurant>((resolve, reject) => {
+      return new Promise<Restaurant | null>((resolve, reject) => {
         service.getDetails(
           {
             placeId: place.place_id!,
@@ -88,7 +80,7 @@ const useRestaurantSearch = () => {
                 result.business_status &&
                 result.business_status !== 'OPERATIONAL'
               ) {
-                resolve({} as Restaurant);
+                resolve(null);
                 return;
               }
 
@@ -101,10 +93,10 @@ const useRestaurantSearch = () => {
                   );
               }
 
-              const restaurantData: Restaurant = {
-                place_id: result.place_id!,
-                name: result.name!,
-                vicinity: result.vicinity!,
+              const restaurantData = RestaurantSchema.parse({
+                place_id: result.place_id,
+                name: result.name,
+                vicinity: result.vicinity || '',
                 rating: result.rating || 0,
                 user_ratings_total: result.user_ratings_total || 0,
                 price_level: result.price_level || 1,
@@ -123,7 +115,7 @@ const useRestaurantSearch = () => {
                     }
                   : undefined,
                 business_status: result.business_status,
-              };
+              });
 
               detailsCache.setCached(result.place_id!, restaurantData);
               resolve(restaurantData);
@@ -136,10 +128,10 @@ const useRestaurantSearch = () => {
                 ),
               );
             } else {
-              resolve({
-                place_id: place.place_id!,
-                name: place.name!,
-                vicinity: place.vicinity!,
+              const fallback = RestaurantSchema.safeParse({
+                place_id: place.place_id,
+                name: place.name,
+                vicinity: place.vicinity || '',
                 rating: place.rating || 0,
                 user_ratings_total: place.user_ratings_total || 0,
                 price_level: place.price_level || 1,
@@ -148,6 +140,7 @@ const useRestaurantSearch = () => {
                 opening_hours: undefined,
                 business_status: place.business_status,
               });
+              resolve(fallback.success ? fallback.data : null);
             }
           },
         );
@@ -158,21 +151,29 @@ const useRestaurantSearch = () => {
 
   // クライアント側フィルタリング（APIを呼ばない）
   const applyFilters = useCallback(
-    (restaurants: Restaurant[], filterParams: FilterParams): Restaurant[] => {
+    (
+      restaurants: Restaurant[],
+      rawFilterParams: {
+        minRating: number;
+        minReviews: number;
+        isOpenNow: boolean;
+        searchRadius: number;
+        selectedPriceLevels: number[];
+      },
+    ): Restaurant[] => {
       const {
         minRating,
         minReviews,
         isOpenNow,
         searchRadius,
         selectedPriceLevels,
-      } = filterParams;
+      } = FilterParamsSchema.parse(rawFilterParams);
 
       const filtered = restaurants
         .filter(
           (place) =>
-            Object.keys(place).length > 0 &&
-            (place.business_status === 'OPERATIONAL' ||
-              place.business_status === undefined),
+            place.business_status === 'OPERATIONAL' ||
+            place.business_status === undefined,
         )
         .filter((place) => {
           const meetsBasicCriteria =
@@ -206,8 +207,14 @@ const useRestaurantSearch = () => {
 
   // フィルターのみ再適用（API呼び出しなし）
   const reapplyFilters = useCallback(
-    (filterParams: FilterParams) => {
-      lastFilterParamsRef.current = filterParams;
+    (filterParams: {
+      minRating: number;
+      minReviews: number;
+      isOpenNow: boolean;
+      searchRadius: number;
+      selectedPriceLevels: number[];
+    }) => {
+      lastFilterParamsRef.current = FilterParamsSchema.parse(filterParams);
       const sorted = applyFilters(allRestaurants, filterParams);
       setFilteredRestaurants(sorted);
     },
@@ -228,14 +235,14 @@ const useRestaurantSearch = () => {
       setIsLoading(true);
       setError(null);
 
-      const filterParams: FilterParams = {
+      const filterParams = {
         minRating,
         minReviews,
         isOpenNow,
         searchRadius,
         selectedPriceLevels,
       };
-      lastFilterParamsRef.current = filterParams;
+      lastFilterParamsRef.current = FilterParamsSchema.parse(filterParams);
 
       try {
         let location: google.maps.LatLng;
@@ -373,10 +380,13 @@ const useRestaurantSearch = () => {
         // getDetails呼び出し数を制限（コスト最適化）
         const limitedResults = uniqueResults.slice(0, MAX_DETAILS_REQUESTS);
 
-        const detailedResults = await Promise.all(
+        const detailedResultsRaw = await Promise.all(
           limitedResults.map((place) =>
             getPlaceDetails(service, place, location),
           ),
+        );
+        const detailedResults = detailedResultsRaw.filter(
+          (r): r is Restaurant => r !== null,
         );
 
         setAllRestaurants(detailedResults);

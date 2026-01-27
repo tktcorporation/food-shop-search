@@ -1,4 +1,5 @@
-import { Restaurant } from './types';
+import type { Restaurant } from './types';
+import { RestaurantSchema } from './types';
 
 export const getPlaceDetails = async (
   service: google.maps.places.PlacesService,
@@ -8,16 +9,16 @@ export const getPlaceDetails = async (
     getCached: (key: string) => Restaurant | null;
     setCached: (key: string, data: Restaurant) => void;
   },
-): Promise<Restaurant> => {
+): Promise<Restaurant | null> => {
   const cached = detailsCache.getCached(place.place_id!);
   if (cached) {
-    return {
+    return RestaurantSchema.parse({
       ...cached,
       searchKeywords: place.searchKeywords,
-    };
+    });
   }
 
-  return new Promise<Restaurant>((resolve, reject) => {
+  return new Promise<Restaurant | null>((resolve, reject) => {
     service.getDetails(
       {
         placeId: place.place_id!,
@@ -41,7 +42,7 @@ export const getPlaceDetails = async (
             result.business_status &&
             result.business_status !== 'OPERATIONAL'
           ) {
-            resolve({} as Restaurant);
+            resolve(null);
             return;
           }
 
@@ -53,10 +54,10 @@ export const getPlaceDetails = async (
             );
           }
 
-          const restaurantData: Restaurant = {
-            place_id: result.place_id!,
-            name: result.name!,
-            vicinity: result.vicinity!,
+          const restaurantData = RestaurantSchema.parse({
+            place_id: result.place_id,
+            name: result.name,
+            vicinity: result.vicinity || '',
             rating: result.rating || 0,
             user_ratings_total: result.user_ratings_total || 0,
             price_level: result.price_level || 1,
@@ -75,7 +76,7 @@ export const getPlaceDetails = async (
                 }
               : undefined,
             business_status: result.business_status,
-          };
+          });
 
           detailsCache.setCached(result.place_id!, restaurantData);
           resolve(restaurantData);
@@ -88,10 +89,10 @@ export const getPlaceDetails = async (
             ),
           );
         } else {
-          resolve({
-            place_id: place.place_id!,
-            name: place.name!,
-            vicinity: place.vicinity!,
+          const fallback = RestaurantSchema.safeParse({
+            place_id: place.place_id,
+            name: place.name,
+            vicinity: place.vicinity || '',
             rating: place.rating || 0,
             user_ratings_total: place.user_ratings_total || 0,
             price_level: place.price_level || 1,
@@ -100,6 +101,7 @@ export const getPlaceDetails = async (
             opening_hours: undefined,
             business_status: place.business_status,
           });
+          resolve(fallback.success ? fallback.data : null);
         }
       },
     );

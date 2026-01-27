@@ -1,7 +1,2 @@
-export interface Station {
-  name: string;
-  prefecture: string;
-  address: string;
-  distance?: number;
-  rawPrediction: google.maps.places.AutocompletePrediction;
-}
+export type { Station } from '../../schemas';
+export { StationSchema } from '../../schemas';

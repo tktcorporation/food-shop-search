@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
+import { z } from 'zod';
+import type { CacheConfig } from '../schemas';
+import { createCacheEntrySchema } from '../schemas';
 
-export interface CacheConfig {
-  key: string;
-  version: string;
-  expiry: number;
-}
+export type { CacheConfig };
 
 export interface CacheData<T> {
   data: T;
@@ -50,13 +49,23 @@ export const CACHE_CONFIGS = {
   },
 } as const;
 
-export function useCache<T>(config: CacheConfig) {
+export function useCache<T>(config: CacheConfig, schema?: z.ZodType<T>) {
   const [cache, setCache] = useState<Map<string, CacheData<T>>>(() => {
     try {
       const cached = localStorage.getItem(config.key);
       if (!cached) return new Map();
 
-      const parsed = JSON.parse(cached) as CacheEntry<T>;
+      const raw: unknown = JSON.parse(cached);
+
+      if (schema) {
+        const cacheEntrySchema = createCacheEntrySchema(schema);
+        const result = cacheEntrySchema.safeParse(raw);
+        if (!result.success) return new Map();
+        if (result.data.version !== config.version) return new Map();
+        return new Map(Object.entries(result.data.data));
+      }
+
+      const parsed = raw as CacheEntry<T>;
       if (parsed.version !== config.version) return new Map();
 
       return new Map(Object.entries(parsed.data));
