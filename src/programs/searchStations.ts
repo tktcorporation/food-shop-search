@@ -1,7 +1,6 @@
 import { Effect, Option } from 'effect';
 import type { PlaceSearchError } from '../errors';
-import type { GoogleMapsPlacesService } from '../services/GoogleMapsPlacesService';
-import type { CacheService } from '../services/CacheService';
+import { GoogleMapsPlacesService, CacheService } from '../services';
 import type { Station } from '../composables/useStationSearch/types';
 import { CACHE_CONFIGS } from '../utils/cacheManager';
 
@@ -10,11 +9,16 @@ import { CACHE_CONFIGS } from '../utils/cacheManager';
  * キャッシュがあればそれを返し、なければ Google Maps Autocomplete API を呼び出す。
  */
 export const searchStationsProgram = (
-  placesService: GoogleMapsPlacesService,
-  cacheService: CacheService,
   input: string,
-): Effect.Effect<Station[], PlaceSearchError> =>
+): Effect.Effect<
+  Station[],
+  PlaceSearchError,
+  GoogleMapsPlacesService | CacheService
+> =>
   Effect.gen(function* () {
+    const placesService = yield* GoogleMapsPlacesService;
+    const cacheService = yield* CacheService;
+
     const cached = yield* cacheService.get<Station[]>(
       CACHE_CONFIGS.STATION_PREDICTIONS,
       input,

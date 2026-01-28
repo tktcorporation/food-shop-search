@@ -5,12 +5,7 @@ import type { Station } from './useStationSearch/types';
 import { filterRestaurants, sortByDistance } from './useRestaurantSearch/utils';
 import { searchRestaurantsProgram } from '../programs/searchRestaurants';
 import { extractErrorMessage } from '../utils/effectErrors';
-import {
-  GoogleMapsGeocoderService,
-  GoogleMapsPlacesService,
-  CacheService,
-  AppLive,
-} from '../services';
+import { AppLive } from '../services';
 
 interface FilterParams {
   minRating: number;
@@ -64,29 +59,17 @@ const useRestaurantSearch = () => {
       };
       lastFilterParamsRef.current = filterParams;
 
-      // Effect プログラムを構築: サービスを取得して検索を実行
-      const program = Effect.gen(function* () {
-        const geocoderService = yield* GoogleMapsGeocoderService;
-        const placesService = yield* GoogleMapsPlacesService;
-        const cacheService = yield* CacheService;
-
-        return yield* searchRestaurantsProgram(
-          geocoderService,
-          placesService,
-          cacheService,
-          {
-            keywords,
-            minRating,
-            minReviews,
-            searchLocation,
-            isOpenNow,
-            searchRadius,
-            selectedPriceLevels,
-          },
-        );
+      // Effect プログラムを構築して AppLive レイヤーで提供
+      const program = searchRestaurantsProgram({
+        keywords,
+        minRating,
+        minReviews,
+        searchLocation,
+        isOpenNow,
+        searchRadius,
+        selectedPriceLevels,
       });
 
-      // AppLive レイヤーで全サービスを提供して実行
       const runnable = Effect.provide(program, AppLive);
 
       void Effect.runPromiseExit(runnable).then((exit) => {

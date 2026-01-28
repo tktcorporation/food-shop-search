@@ -6,15 +6,22 @@ import type {
   GeolocationUnsupportedError,
   PlaceSearchError,
 } from '../errors';
-import type { GeolocationService } from '../services/GeolocationService';
-import type { GoogleMapsPlacesService } from '../services/GoogleMapsPlacesService';
-import type { CacheService } from '../services/CacheService';
+import {
+  GeolocationService,
+  GoogleMapsPlacesService,
+  CacheService,
+} from '../services';
 import type { Station } from '../composables/useStationSearch/types';
 import { CACHE_CONFIGS } from '../utils/cacheManager';
+import {
+  MAX_NEARBY_STATIONS,
+  NEARBY_STATIONS_RADIUS,
+  POSITION_CACHE_PRECISION,
+} from '../constants';
 
-/** 位置をキャッシュキーに変換（小数3桁に丸めて近傍位置をまとめる ≈ 約100m精度） */
+/** 位置をキャッシュキーに変換（指定精度に丸めて近傍位置をまとめる） */
 const positionToCacheKey = (lat: number, lng: number): string =>
-  `${lat.toFixed(3)}_${lng.toFixed(3)}`;
+  `${lat.toFixed(POSITION_CACHE_PRECISION)}_${lng.toFixed(POSITION_CACHE_PRECISION)}`;
 
 /**
  * 現在地周辺の駅を検索する Effect プログラム。
@@ -22,22 +29,23 @@ const positionToCacheKey = (lat: number, lng: number): string =>
  * 1. ブラウザから位置情報を取得
  * 2. キャッシュチェック
  * 3. Google Maps Places API で近くの駅を検索
- * 4. 距離計算・ソート・上位5件を返却
+ * 4. 距離計算・ソート・上位N件を返却
  * 5. キャッシュに保存
  */
-export const searchNearbyStationsProgram = (
-  geolocationService: GeolocationService,
-  placesService: GoogleMapsPlacesService,
-  cacheService: CacheService,
-): Effect.Effect<
+export const searchNearbyStationsProgram = (): Effect.Effect<
   Station[],
   | GeolocationError
   | HttpsRequiredError
   | GeolocationUnsupportedError
   | GoogleMapsAuthError
-  | PlaceSearchError
+  | PlaceSearchError,
+  GeolocationService | GoogleMapsPlacesService | CacheService
 > =>
   Effect.gen(function* () {
+    const geolocationService = yield* GeolocationService;
+    const placesService = yield* GoogleMapsPlacesService;
+    const cacheService = yield* CacheService;
+
     // 1. ブラウザから位置情報を取得
     const position = yield* geolocationService.getCurrentPosition();
     const { latitude, longitude } = position.coords;
@@ -57,7 +65,7 @@ export const searchNearbyStationsProgram = (
     const userLocation = new google.maps.LatLng(latitude, longitude);
     const results = yield* placesService.nearbySearch({
       location: userLocation,
-      radius: 5000,
+      radius: NEARBY_STATIONS_RADIUS,
       type: 'train_station',
     });
 
@@ -89,11 +97,11 @@ export const searchNearbyStationsProgram = (
       };
     });
 
-    // 距離でソートして上位5件
+    // 距離でソートして上位N件
     const sorted = stations.sort(
       (a, b) => (a.distance || 0) - (b.distance || 0),
     );
-    const nearestStations = sorted.slice(0, 5);
+    const nearestStations = sorted.slice(0, MAX_NEARBY_STATIONS);
 
     // 5. キャッシュに保存
     yield* cacheService.set(
