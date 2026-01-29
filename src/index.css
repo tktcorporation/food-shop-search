@@ -1,5 +1,6 @@
-/* GourmetSpot Design System - Vibrant & Block-based */
-@import url('https://fonts.googleapis.com/css2?family=Karla:wght@300;400;500;600;700&family=Playfair+Display+SC:wght@400;700&display=swap');
+/* GourmetSpot Design System - Soft UI Evolution */
+/* Warm, approachable design with improved contrast (WCAG AA+) */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -8,75 +9,181 @@
 @layer base {
   body {
     @apply font-body bg-surface text-text min-h-screen antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }
 
   h1,
   h2,
-  h3 {
-    @apply font-heading;
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading font-semibold text-text;
+  }
+
+  /* Improved link styles */
+  a {
+    @apply text-primary-600 hover:text-primary-700 transition-colors duration-200;
   }
 }
 
 @layer components {
-  /* Primary CTA Button - Use sparingly (1 per screen recommended) */
-  .btn-cta {
-    @apply bg-cta-500 text-text-inverse px-6 py-3 rounded-lg font-semibold
-           transition-all duration-200 cursor-pointer
-           hover:opacity-90 hover:-translate-y-0.5
-           focus:outline-none focus:ring-2 focus:ring-cta-500 focus:ring-offset-2;
-  }
+  /* ===== Soft UI Buttons ===== */
 
-  /* Primary Button */
+  /* Primary Button - Soft gradient with warm amber */
   .btn-primary {
-    @apply bg-primary-500 text-text-inverse px-4 py-2 rounded-lg font-semibold
-           transition-all duration-200 cursor-pointer
-           hover:bg-primary-600 hover:-translate-y-0.5
-           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+    @apply inline-flex items-center justify-center
+           bg-gradient-to-b from-primary-500 to-primary-600
+           text-white px-5 py-2.5 rounded-lg font-semibold
+           shadow-md
+           transition-all duration-200 ease-soft cursor-pointer
+           hover:shadow-lg hover:from-primary-400 hover:to-primary-500
+           active:shadow-sm active:scale-[0.98]
+           focus:outline-none focus:ring-2 focus:ring-primary-400/50 focus:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md;
   }
 
-  /* Secondary/Outline Button */
+  /* Secondary Button - Soft outline style */
   .btn-secondary {
-    @apply bg-transparent text-primary-500 border-2 border-primary-500
-           px-4 py-2 rounded-lg font-semibold
-           transition-all duration-200 cursor-pointer
+    @apply inline-flex items-center justify-center
+           bg-surface-card text-primary-600
+           border border-primary-200
+           px-5 py-2.5 rounded-lg font-semibold
+           shadow-sm
+           transition-all duration-200 ease-soft cursor-pointer
+           hover:bg-primary-50 hover:border-primary-300 hover:shadow
+           active:bg-primary-100 active:scale-[0.98]
+           focus:outline-none focus:ring-2 focus:ring-primary-400/50 focus:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Ghost Button - Minimal style */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center
+           bg-transparent text-primary-600
+           px-4 py-2 rounded-lg font-medium
+           transition-all duration-200 ease-soft cursor-pointer
            hover:bg-primary-50
-           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+           active:bg-primary-100
+           focus:outline-none focus:ring-2 focus:ring-primary-400/50;
   }
 
-  /* Card Component */
+  /* ===== Soft UI Card ===== */
   .card {
-    @apply bg-surface-card rounded-lg shadow-md p-6
-           transition-all duration-200 cursor-pointer
-           hover:shadow-lg hover:-translate-y-0.5;
+    @apply bg-surface-card rounded-xl p-5
+           shadow
+           transition-all duration-200 ease-soft
+           border border-primary-100/50;
   }
 
-  /* Input Field */
+  .card-interactive {
+    @apply card cursor-pointer
+           hover:shadow-lg hover:-translate-y-0.5 hover:border-primary-200
+           active:shadow-md active:translate-y-0;
+  }
+
+  /* ===== Soft UI Input ===== */
   .input {
-    @apply w-full px-4 py-3 border border-gray-200 rounded-lg text-base
-           transition-all duration-200
-           focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20;
+    @apply w-full px-4 py-3
+           bg-surface-card
+           border border-primary-200
+           rounded-lg text-base text-text
+           shadow-inner
+           transition-all duration-200 ease-soft
+           placeholder:text-text-muted/60
+           focus:border-primary-400 focus:outline-none
+           focus:ring-2 focus:ring-primary-400/30
+           focus:shadow-focus;
   }
 
-  /* Chip/Tag */
+  .input-error {
+    @apply input border-error focus:border-error focus:ring-error/30;
+  }
+
+  /* ===== Soft UI Select ===== */
+  .select {
+    @apply input appearance-none cursor-pointer
+           bg-no-repeat bg-[right_1rem_center] bg-[length:1.25rem]
+           pr-10;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2392400E' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  }
+
+  /* ===== Soft UI Chips/Tags ===== */
   .chip {
-    @apply inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium
-           transition-colors duration-200 cursor-pointer;
+    @apply inline-flex items-center gap-1.5
+           px-3 py-1.5 rounded-full
+           text-sm font-medium
+           transition-all duration-200 ease-soft cursor-pointer
+           focus:outline-none focus:ring-2 focus:ring-primary-400/50;
   }
 
   .chip-selected {
-    @apply bg-primary-500 text-text-inverse;
+    @apply bg-gradient-to-b from-primary-500 to-primary-600
+           text-white shadow-sm;
   }
 
   .chip-unselected {
-    @apply bg-surface-muted text-text hover:bg-gray-200;
+    @apply bg-surface-muted text-text-muted
+           border border-primary-100
+           hover:bg-primary-100 hover:text-text hover:border-primary-200;
+  }
+
+  /* ===== Soft UI Alert/Message ===== */
+  .alert {
+    @apply flex items-start gap-3 p-4 rounded-xl
+           border shadow-sm;
+  }
+
+  .alert-info {
+    @apply alert bg-primary-50 border-primary-200 text-text;
+  }
+
+  .alert-success {
+    @apply alert bg-success-light border-success/20 text-success;
+  }
+
+  .alert-error {
+    @apply alert bg-error-light border-error/20 text-error;
+  }
+
+  /* ===== Soft UI Badge ===== */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5
+           rounded-full text-xs font-semibold;
+  }
+
+  .badge-primary {
+    @apply badge bg-primary-100 text-primary-700;
+  }
+
+  .badge-success {
+    @apply badge bg-success-light text-success;
+  }
+
+  .badge-error {
+    @apply badge bg-error-light text-error;
+  }
+
+  /* ===== Section/Container ===== */
+  .section {
+    @apply py-8 px-4 sm:px-6 lg:px-8;
+  }
+
+  .container-soft {
+    @apply max-w-6xl mx-auto;
+  }
+
+  /* ===== Divider ===== */
+  .divider {
+    @apply border-t border-primary-100 my-6;
   }
 }
 
-/* Animations */
+/* ===== Animations ===== */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -84,11 +191,40 @@
   }
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.3s ease-out;
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* Reduced motion support */
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.25s ease-out;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+/* ===== Reduced motion support ===== */
 @media (prefers-reduced-motion: reduce) {
   *,
   ::before,
@@ -99,11 +235,42 @@
   }
 }
 
-/* Responsive styles */
+/* ===== Focus Visible (Keyboard Navigation) ===== */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+:focus-visible {
+  @apply outline-none ring-2 ring-primary-400/50 ring-offset-2;
+}
+
+/* ===== Scrollbar Styling ===== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-surface-muted rounded-full;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-primary-200 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-primary-300;
+}
+
+/* ===== Responsive styles ===== */
 @media (max-width: 640px) {
-  .btn-cta,
   .btn-primary,
-  .btn-secondary {
+  .btn-secondary,
+  .btn-ghost {
     @apply px-4 py-2 text-sm;
+  }
+
+  .card {
+    @apply p-4 rounded-lg;
   }
 }

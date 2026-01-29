@@ -58,9 +58,10 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="card space-y-5">
+      {/* Search Radius */}
       <div>
-        <label className="block text-sm font-medium text-text mb-2">
+        <label className="block text-sm font-semibold text-text mb-3">
           検索範囲
         </label>
         <div className="flex flex-wrap gap-2">
@@ -76,8 +77,11 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
         </div>
       </div>
 
+      <div className="divider !my-4" />
+
+      {/* Price Levels */}
       <div>
-        <label className="block text-sm font-medium text-text mb-2">
+        <label className="block text-sm font-semibold text-text mb-3">
           価格帯
         </label>
         <div className="flex flex-wrap gap-2">
@@ -101,49 +105,63 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
         </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-text mb-2">
-          最低評価
-        </label>
-        <select
-          value={minRating}
-          onChange={(e) => setMinRating(parseFloat(e.target.value))}
-          className="input cursor-pointer"
-        >
-          <option value={0}>指定なし</option>
-          <option value={3}>3以上</option>
-          <option value={3.5}>3.5以上</option>
-          <option value={4}>4以上</option>
-          <option value={4.5}>4.5以上</option>
-        </select>
+      <div className="divider !my-4" />
+
+      {/* Min Rating & Reviews */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-semibold text-text mb-2">
+            最低評価
+          </label>
+          <select
+            value={minRating}
+            onChange={(e) => setMinRating(parseFloat(e.target.value))}
+            className="select"
+          >
+            <option value={0}>指定なし</option>
+            <option value={3}>3以上</option>
+            <option value={3.5}>3.5以上</option>
+            <option value={4}>4以上</option>
+            <option value={4.5}>4.5以上</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-text mb-2">
+            最低レビュー数
+          </label>
+          <select
+            value={minReviews}
+            onChange={(e) => setMinReviews(parseInt(e.target.value))}
+            className="select"
+          >
+            <option value={0}>指定なし</option>
+            <option value={50}>50件以上</option>
+            <option value={100}>100件以上</option>
+            <option value={200}>200件以上</option>
+            <option value={500}>500件以上</option>
+          </select>
+        </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-text mb-2">
-          最低レビュー数
-        </label>
-        <select
-          value={minReviews}
-          onChange={(e) => setMinReviews(parseInt(e.target.value))}
-          className="input cursor-pointer"
-        >
-          <option value={0}>指定なし</option>
-          <option value={50}>50件以上</option>
-          <option value={100}>100件以上</option>
-          <option value={200}>200件以上</option>
-          <option value={500}>500件以上</option>
-        </select>
-      </div>
+      <div className="divider !my-4" />
 
+      {/* Open Now Toggle */}
       <div>
-        <label className="flex items-center cursor-pointer">
-          <input
-            type="checkbox"
-            checked={isOpenNow}
-            onChange={(e) => setIsOpenNow(e.target.checked)}
-            className="h-5 w-5 text-primary-500 rounded border-gray-300 focus:ring-primary-500 cursor-pointer"
-          />
-          <span className="ml-2 text-sm text-text">営業中のみ表示</span>
+        <label className="flex items-center cursor-pointer group">
+          <div className="relative">
+            <input
+              type="checkbox"
+              checked={isOpenNow}
+              onChange={(e) => setIsOpenNow(e.target.checked)}
+              className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-surface-muted border border-primary-200 rounded-full peer peer-checked:bg-gradient-to-b peer-checked:from-primary-500 peer-checked:to-primary-600 peer-checked:border-primary-500 transition-all duration-200"></div>
+            <div className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full shadow-sm transition-transform duration-200 peer-checked:translate-x-5"></div>
+          </div>
+          <span className="ml-3 text-sm font-medium text-text group-hover:text-primary-600 transition-colors">
+            営業中のみ表示
+          </span>
         </label>
       </div>
     </div>

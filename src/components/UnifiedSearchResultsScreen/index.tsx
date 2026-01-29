@@ -188,17 +188,17 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 relative pb-20">
-      <div className="flex flex-col gap-6">
-        {/* Search Method Toggle */}
-        <div className="bg-surface-card rounded-lg shadow-md p-4">
-          <div className="flex flex-col sm:flex-row items-center gap-3 justify-center">
+    <div className="max-w-4xl mx-auto p-4 sm:p-6 relative pb-20">
+      <div className="flex flex-col gap-5">
+        {/* Search Method Toggle - Soft UI style */}
+        <div className="card">
+          <div className="flex flex-col sm:flex-row items-stretch gap-3">
             <button
               onClick={() => setSearchMethod('location')}
-              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-base font-medium transition-all duration-200 cursor-pointer ${
+              className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-lg text-base font-semibold transition-all duration-200 cursor-pointer ${
                 searchMethod === 'location'
-                  ? 'bg-primary-500 text-text-inverse shadow-md'
-                  : 'bg-surface-muted text-text hover:bg-gray-200'
+                  ? 'bg-gradient-to-b from-primary-500 to-primary-600 text-white shadow-md'
+                  : 'bg-surface-muted text-text-muted border border-primary-100 hover:bg-primary-50 hover:text-text hover:border-primary-200'
               }`}
             >
               <MapPin size={20} />
@@ -206,10 +206,10 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
             </button>
             <button
               onClick={() => setSearchMethod('station')}
-              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-base font-medium transition-all duration-200 cursor-pointer ${
+              className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-lg text-base font-semibold transition-all duration-200 cursor-pointer ${
                 searchMethod === 'station'
-                  ? 'bg-primary-500 text-text-inverse shadow-md'
-                  : 'bg-surface-muted text-text hover:bg-gray-200'
+                  ? 'bg-gradient-to-b from-primary-500 to-primary-600 text-white shadow-md'
+                  : 'bg-surface-muted text-text-muted border border-primary-100 hover:bg-primary-50 hover:text-text hover:border-primary-200'
               }`}
             >
               <Train size={20} />
@@ -256,9 +256,9 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
         />
 
         {isLoading && (
-          <div className="flex items-center justify-center py-8">
+          <div className="flex items-center justify-center py-10 card">
             <Loader2 className="h-6 w-6 text-primary-500 animate-spin" />
-            <span className="ml-2 text-text-muted text-sm">検索中...</span>
+            <span className="ml-3 text-text-muted font-medium">検索中...</span>
           </div>
         )}
 
