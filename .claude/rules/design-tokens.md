@@ -4,42 +4,50 @@ IMPORTANT: UI実装時はこれらのトークンのみ使用してください�
 
 ## カラーパレット
 
-> Restaurant/Food Service向けパレット - 食欲をそそる赤 + 温かみのあるゴールド
+> Clean & Pop - 白ベース + 鮮やかオレンジ + 明確なコントラスト
 
-### Primary（赤系）- メインアクション、食欲をそそる色
+### Primary（オレンジ系）- メインアクション、位置情報
 
 ```css
-primary-50:  #fef2f2  /* 背景（非常に薄い） */
-primary-100: #fee2e2  /* 背景（薄い） */
-primary-500: #ef4444  /* メインカラー */
-primary-600: #dc2626  /* ホバー */
-primary-700: #b91c1c  /* アクティブ */
+primary-50:  #FFF7ED  /* 背景（非常に薄い） */
+primary-100: #FFEDD5  /* 背景（薄い） */
+primary-200: #FED7AA  /* ソフトオレンジ */
+primary-300: #FDBA74  /* ミディアムライト */
+primary-400: #FB923C  /* ミディアム */
+primary-500: #F97316  /* メインカラー */
+primary-600: #EA580C  /* ホバー */
+primary-700: #C2410C  /* アクティブ */
 ```
 
-### Secondary（ゴールド/アンバー系）- CTAアクセント、温かみ
+### Gray - テキスト・背景・ボーダー
 
 ```css
-secondary-500: #f59e0b
-secondary-600: #d97706
-```
-
-### Accent（緑系）- 成功・確認・営業中
-
-```css
-accent-500: #10b981
-accent-600: #059669
-```
-
-### Gray - テキスト・背景
-
-```css
-gray-50:  #f9fafb  /* 背景 */
-gray-100: #f3f4f6  /* カード背景 */
-gray-200: #e5e7eb  /* ボーダー（薄い） */
-gray-300: #d1d5db  /* ボーダー */
-gray-500: #6b7280  /* セカンダリテキスト */
-gray-700: #374151  /* プライマリテキスト */
+gray-50:  #F9FAFB  /* 背景（薄い） */
+gray-100: #F3F4F6  /* 背景（ミュート） */
+gray-200: #E5E7EB  /* ボーダー（薄い） */
+gray-300: #D1D5DB  /* ボーダー */
+gray-400: #9CA3AF  /* テキスト（薄い） */
+gray-500: #6B7280  /* テキスト（セカンダリ） */
+gray-600: #4B5563  /* テキスト（ミディアム） */
+gray-700: #374151  /* テキスト（やや濃い） */
+gray-800: #1F2937  /* テキスト（プライマリ） */
 gray-900: #111827  /* 見出し */
+```
+
+### Success（緑系）- 成功・確認・営業中
+
+```css
+success-light: #D1FAE5
+success:       #10B981
+success-dark:  #059669
+```
+
+### Error（赤系）- エラー・警告
+
+```css
+error-light: #FEE2E2
+error:       #EF4444
+error-dark:  #DC2626
 ```
 
 ## タイポグラフィ
@@ -61,7 +69,7 @@ gray-900: #111827  /* 見出し */
 関連要素間: space-y-2
 ラベルと入力: mb-2
 カード内パディング: p-4
-ボタン内パディング: px-4 py-2
+ボタン内パディング: px-4 py-2.5
 アイコンとテキスト: gap-2
 ```
 
@@ -70,37 +78,57 @@ gray-900: #111827  /* 見出し */
 ### ボタン
 
 ```tsx
-// Primary（1画面に1つ推奨）
-'bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg transition-colors duration-200';
+// Primary（1画面に1つ推奨）- 最も目立つ
+'bg-primary-500 hover:bg-primary-600 text-white px-4 py-2.5 rounded-lg font-semibold transition-colors duration-200';
 
-// Secondary
-'bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg transition-colors duration-200';
+// Secondary - 控えめ
+'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-4 py-2.5 rounded-lg font-medium transition-colors duration-200';
 
-// Ghost
-'text-primary-600 hover:bg-primary-50 px-4 py-2 rounded-lg transition-colors duration-200';
+// Ghost - 最小限
+'text-primary-500 hover:bg-primary-50 px-3 py-2 rounded-lg font-medium transition-colors duration-200';
 ```
 
 ### カード
 
 ```tsx
-'bg-white rounded-lg shadow-lg overflow-hidden';
-// ホバー時
-'hover:shadow-xl hover:scale-[1.02] transition-transform duration-200';
+// 基本カード
+'bg-white rounded-xl p-4 border border-gray-200 shadow-card';
+
+// インタラクティブカード
+'bg-white rounded-xl p-4 border border-gray-200 shadow-card hover:shadow-lg hover:border-gray-300 cursor-pointer transition-shadow duration-200';
 ```
 
 ### 入力フィールド
 
 ```tsx
-'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500';
+'w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-800 placeholder:text-gray-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20';
 ```
 
 ### チップ（選択状態）
 
 ```tsx
-// 選択時
+// 選択時 - 明確に目立つ
 'bg-primary-500 text-white';
-// 非選択時
-'bg-gray-200 text-gray-700 hover:bg-gray-300';
+
+// 非選択時 - 控えめ
+'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800';
+
 // 共通
-'px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200';
+'px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-200';
+```
+
+### 位置情報バー（最も目立つ要素）
+
+```tsx
+'bg-primary-500 text-white px-4 py-3 rounded-lg font-semibold shadow-md';
+```
+
+## 視覚的階層
+
+```
+【強】位置情報バー ─ primary-500背景 + 白文字
+ ↓
+【中】お店カード ─ 白背景 + shadow-card + gray-200ボーダー
+ ↓
+【弱】フィルター等 ─ gray-100背景、gray-500テキスト
 ```

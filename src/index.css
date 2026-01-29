@@ -1,4 +1,4 @@
-/* GourmetSpot Design System - Clean & Functional */
+/* GourmetSpot Design System - Clean & Pop */
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap');
 
 @tailwind base;
@@ -7,7 +7,7 @@
 
 @layer base {
   body {
-    @apply font-body bg-surface text-text min-h-screen antialiased;
+    @apply font-body bg-white text-text min-h-screen antialiased;
   }
 
   h1,
@@ -16,19 +16,19 @@
   h4,
   h5,
   h6 {
-    @apply font-heading font-semibold text-text;
+    @apply font-heading font-semibold text-gray-900;
   }
 }
 
 @layer components {
-  /* ===== Buttons - Flat, No Gradients ===== */
+  /* ===== Buttons - Clean & Pop ===== */
 
   .btn-primary {
     @apply inline-flex items-center justify-center
-           bg-primary-600 text-white
+           bg-primary-500 text-white
            px-4 py-2.5 rounded-lg font-semibold
            transition-colors duration-200 cursor-pointer
-           hover:bg-primary-700
+           hover:bg-primary-600
            active:bg-primary-700
            focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:ring-offset-2
            disabled:opacity-50 disabled:cursor-not-allowed;
@@ -36,19 +36,19 @@
 
   .btn-secondary {
     @apply inline-flex items-center justify-center
-           bg-white text-text
-           border border-primary-200
+           bg-white text-gray-700
+           border border-gray-300
            px-4 py-2.5 rounded-lg font-medium
            transition-colors duration-200 cursor-pointer
-           hover:bg-primary-50 hover:border-primary-300
-           active:bg-primary-100
+           hover:bg-gray-50 hover:border-gray-400
+           active:bg-gray-100
            focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:ring-offset-2
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-ghost {
     @apply inline-flex items-center justify-center
-           bg-transparent text-primary-600
+           bg-transparent text-primary-500
            px-3 py-2 rounded-lg font-medium
            transition-colors duration-200 cursor-pointer
            hover:bg-primary-50
@@ -56,27 +56,28 @@
            focus:outline-none focus:ring-2 focus:ring-primary-500/40;
   }
 
-  /* ===== Cards - Subtle ===== */
+  /* ===== Cards - White with subtle shadow ===== */
   .card {
     @apply bg-white rounded-xl p-4
-           border border-primary-100
-           transition-colors duration-200;
+           border border-gray-200
+           shadow-card
+           transition-shadow duration-200;
   }
 
   .card-interactive {
     @apply card cursor-pointer
-           hover:border-primary-200 hover:bg-primary-50/30
-           active:bg-primary-50;
+           hover:shadow-lg hover:border-gray-300
+           active:shadow-md;
   }
 
-  /* ===== Inputs - Clean ===== */
+  /* ===== Inputs - Clean with clear focus ===== */
   .input {
     @apply w-full px-3 py-2.5
            bg-white
-           border border-primary-200
-           rounded-lg text-base text-text
+           border border-gray-300
+           rounded-lg text-base text-gray-800
            transition-colors duration-200
-           placeholder:text-text-muted/50
+           placeholder:text-gray-400
            focus:border-primary-500 focus:outline-none
            focus:ring-2 focus:ring-primary-500/20;
   }
@@ -85,10 +86,10 @@
     @apply input appearance-none cursor-pointer
            bg-no-repeat bg-[right_0.75rem_center] bg-[length:1rem]
            pr-8;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2392400E' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
   }
 
-  /* ===== Chips - Simple Toggle ===== */
+  /* ===== Chips - Clear selected state ===== */
   .chip {
     @apply inline-flex items-center gap-1
            px-3 py-1.5 rounded-full
@@ -98,12 +99,12 @@
   }
 
   .chip-selected {
-    @apply bg-primary-600 text-white;
+    @apply bg-primary-500 text-white;
   }
 
   .chip-unselected {
-    @apply bg-primary-50 text-text-muted
-           hover:bg-primary-100 hover:text-text;
+    @apply bg-gray-100 text-gray-600
+           hover:bg-gray-200 hover:text-gray-800;
   }
 
   /* ===== Alerts ===== */
@@ -112,11 +113,11 @@
   }
 
   .alert-info {
-    @apply alert bg-primary-50 text-text;
+    @apply alert bg-primary-50 text-gray-800;
   }
 
   .alert-error {
-    @apply alert bg-error-light text-error;
+    @apply alert bg-error-light text-error-dark;
   }
 
   /* ===== Badge ===== */
@@ -135,26 +136,26 @@
   }
 
   .section-title {
-    @apply text-sm font-semibold text-text;
+    @apply text-sm font-semibold text-gray-800;
   }
 
   /* ===== Collapsible ===== */
   .collapsible-trigger {
     @apply flex items-center justify-between w-full py-3 px-4
-           bg-primary-50 rounded-lg
-           text-left font-medium text-text
+           bg-gray-100 rounded-lg
+           text-left font-medium text-gray-800
            cursor-pointer transition-colors duration-200
-           hover:bg-primary-100;
+           hover:bg-gray-200;
   }
 
   /* ===== Divider ===== */
   .divider {
-    @apply border-t border-primary-100 my-4;
+    @apply border-t border-gray-200 my-4;
   }
 
   /* ===== Tab-like Toggle ===== */
   .tab-group {
-    @apply flex bg-primary-50 p-1 rounded-lg;
+    @apply flex bg-gray-100 p-1 rounded-lg;
   }
 
   .tab-item {
@@ -165,11 +166,11 @@
   }
 
   .tab-item-active {
-    @apply tab-item bg-white text-primary-700 shadow-sm;
+    @apply tab-item bg-white text-primary-600 shadow-sm;
   }
 
   .tab-item-inactive {
-    @apply tab-item text-text-muted hover:text-text;
+    @apply tab-item text-gray-500 hover:text-gray-700;
   }
 
   /* ===== Filter Panel ===== */
@@ -178,11 +179,19 @@
   }
 
   .filter-label {
-    @apply text-xs font-semibold text-text-muted uppercase tracking-wide;
+    @apply text-xs font-semibold text-gray-500 uppercase tracking-wide;
   }
 
   .filter-row {
     @apply flex items-center gap-2 flex-wrap;
+  }
+
+  /* ===== Location Bar - 最も目立つ要素 ===== */
+  .location-bar {
+    @apply bg-primary-500 text-white
+           px-4 py-3 rounded-lg
+           font-semibold
+           shadow-md;
   }
 }
 
@@ -230,11 +239,11 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-primary-200 rounded-full;
+  @apply bg-gray-300 rounded-full;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-primary-300;
+  @apply bg-gray-400;
 }
 
 /* Hide scrollbar for horizontal scroll areas */
