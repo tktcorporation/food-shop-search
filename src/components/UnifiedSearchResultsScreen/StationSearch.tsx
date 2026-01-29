@@ -1,7 +1,6 @@
-import { useCallback } from 'react';
+import { useCallback, useState, useRef } from 'react';
 import type React from 'react';
-import { Search, Navigation, Loader2 } from 'lucide-react';
-import ErrorAlert from '../ui/ErrorAlert';
+import { Search, X } from 'lucide-react';
 import useNearbyStationSearch from '../../composables/useNearbyStationSearch';
 import type { Station } from '../../composables/useStationSearch/types';
 
@@ -18,6 +17,9 @@ const StationSearch: React.FC<StationSearchProps> = ({
   stationCandidates,
   selectStation,
 }) => {
+  const [isFocused, setIsFocused] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const onStationFound = useCallback(
     (found: Station) => {
       setStation(found.name);
@@ -26,77 +28,91 @@ const StationSearch: React.FC<StationSearchProps> = ({
     [setStation, selectStation],
   );
 
-  const { nearbyStations, isLoading, error } =
-    useNearbyStationSearch(onStationFound);
+  const { nearbyStations } = useNearbyStationSearch(onStationFound);
+
+  const handleSelect = (s: Station) => {
+    selectStation(s);
+    setStation(s.name);
+    setIsFocused(false);
+  };
+
+  const showDropdown =
+    isFocused && (stationCandidates.length > 0 || nearbyStations.length > 0);
 
   return (
-    <div>
-      {/* Search Input */}
-      <div className="relative">
-        <input
-          type="text"
-          value={station}
-          onChange={(e) => setStation(e.target.value)}
-          className="input pr-10"
-          placeholder="駅名を入力"
-        />
-        <Search
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted"
-          size={18}
-        />
+    <div className="relative">
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <input
+            ref={inputRef}
+            type="text"
+            value={station}
+            onChange={(e) => setStation(e.target.value)}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setTimeout(() => setIsFocused(false), 200)}
+            className="w-full pl-3 pr-8 py-1.5 text-sm border border-primary-200 rounded-lg focus:border-primary-500 focus:outline-none"
+            placeholder="駅名を入力"
+          />
+          {station ? (
+            <button
+              onClick={() => setStation('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text"
+            >
+              <X size={14} />
+            </button>
+          ) : (
+            <Search
+              size={14}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted"
+            />
+          )}
+        </div>
       </div>
 
-      {/* Nearby Stations */}
-      {isLoading ? (
-        <div className="flex items-center gap-2 mt-2 text-xs text-text-muted">
-          <Loader2 className="animate-spin" size={12} />
-          近くの駅を検索中...
-        </div>
-      ) : (
-        nearbyStations.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-2">
-            {nearbyStations.map((nearbyStation) => (
-              <button
-                key={nearbyStation.name}
-                onClick={() => selectStation(nearbyStation)}
-                className={`text-xs px-2 py-1 rounded-full flex items-center gap-1 transition-colors
-                  ${
-                    station === nearbyStation.name
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-primary-50 text-text-muted hover:bg-primary-100'
-                  }`}
-              >
-                <Navigation size={10} />
-                {nearbyStation.name}
-                {nearbyStation.distance && (
-                  <span className="opacity-75">
-                    {(nearbyStation.distance / 1000).toFixed(1)}km
+      {/* Dropdown */}
+      {showDropdown && (
+        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-primary-200 rounded-lg shadow-lg z-30 max-h-60 overflow-y-auto">
+          {/* Search candidates */}
+          {stationCandidates.length > 0 && (
+            <div>
+              {stationCandidates.map((candidate, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleSelect(candidate)}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-primary-50 border-b border-primary-100 last:border-b-0"
+                >
+                  <span className="font-medium text-text">{candidate.name}</span>
+                  <span className="text-text-muted ml-2 text-xs">
+                    {candidate.address}
                   </span>
-                )}
-              </button>
-            ))}
-          </div>
-        )
-      )}
+                </button>
+              ))}
+            </div>
+          )}
 
-      {error && <ErrorAlert message={error} className="mt-2 text-xs" />}
-
-      {/* Station Candidates Dropdown */}
-      {stationCandidates.length > 0 && (
-        <ul className="mt-2 bg-white border border-primary-200 rounded-lg shadow-lg overflow-hidden">
-          {stationCandidates.map((candidate, index) => (
-            <li
-              key={index}
-              onClick={() => selectStation(candidate)}
-              className="px-3 py-2 hover:bg-primary-50 cursor-pointer transition-colors text-sm border-b border-primary-100 last:border-b-0"
-            >
-              <span className="font-medium text-text">{candidate.name}</span>
-              <span className="text-text-muted ml-2 text-xs">
-                ({candidate.address})
-              </span>
-            </li>
-          ))}
-        </ul>
+          {/* Nearby stations */}
+          {stationCandidates.length === 0 && nearbyStations.length > 0 && (
+            <div>
+              <div className="px-3 py-1.5 text-xs text-text-muted bg-primary-50">
+                近くの駅
+              </div>
+              {nearbyStations.map((s) => (
+                <button
+                  key={s.name}
+                  onClick={() => handleSelect(s)}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-primary-50 border-b border-primary-100 last:border-b-0"
+                >
+                  <span className="font-medium text-text">{s.name}</span>
+                  {s.distance && (
+                    <span className="text-text-muted ml-2 text-xs">
+                      {(s.distance / 1000).toFixed(1)}km
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
