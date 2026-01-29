@@ -7,8 +7,8 @@
 ---
 
 **Project:** GourmetSpot
-**Generated:** 2026-01-29 09:40:13
-**Category:** Restaurant/Food Service
+**Generated:** 2026-01-29 09:50:04
+**Category:** Bakery/Cafe
 
 ---
 
@@ -16,48 +16,47 @@
 
 ### Color Palette
 
-| Role       | Hex       | CSS Variable         |
-| ---------- | --------- | -------------------- |
-| Primary    | `#DC2626` | `--color-primary`    |
-| Secondary  | `#F87171` | `--color-secondary`  |
-| CTA/Accent | `#CA8A04` | `--color-cta`        |
-| Background | `#FEF2F2` | `--color-background` |
-| Text       | `#450A0A` | `--color-text`       |
+| Role | Hex | CSS Variable |
+|------|-----|--------------|
+| Primary | `#92400E` | `--color-primary` |
+| Secondary | `#B45309` | `--color-secondary` |
+| CTA/Accent | `#F8FAFC` | `--color-cta` |
+| Background | `#FEF3C7` | `--color-background` |
+| Text | `#78350F` | `--color-text` |
 
-**Color Notes:** Appetizing red + warm gold
+**Color Notes:** Warm brown + cream white
 
 ### Typography
 
-- **Heading Font:** Playfair Display SC
-- **Body Font:** Karla
-- **Mood:** restaurant, menu, culinary, elegant, foodie, hospitality
-- **Google Fonts:** [Playfair Display SC + Karla](https://fonts.google.com/share?selection.family=Karla:wght@300;400;500;600;700|Playfair+Display+SC:wght@400;700)
+- **Heading Font:** Fredoka
+- **Body Font:** Nunito
+- **Mood:** playful, friendly, fun, creative, warm, approachable
+- **Google Fonts:** [Fredoka + Nunito](https://fonts.google.com/share?selection.family=Fredoka:wght@400;500;600;700|Nunito:wght@300;400;500;600;700)
 
 **CSS Import:**
-
 ```css
-@import url('https://fonts.googleapis.com/css2?family=Karla:wght@300;400;500;600;700&family=Playfair+Display+SC:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@300;400;500;600;700&display=swap');
 ```
 
 ### Spacing Variables
 
-| Token         | Value             | Usage                     |
-| ------------- | ----------------- | ------------------------- |
-| `--space-xs`  | `4px` / `0.25rem` | Tight gaps                |
-| `--space-sm`  | `8px` / `0.5rem`  | Icon gaps, inline spacing |
-| `--space-md`  | `16px` / `1rem`   | Standard padding          |
-| `--space-lg`  | `24px` / `1.5rem` | Section padding           |
-| `--space-xl`  | `32px` / `2rem`   | Large gaps                |
-| `--space-2xl` | `48px` / `3rem`   | Section margins           |
-| `--space-3xl` | `64px` / `4rem`   | Hero padding              |
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--space-xs` | `4px` / `0.25rem` | Tight gaps |
+| `--space-sm` | `8px` / `0.5rem` | Icon gaps, inline spacing |
+| `--space-md` | `16px` / `1rem` | Standard padding |
+| `--space-lg` | `24px` / `1.5rem` | Section padding |
+| `--space-xl` | `32px` / `2rem` | Large gaps |
+| `--space-2xl` | `48px` / `3rem` | Section margins |
+| `--space-3xl` | `64px` / `4rem` | Hero padding |
 
 ### Shadow Depths
 
-| Level         | Value                          | Usage                       |
-| ------------- | ------------------------------ | --------------------------- |
-| `--shadow-sm` | `0 1px 2px rgba(0,0,0,0.05)`   | Subtle lift                 |
-| `--shadow-md` | `0 4px 6px rgba(0,0,0,0.1)`    | Cards, buttons              |
-| `--shadow-lg` | `0 10px 15px rgba(0,0,0,0.1)`  | Modals, dropdowns           |
+| Level | Value | Usage |
+|-------|-------|-------|
+| `--shadow-sm` | `0 1px 2px rgba(0,0,0,0.05)` | Subtle lift |
+| `--shadow-md` | `0 4px 6px rgba(0,0,0,0.1)` | Cards, buttons |
+| `--shadow-lg` | `0 10px 15px rgba(0,0,0,0.1)` | Modals, dropdowns |
 | `--shadow-xl` | `0 20px 25px rgba(0,0,0,0.15)` | Hero images, featured cards |
 
 ---
@@ -69,7 +68,7 @@
 ```css
 /* Primary Button */
 .btn-primary {
-  background: #ca8a04;
+  background: #F8FAFC;
   color: white;
   padding: 12px 24px;
   border-radius: 8px;
@@ -86,8 +85,8 @@
 /* Secondary Button */
 .btn-secondary {
   background: transparent;
-  color: #dc2626;
-  border: 2px solid #dc2626;
+  color: #92400E;
+  border: 2px solid #92400E;
   padding: 12px 24px;
   border-radius: 8px;
   font-weight: 600;
@@ -100,7 +99,7 @@
 
 ```css
 .card {
-  background: #fef2f2;
+  background: #FEF3C7;
   border-radius: 12px;
   padding: 24px;
   box-shadow: var(--shadow-md);
@@ -119,16 +118,16 @@
 ```css
 .input {
   padding: 12px 16px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #E2E8F0;
   border-radius: 8px;
   font-size: 16px;
   transition: border-color 200ms ease;
 }
 
 .input:focus {
-  border-color: #dc2626;
+  border-color: #92400E;
   outline: none;
-  box-shadow: 0 0 0 3px #dc262620;
+  box-shadow: 0 0 0 3px #92400E20;
 }
 ```
 
@@ -164,18 +163,17 @@
 
 ### Page Pattern
 
-**Pattern Name:** App Store Style Landing
+**Pattern Name:** Hero-Centric + Conversion
 
-- **Conversion Strategy:** Show real screenshots. Include ratings (4.5+ stars). QR code for mobile. Platform-specific CTAs.
-- **CTA Placement:** Download buttons prominent (App Store + Play Store) throughout
-- **Section Order:** 1. Hero with device mockup, 2. Screenshots carousel, 3. Features with icons, 4. Reviews/ratings, 5. Download CTAs
+- **CTA Placement:** Above fold
+- **Section Order:** Hero > Features > CTA
 
 ---
 
 ## Anti-Patterns (Do NOT Use)
 
-- ❌ Low-quality imagery
-- ❌ Outdated hours
+- ❌ Poor food photos
+- ❌ Hidden hours
 
 ### Additional Forbidden Patterns
 

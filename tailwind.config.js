@@ -4,33 +4,33 @@ export default {
   theme: {
     extend: {
       colors: {
-        // GourmetSpot Design System - Vibrant & Block-based
+        // GourmetSpot Design System - Warm Bakery/Cafe palette
         primary: {
-          DEFAULT: '#DC2626',
-          50: '#FEF2F2',
-          100: '#FEE2E2',
-          200: '#FECACA',
-          300: '#FCA5A5',
-          400: '#F87171',
-          500: '#DC2626',
-          600: '#B91C1C',
-          700: '#991B1B',
-        },
-        cta: {
-          DEFAULT: '#CA8A04',
+          DEFAULT: '#92400E',
           50: '#FFFBEB',
           100: '#FEF3C7',
-          500: '#CA8A04',
-          600: '#A16207',
+          200: '#FDE68A',
+          300: '#FCD34D',
+          400: '#FBBF24',
+          500: '#92400E',
+          600: '#B45309',
+          700: '#78350F',
+        },
+        cta: {
+          DEFAULT: '#F59E0B',
+          50: '#FFFBEB',
+          100: '#FEF3C7',
+          500: '#F59E0B',
+          600: '#D97706',
         },
         surface: {
-          DEFAULT: '#FEF2F2',
+          DEFAULT: '#FFFBEB',
           card: '#FFFFFF',
-          muted: '#F5F5F4',
+          muted: '#FEF3C7',
         },
         text: {
-          DEFAULT: '#450A0A',
-          muted: '#78716C',
+          DEFAULT: '#78350F',
+          muted: '#A16207',
           inverse: '#FFFFFF',
         },
       },
