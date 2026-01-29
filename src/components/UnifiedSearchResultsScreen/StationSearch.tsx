@@ -50,20 +50,20 @@ const StationSearch: React.FC<StationSearchProps> = ({
             onChange={(e) => setStation(e.target.value)}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setTimeout(() => setIsFocused(false), 200)}
-            className="w-full pl-3 pr-8 py-1.5 text-sm border border-primary-200 rounded-lg focus:border-primary-500 focus:outline-none"
+            className="w-full pl-3 pr-9 py-2 text-sm border border-primary-200 rounded-lg focus:border-primary-500 focus:outline-none"
             placeholder="駅名を入力"
           />
           {station ? (
             <button
               onClick={() => setStation('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text"
             >
-              <X size={14} />
+              <X size={18} />
             </button>
           ) : (
             <Search
-              size={14}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted"
+              size={18}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted"
             />
           )}
         </div>

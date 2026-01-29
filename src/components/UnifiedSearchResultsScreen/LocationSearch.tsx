@@ -30,12 +30,12 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
       <button
         onClick={onGetCurrentLocation}
         disabled={isLoading}
-        className="p-1.5 rounded-full hover:bg-primary-50 transition-colors disabled:opacity-50"
+        className="p-2 rounded-full hover:bg-primary-50 transition-colors disabled:opacity-50"
       >
         {isLoading ? (
-          <Loader2 className="animate-spin text-primary-500" size={16} />
+          <Loader2 className="animate-spin text-primary-500" size={20} />
         ) : (
-          <Navigation size={16} className="text-primary-600" />
+          <Navigation size={20} className="text-primary-600" />
         )}
       </button>
 

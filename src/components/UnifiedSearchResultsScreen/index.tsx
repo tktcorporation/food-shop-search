@@ -219,30 +219,30 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
     <div className="max-w-4xl mx-auto pb-20">
       {/* ===== Header ===== */}
       <div className="sticky top-0 z-20 bg-surface">
-        {/* Location Bar - Compact */}
-        <div className="p-3 border-b border-primary-100">
-          <div className="flex items-center gap-2">
+        {/* Location Bar */}
+        <div className="p-4 border-b border-primary-100">
+          <div className="flex items-center gap-3">
             {/* Search Method Toggle */}
             <button
               onClick={() => setSearchMethod('location')}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
                 searchMethod === 'location'
                   ? 'bg-primary-600 text-white'
                   : 'bg-primary-50 text-text-muted hover:bg-primary-100'
               }`}
             >
-              <MapPin size={14} />
+              <MapPin size={18} />
               <span className="hidden sm:inline">現在地</span>
             </button>
             <button
               onClick={() => setSearchMethod('station')}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
                 searchMethod === 'station'
                   ? 'bg-primary-600 text-white'
                   : 'bg-primary-50 text-text-muted hover:bg-primary-100'
               }`}
             >
-              <Train size={14} />
+              <Train size={18} />
               <span className="hidden sm:inline">駅名</span>
             </button>
 
@@ -268,15 +268,15 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
         </div>
 
         {/* Store Types - Core Feature (Always Visible) */}
-        <div className="px-3 py-2 bg-white border-b border-primary-100">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-text-muted shrink-0">
+        <div className="px-4 py-3 bg-white border-b border-primary-100">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold text-text shrink-0">
               食べたいもの
             </span>
 
             {/* Horizontal scrollable chips */}
             <div className="flex-1 overflow-x-auto scrollbar-hide">
-              <div className="flex gap-1.5 pb-1">
+              <div className="flex gap-2 pb-1">
                 {selectedKeywords.length === 0 ? (
                   <span className="text-sm text-text-muted italic">
                     選択してください
@@ -290,15 +290,15 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
                     <button
                       key={keyword}
                       onClick={() => toggleKeyword(keyword)}
-                      className="inline-flex items-center gap-1 px-2 py-1 bg-primary-100 text-primary-700 rounded-full text-xs font-medium whitespace-nowrap hover:bg-primary-200 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-primary-100 text-primary-700 rounded-full text-sm font-medium whitespace-nowrap hover:bg-primary-200 transition-colors"
                     >
                       {getKeywordLabel(keyword)}
-                      <X size={12} className="opacity-60" />
+                      <X size={14} className="opacity-60" />
                     </button>
                   ))
                 )}
                 {!isAllSelected && selectedKeywords.length > 5 && (
-                  <span className="text-xs text-text-muted self-center">
+                  <span className="text-sm text-text-muted self-center">
                     +{selectedKeywords.length - 5}
                   </span>
                 )}
@@ -308,10 +308,10 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
             {/* Edit Button */}
             <button
               onClick={() => setIsStoreTypesOpen(true)}
-              className="shrink-0 flex items-center gap-1 px-2 py-1 text-sm font-medium text-primary-600 hover:bg-primary-50 rounded transition-colors"
+              className="shrink-0 flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
             >
               編集
-              <ChevronRight size={14} />
+              <ChevronRight size={16} />
             </button>
           </div>
         </div>
@@ -319,10 +319,10 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
         {/* Filters Toggle - Secondary */}
         <button
           onClick={() => setIsFiltersOpen(!isFiltersOpen)}
-          className="w-full px-3 py-2 flex items-center justify-between bg-primary-50/50 border-b border-primary-100 text-sm hover:bg-primary-50 transition-colors"
+          className="w-full px-4 py-3 flex items-center justify-between bg-primary-50/50 border-b border-primary-100 text-sm hover:bg-primary-50 transition-colors"
         >
           <div className="flex items-center gap-2 text-text-muted">
-            <SlidersHorizontal size={14} />
+            <SlidersHorizontal size={18} />
             <span>フィルター</span>
             {activeFilterCount > 0 && (
               <span className="bg-primary-600 text-white text-xs px-1.5 py-0.5 rounded-full">
@@ -331,7 +331,7 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
             )}
           </div>
           <ChevronRight
-            size={14}
+            size={16}
             className={`text-text-muted transition-transform ${isFiltersOpen ? 'rotate-90' : ''}`}
           />
         </button>

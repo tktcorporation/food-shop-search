@@ -50,16 +50,16 @@ function App() {
         isLoading={isLoading}
         error={error}
       />
-      {/* Footer - Soft UI style */}
-      <footer className="flex items-center justify-center py-5 bg-gradient-to-b from-primary-100 to-primary-200 border-t border-primary-200">
+      {/* Footer */}
+      <footer className="flex items-center justify-center py-4 bg-primary-50 border-t border-primary-100">
         <a
           href="https://forms.gle/MyyDc8ybQJcR5JYs9"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 text-primary-700 text-sm font-medium hover:text-primary-600 transition-colors duration-200 cursor-pointer"
+          className="flex items-center gap-2 text-text-muted text-sm hover:text-primary-600 transition-colors"
         >
           <span>お問い合わせ・要望・バグ報告</span>
-          <ExternalLink size={16} />
+          <ExternalLink size={14} />
         </a>
       </footer>
     </div>
