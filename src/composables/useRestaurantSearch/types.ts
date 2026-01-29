@@ -32,9 +32,8 @@ export interface Restaurant {
   types: string[];
   photos?: google.maps.places.PlacePhoto[];
   searchKeywords: string[];
-  opening_hours?: {
-    weekday_text?: string[];
-  };
+  /** Nearby Search の isOpen() から取得した営業状態 */
+  isOpenNow?: boolean;
   distance?: number;
   geometry?: {
     location: google.maps.LatLng;

@@ -1,7 +1,6 @@
 import React from 'react';
 import { Star, Image as ImageIcon, AlertCircle } from 'lucide-react';
 import { getKeywordLabel } from '../../utils/keywordOptions';
-import { useOperatingHours } from '../../composables/useOperatingHours';
 import { useAnalytics } from '../../hooks/useAnalytics';
 
 interface Restaurant {
@@ -13,9 +12,8 @@ interface Restaurant {
   price_level: number;
   types: string[];
   photos?: google.maps.places.PlacePhoto[];
-  opening_hours?: {
-    weekday_text?: string[];
-  };
+  /** Nearby Search の isOpen() から取得した営業状態 */
+  isOpenNow?: boolean;
   distance?: number;
   searchKeywords: string[];
   business_status?: string;
@@ -45,7 +43,6 @@ const getBusinessStatusInfo = (status?: string) => {
 };
 
 const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
-  const { isOpen } = useOperatingHours(restaurant.opening_hours);
   const { trackEvent } = useAnalytics();
   const businessStatusInfo = getBusinessStatusInfo(restaurant.business_status);
 
@@ -134,11 +131,11 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
           <span className="text-text-muted">
             {'¥'.repeat(restaurant.price_level)}
           </span>
-          {isOpen !== null && !businessStatusInfo && (
+          {restaurant.isOpenNow !== undefined && !businessStatusInfo && (
             <span
-              className={`text-xs font-medium ${isOpen ? 'text-success' : 'text-text-muted'}`}
+              className={`text-xs font-medium ${restaurant.isOpenNow ? 'text-success' : 'text-text-muted'}`}
             >
-              {isOpen ? '営業中' : '営業時間外'}
+              {restaurant.isOpenNow ? '営業中' : '営業時間外'}
             </span>
           )}
         </div>

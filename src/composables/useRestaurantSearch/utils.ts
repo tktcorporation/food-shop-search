@@ -1,5 +1,4 @@
 import { Restaurant } from './types';
-import { calculateOperatingHours } from '../../utils/operatingHours';
 
 export const generateCacheKey = (
   request: google.maps.places.PlaceSearchRequest,
@@ -39,10 +38,8 @@ export const filterRestaurants = (
         place.user_ratings_total >= minReviews &&
         selectedPriceLevels.includes(place.price_level);
 
-      if (
-        isOpenNow &&
-        !calculateOperatingHours(place.opening_hours?.weekday_text)
-      ) {
+      // isOpenNow フィルター: Nearby Search の isOpen() 結果を使用
+      if (isOpenNow && place.isOpenNow !== true) {
         return false;
       }
 
