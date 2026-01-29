@@ -4,47 +4,57 @@ export default {
   theme: {
     extend: {
       colors: {
-        // GourmetSpot Design System - Soft UI Evolution + Warm Food Palette
-        // Warm, approachable colors with improved contrast (WCAG AA+)
+        // GourmetSpot Design System - Clean & Pop
+        // オレンジ系メイン + 白ベース + 明確なコントラスト
         primary: {
-          DEFAULT: '#B45309', // Soft amber brown
-          50: '#FFFBEB', // Very soft cream
-          100: '#FEF3C7', // Light cream
-          200: '#FDE68A', // Soft gold
-          300: '#FCD34D', // Warm yellow
-          400: '#FBBF24', // Amber
-          500: '#D97706', // Main amber (softer)
-          600: '#B45309', // Deep amber
-          700: '#92400E', // Rich brown
+          DEFAULT: '#F97316', // Vivid orange - main
+          50: '#FFF7ED', // Very light orange tint
+          100: '#FFEDD5', // Light orange
+          200: '#FED7AA', // Soft orange
+          300: '#FDBA74', // Medium light orange
+          400: '#FB923C', // Medium orange
+          500: '#F97316', // Main orange (default)
+          600: '#EA580C', // Hover state
+          700: '#C2410C', // Active/pressed state
         },
-        // Soft accent colors for actions
-        accent: {
-          DEFAULT: '#F59E0B',
-          light: '#FEF3C7',
-          dark: '#D97706',
-        },
-        // Surface colors for Soft UI depth
+        // Surface colors - 白ベースでクリーン
         surface: {
-          DEFAULT: '#FFFBEB', // Warm cream background
-          card: '#FFFFFF', // Pure white cards
-          muted: '#FEF3C7', // Muted cream
+          DEFAULT: '#FFFFFF', // Pure white background
+          card: '#FFFFFF', // Card background
+          muted: '#F9FAFB', // Slightly off-white (gray-50)
           elevated: '#FFFFFF', // Elevated elements
         },
-        // Text colors with warm undertones
+        // Text colors - しっかりしたコントラスト
         text: {
-          DEFAULT: '#78350F', // Warm brown (readable)
-          muted: '#92400E', // Softer brown
-          light: '#B45309', // Light text
-          inverse: '#FFFFFF', // White text
+          DEFAULT: '#1F2937', // Dark gray (gray-800) - primary text
+          muted: '#6B7280', // Medium gray (gray-500) - secondary text
+          light: '#9CA3AF', // Light gray (gray-400) - tertiary text
+          inverse: '#FFFFFF', // White text on dark backgrounds
         },
-        // Success/Error states
+        // Neutral grays for borders, dividers
+        gray: {
+          50: '#F9FAFB',
+          100: '#F3F4F6',
+          200: '#E5E7EB',
+          300: '#D1D5DB',
+          400: '#9CA3AF',
+          500: '#6B7280',
+          600: '#4B5563',
+          700: '#374151',
+          800: '#1F2937',
+          900: '#111827',
+        },
+        // Success state - 営業中、確認
         success: {
-          DEFAULT: '#059669',
-          light: '#D1FAE5',
+          DEFAULT: '#10B981', // Emerald-500
+          light: '#D1FAE5', // Emerald-100
+          dark: '#059669', // Emerald-600
         },
+        // Error state - エラー、警告
         error: {
-          DEFAULT: '#DC2626',
-          light: '#FEE2E2',
+          DEFAULT: '#EF4444', // Red-500
+          light: '#FEE2E2', // Red-100
+          dark: '#DC2626', // Red-600
         },
       },
       fontFamily: {
@@ -66,17 +76,16 @@ export default {
         xl: '16px',
       },
       boxShadow: {
-        // Soft UI Evolution shadows - softer than flat, clearer than neumorphism
-        sm: '0 1px 3px rgba(120, 53, 15, 0.08)',
-        DEFAULT:
-          '0 2px 8px rgba(120, 53, 15, 0.08), 0 1px 3px rgba(120, 53, 15, 0.04)',
-        md: '0 4px 12px rgba(120, 53, 15, 0.1), 0 2px 4px rgba(120, 53, 15, 0.04)',
-        lg: '0 8px 24px rgba(120, 53, 15, 0.1), 0 4px 8px rgba(120, 53, 15, 0.04)',
-        xl: '0 16px 32px rgba(120, 53, 15, 0.12), 0 8px 16px rgba(120, 53, 15, 0.06)',
-        // Soft inner shadow for inputs
-        inner: 'inset 0 1px 2px rgba(120, 53, 15, 0.06)',
-        // Focus ring shadow
-        focus: '0 0 0 3px rgba(245, 158, 11, 0.3)',
+        // Clean shadows - neutral gray base
+        sm: '0 1px 2px rgba(0, 0, 0, 0.05)',
+        DEFAULT: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
+        md: '0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)',
+        lg: '0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05)',
+        xl: '0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04)',
+        // Card shadow - slightly elevated
+        card: '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)',
+        // Focus ring shadow - orange tint
+        focus: '0 0 0 3px rgba(249, 115, 22, 0.3)',
       },
       transitionDuration: {
         // Soft UI Evolution - modern animations (200-300ms)
