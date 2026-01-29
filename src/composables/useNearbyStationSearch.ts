@@ -1,14 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Effect } from 'effect';
+import { useEffect, useMemo } from 'react';
 import type { Station } from './useStationSearch/types';
 import { searchNearbyStationsProgram } from '../programs/searchNearbyStations';
-import { extractErrorMessage } from '../utils/effectErrors';
-import {
-  GeolocationService,
-  GoogleMapsPlacesService,
-  CacheService,
-  AppLive,
-} from '../services';
+import { useEffectRunner } from '../hooks/useEffectRunner';
 
 interface UseNearbyStationSearchResult {
   nearbyStations: Station[];
@@ -25,49 +18,28 @@ interface UseNearbyStationSearchResult {
 const useNearbyStationSearch = (
   onStationFound?: (station: Station) => void,
 ): UseNearbyStationSearchResult => {
-  const [nearbyStations, setNearbyStations] = useState<Station[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const findNearbyStations = useCallback(() => {
-    setIsLoading(true);
-    setError(null);
-
-    const program = Effect.gen(function* () {
-      const geolocationService = yield* GeolocationService;
-      const placesService = yield* GoogleMapsPlacesService;
-      const cacheService = yield* CacheService;
-      return yield* searchNearbyStationsProgram(
-        geolocationService,
-        placesService,
-        cacheService,
-      );
-    });
-
-    const runnable = Effect.provide(program, AppLive);
-
-    void Effect.runPromiseExit(runnable).then((exit) => {
-      setIsLoading(false);
-      if (exit._tag === 'Success') {
-        setNearbyStations(exit.value);
-        if (exit.value.length > 0 && onStationFound) {
-          onStationFound(exit.value[0]);
-        }
-      } else {
-        const errorMessage = extractErrorMessage(
-          exit.cause,
-          '近くの駅を見つけることができませんでした。',
-        );
-        setError(errorMessage);
+  const runner = useEffectRunner<Station[]>({
+    initialData: [],
+    errorFallback: '近くの駅を見つけることができませんでした。',
+    onSuccess: (stations) => {
+      if (stations.length > 0 && onStationFound) {
+        onStationFound(stations[0]);
       }
-    });
-  }, [onStationFound]);
+    },
+  });
 
   useEffect(() => {
-    findNearbyStations();
+    runner.run(searchNearbyStationsProgram());
   }, []); // oxlint-disable-line react-hooks/exhaustive-deps -- mount時に一度だけ実行
 
-  return { nearbyStations, isLoading, error };
+  return useMemo(
+    () => ({
+      nearbyStations: runner.data ?? [],
+      isLoading: runner.isLoading,
+      error: runner.error,
+    }),
+    [runner.data, runner.isLoading, runner.error],
+  );
 };
 
 export default useNearbyStationSearch;

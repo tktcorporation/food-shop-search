@@ -3,7 +3,8 @@ import { Effect } from 'effect';
 import type { Station } from './useStationSearch/types';
 import { searchStationsProgram } from '../programs/searchStations';
 import { extractFirstFailure } from '../utils/effectErrors';
-import { GoogleMapsPlacesService, CacheService, AppLive } from '../services';
+import { AppLive } from '../services';
+import { STATION_SEARCH_DEBOUNCE_MS } from '../constants';
 
 const useStationSearch = (initialStation = '') => {
   const [station, setStation] = useState(initialStation);
@@ -19,14 +20,8 @@ const useStationSearch = (initialStation = '') => {
         return;
       }
 
-      // Effect プログラムを構築して実行
-      const program = Effect.gen(function* () {
-        const placesService = yield* GoogleMapsPlacesService;
-        const cacheService = yield* CacheService;
-        return yield* searchStationsProgram(placesService, cacheService, input);
-      });
-
-      const runnable = Effect.provide(program, AppLive);
+      // Effect プログラムを構築して AppLive レイヤーで提供
+      const runnable = Effect.provide(searchStationsProgram(input), AppLive);
 
       void Effect.runPromiseExit(runnable).then((exit) => {
         if (exit._tag === 'Success') {
@@ -47,7 +42,7 @@ const useStationSearch = (initialStation = '') => {
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
       handleStationInput(station);
-    }, 300);
+    }, STATION_SEARCH_DEBOUNCE_MS);
 
     return () => clearTimeout(debounceTimer);
   }, [station, handleStationInput]);

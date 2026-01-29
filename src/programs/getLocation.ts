@@ -6,9 +6,11 @@ import type {
   HttpsRequiredError,
   GeolocationUnsupportedError,
 } from '../errors';
-import type { GeolocationService } from '../services/GeolocationService';
-import type { GoogleMapsGeocoderService } from '../services/GoogleMapsGeocoderService';
-import type { CacheService } from '../services/CacheService';
+import {
+  GeolocationService,
+  GoogleMapsGeocoderService,
+  CacheService,
+} from '../services';
 import { CACHE_CONFIGS } from '../utils/cacheManager';
 
 export interface LocationData {
@@ -25,19 +27,20 @@ export interface LocationData {
  * 3. 逆ジオコーディングで住所を取得
  * 4. キャッシュに保存
  */
-export const getLocationProgram = (
-  geolocationService: GeolocationService,
-  geocoderService: GoogleMapsGeocoderService,
-  cacheService: CacheService,
-): Effect.Effect<
+export const getLocationProgram = (): Effect.Effect<
   LocationData,
   | GeolocationError
   | HttpsRequiredError
   | GeolocationUnsupportedError
   | GoogleMapsAuthError
-  | GeocodeError
+  | GeocodeError,
+  GeolocationService | GoogleMapsGeocoderService | CacheService
 > =>
   Effect.gen(function* () {
+    const geolocationService = yield* GeolocationService;
+    const geocoderService = yield* GoogleMapsGeocoderService;
+    const cacheService = yield* CacheService;
+
     // 1. ブラウザから位置情報を取得
     const position = yield* geolocationService.getCurrentPosition();
     const { latitude, longitude } = position.coords;

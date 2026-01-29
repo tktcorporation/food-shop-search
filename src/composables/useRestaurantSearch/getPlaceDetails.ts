@@ -1,7 +1,6 @@
 import { Effect, Option, pipe } from 'effect';
 import type { Restaurant } from './types';
-import type { GoogleMapsPlacesService } from '../../services/GoogleMapsPlacesService';
-import type { CacheService } from '../../services/CacheService';
+import { GoogleMapsPlacesService, CacheService } from '../../services';
 import type { GoogleMapsAuthError, PlaceDetailsError } from '../../errors';
 import { CACHE_CONFIGS } from '../../utils/cacheManager';
 
@@ -74,12 +73,17 @@ const fallbackRestaurant = (
  * API エラー時はフォールバックとして部分的なデータを返す。
  */
 export const getPlaceDetailsEffect = (
-  placesService: GoogleMapsPlacesService,
-  cacheService: CacheService,
   place: google.maps.places.PlaceResult & { searchKeywords: string[] },
   location: google.maps.LatLng,
-): Effect.Effect<Restaurant | null, GoogleMapsAuthError | PlaceDetailsError> =>
+): Effect.Effect<
+  Restaurant | null,
+  GoogleMapsAuthError | PlaceDetailsError,
+  GoogleMapsPlacesService | CacheService
+> =>
   Effect.gen(function* () {
+    const placesService = yield* GoogleMapsPlacesService;
+    const cacheService = yield* CacheService;
+
     const cached = yield* cacheService.get<Restaurant>(
       CACHE_CONFIGS.RESTAURANT_DETAILS,
       place.place_id!,

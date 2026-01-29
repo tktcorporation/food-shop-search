@@ -5,9 +5,11 @@ import type {
   PlaceSearchError,
   PlaceDetailsError,
 } from '../errors';
-import type { GoogleMapsGeocoderService } from '../services/GoogleMapsGeocoderService';
-import type { GoogleMapsPlacesService } from '../services/GoogleMapsPlacesService';
-import type { CacheService } from '../services/CacheService';
+import {
+  GoogleMapsGeocoderService,
+  GoogleMapsPlacesService,
+  CacheService,
+} from '../services';
 import type {
   Restaurant,
   SearchParams,
@@ -15,18 +17,21 @@ import type {
 import { generateCacheKey } from '../composables/useRestaurantSearch/utils';
 import { getPlaceDetailsEffect } from '../composables/useRestaurantSearch/getPlaceDetails';
 import { CACHE_CONFIGS } from '../utils/cacheManager';
-
-/** getDetailsの最大呼び出し数（コスト制御） */
-const MAX_DETAILS_REQUESTS = 20;
+import { MAX_DETAILS_REQUESTS, MAX_CONCURRENCY } from '../constants';
 
 /** 駅名からジオコーディングで位置を取得 (キャッシュ対応) */
 const geocodeStation = (
-  geocoderService: GoogleMapsGeocoderService,
-  cacheService: CacheService,
   stationName: string,
   prefecture: string,
-): Effect.Effect<google.maps.LatLng, GoogleMapsAuthError | GeocodeError> =>
+): Effect.Effect<
+  google.maps.LatLng,
+  GoogleMapsAuthError | GeocodeError,
+  GoogleMapsGeocoderService | CacheService
+> =>
   Effect.gen(function* () {
+    const geocoderService = yield* GoogleMapsGeocoderService;
+    const cacheService = yield* CacheService;
+
     const cacheKey = `${stationName}_${prefecture}`;
     const cached = yield* cacheService.get<{
       lat: number;
@@ -52,16 +57,18 @@ const geocodeStation = (
 
 /** 単一キーワードの近隣検索 (キャッシュ対応) */
 const searchByKeyword = (
-  placesService: GoogleMapsPlacesService,
-  cacheService: CacheService,
   keyword: string,
   location: google.maps.LatLng,
   radius: number,
 ): Effect.Effect<
   google.maps.places.PlaceResult[],
-  GoogleMapsAuthError | PlaceSearchError
+  GoogleMapsAuthError | PlaceSearchError,
+  GoogleMapsPlacesService | CacheService
 > =>
   Effect.gen(function* () {
+    const placesService = yield* GoogleMapsPlacesService;
+    const cacheService = yield* CacheService;
+
     const request: google.maps.places.PlaceSearchRequest = {
       keyword,
       location,
@@ -117,13 +124,11 @@ const deduplicateResults = (
  * 4. 各場所の詳細情報取得 (MAX_DETAILS_REQUESTS で制限)
  */
 export const searchRestaurantsProgram = (
-  geocoderService: GoogleMapsGeocoderService,
-  placesService: GoogleMapsPlacesService,
-  cacheService: CacheService,
   params: SearchParams,
 ): Effect.Effect<
   Restaurant[],
-  GoogleMapsAuthError | GeocodeError | PlaceSearchError | PlaceDetailsError
+  GoogleMapsAuthError | GeocodeError | PlaceSearchError | PlaceDetailsError,
+  GoogleMapsGeocoderService | GoogleMapsPlacesService | CacheService
 > =>
   Effect.gen(function* () {
     const { keywords, searchLocation, searchRadius } = params;
@@ -132,25 +137,14 @@ export const searchRestaurantsProgram = (
     const location: google.maps.LatLng =
       'lat' in searchLocation
         ? new google.maps.LatLng(searchLocation.lat, searchLocation.lng)
-        : yield* geocodeStation(
-            geocoderService,
-            cacheService,
-            searchLocation.name,
-            searchLocation.prefecture,
-          );
+        : yield* geocodeStation(searchLocation.name, searchLocation.prefecture);
 
     // 2. 全キーワードで並列検索
     const searchResults = yield* Effect.all(
       keywords.map((keyword) =>
-        searchByKeyword(
-          placesService,
-          cacheService,
-          keyword,
-          location,
-          searchRadius,
-        ),
+        searchByKeyword(keyword, location, searchRadius),
       ),
-      { concurrency: 'unbounded' },
+      { concurrency: MAX_CONCURRENCY },
     );
 
     // 3. 結果の結合と重複排除
@@ -166,10 +160,8 @@ export const searchRestaurantsProgram = (
     const limitedResults = uniqueResults.slice(0, MAX_DETAILS_REQUESTS);
 
     const detailedResults = yield* Effect.all(
-      limitedResults.map((place) =>
-        getPlaceDetailsEffect(placesService, cacheService, place, location),
-      ),
-      { concurrency: 'unbounded' },
+      limitedResults.map((place) => getPlaceDetailsEffect(place, location)),
+      { concurrency: MAX_CONCURRENCY },
     );
 
     // 非OPERATIONALな店舗 (null) を除外

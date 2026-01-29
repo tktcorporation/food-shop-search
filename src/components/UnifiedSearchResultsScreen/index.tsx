@@ -14,9 +14,13 @@ import type {
   Location,
 } from '../../composables/useRestaurantSearch/types';
 import type { Station } from '../../composables/useStationSearch/types';
-
-// API検索のデバウンス時間（ミリ秒）
-const SEARCH_DEBOUNCE_MS = 500;
+import {
+  SEARCH_DEBOUNCE_MS,
+  DEFAULT_MIN_RATING,
+  DEFAULT_MIN_REVIEWS,
+  DEFAULT_SEARCH_RADIUS,
+  DEFAULT_PRICE_LEVELS,
+} from '../../constants';
 
 interface UnifiedSearchResultsScreenProps {
   restaurants: Restaurant[];
@@ -64,15 +68,16 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>(
     keyWordOptions.map((option) => option.value),
   );
-  const [minRating, setMinRating] = useState<number>(3.5);
-  const [minReviews, setMinReviews] = useState<number>(100);
+  const [minRating, setMinRating] = useState<number>(DEFAULT_MIN_RATING);
+  const [minReviews, setMinReviews] = useState<number>(DEFAULT_MIN_REVIEWS);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [customKeywords, setCustomKeywords] = useState<string[]>([]);
   const [isOpenNow, setIsOpenNow] = useState(false);
-  const [selectedPriceLevels, setSelectedPriceLevels] = useState<number[]>([
-    1, 2, 3, 4,
-  ]);
-  const [searchRadius, setSearchRadius] = useState<number>(100);
+  const [selectedPriceLevels, setSelectedPriceLevels] =
+    useState<number[]>(DEFAULT_PRICE_LEVELS);
+  const [searchRadius, setSearchRadius] = useState<number>(
+    DEFAULT_SEARCH_RADIUS,
+  );
   const [searchMethod, setSearchMethod] = useState<'location' | 'station'>(
     'location',
   );
