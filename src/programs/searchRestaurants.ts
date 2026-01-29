@@ -3,7 +3,6 @@ import type {
   GoogleMapsAuthError,
   GeocodeError,
   PlaceSearchError,
-  PlaceDetailsError,
 } from '../errors';
 import {
   GoogleMapsGeocoderService,
@@ -15,9 +14,8 @@ import type {
   SearchParams,
 } from '../composables/useRestaurantSearch/types';
 import { generateCacheKey } from '../composables/useRestaurantSearch/utils';
-import { getPlaceDetailsEffect } from '../composables/useRestaurantSearch/getPlaceDetails';
 import { CACHE_CONFIGS } from '../utils/cacheManager';
-import { MAX_DETAILS_REQUESTS, MAX_CONCURRENCY } from '../constants';
+import { MAX_CONCURRENCY } from '../constants';
 
 /** 駅名からジオコーディングで位置を取得 (キャッシュ対応) */
 const geocodeStation = (
@@ -114,20 +112,68 @@ const deduplicateResults = (
     })[],
   );
 
+/** PlaceResult から Restaurant への変換（Place Details 不要） */
+const placeResultToRestaurant = (
+  place: google.maps.places.PlaceResult & { searchKeywords: string[] },
+  searchLocation: google.maps.LatLng,
+): Restaurant | null => {
+  // 非OPERATIONALな店舗は除外
+  if (place.business_status && place.business_status !== 'OPERATIONAL') {
+    return null;
+  }
+
+  // 距離計算
+  let distance: number | undefined;
+  if (place.geometry?.location) {
+    distance = google.maps.geometry.spherical.computeDistanceBetween(
+      searchLocation,
+      place.geometry.location,
+    );
+  }
+
+  // isOpen() から営業状態を取得
+  let isOpenNow: boolean | undefined;
+  if (place.opening_hours?.isOpen) {
+    try {
+      isOpenNow = place.opening_hours.isOpen();
+    } catch {
+      isOpenNow = undefined;
+    }
+  }
+
+  return {
+    place_id: place.place_id!,
+    name: place.name!,
+    vicinity: place.vicinity!,
+    rating: place.rating || 0,
+    user_ratings_total: place.user_ratings_total || 0,
+    price_level: place.price_level || 1,
+    types: place.types || [],
+    photos: place.photos,
+    searchKeywords: place.searchKeywords,
+    isOpenNow,
+    distance,
+    geometry: place.geometry?.location
+      ? { location: place.geometry.location }
+      : undefined,
+    business_status: place.business_status,
+  };
+};
+
 /**
  * レストラン検索の Effect プログラム。
- * 全詳細結果を返す（フィルタリングは呼び出し側で行う）。
+ * Nearby Search の結果を直接使用（Place Details 不要）。
  *
  * 1. 検索位置の解決 (LatLng or 駅ジオコーディング + キャッシュ)
  * 2. 全キーワードで並列検索
  * 3. 結果の重複排除
- * 4. 各場所の詳細情報取得 (MAX_DETAILS_REQUESTS で制限)
+ * 4. Restaurant 型への変換
  */
 export const searchRestaurantsProgram = (
   params: SearchParams,
 ): Effect.Effect<
   Restaurant[],
-  GoogleMapsAuthError | GeocodeError | PlaceSearchError | PlaceDetailsError,
+  GoogleMapsAuthError | GeocodeError | PlaceSearchError,
   GoogleMapsGeocoderService | GoogleMapsPlacesService | CacheService
 > =>
   Effect.gen(function* () {
@@ -156,14 +202,8 @@ export const searchRestaurantsProgram = (
     );
     const uniqueResults = deduplicateResults(combinedResults);
 
-    // 4. 各場所の詳細情報を並列取得 (コスト制限)
-    const limitedResults = uniqueResults.slice(0, MAX_DETAILS_REQUESTS);
-
-    const detailedResults = yield* Effect.all(
-      limitedResults.map((place) => getPlaceDetailsEffect(place, location)),
-      { concurrency: MAX_CONCURRENCY },
-    );
-
-    // 非OPERATIONALな店舗 (null) を除外
-    return detailedResults.filter((r): r is Restaurant => r !== null);
+    // 4. Restaurant 型への変換（非OPERATIONALは除外）
+    return uniqueResults
+      .map((place) => placeResultToRestaurant(place, location))
+      .filter((r): r is Restaurant => r !== null);
   });

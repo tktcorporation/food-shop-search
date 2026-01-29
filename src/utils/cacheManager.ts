@@ -36,11 +36,6 @@ export const CACHE_CONFIGS = {
     version: '1',
     expiry: 48 * 60 * 60 * 1000, // 48時間
   },
-  RESTAURANT_DETAILS: {
-    key: 'restaurantDetailsCache',
-    version: '1',
-    expiry: 48 * 60 * 60 * 1000, // 48時間
-  },
   GEOCODE_FORWARD: {
     key: 'geocodeForwardCache',
     version: '1',

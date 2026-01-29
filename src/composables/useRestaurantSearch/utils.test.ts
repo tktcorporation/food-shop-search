@@ -1,11 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { filterRestaurants, sortByDistance } from './utils';
 import type { Restaurant } from './types';
-
-// calculateOperatingHours をモックして時間依存を排除
-vi.mock('../../utils/operatingHours', () => ({
-  calculateOperatingHours: vi.fn(() => true),
-}));
 
 const makeRestaurant = (overrides: Partial<Restaurant> = {}): Restaurant => ({
   place_id: 'test-id',
@@ -91,14 +86,26 @@ describe('filterRestaurants', () => {
     expect(result).toHaveLength(1);
   });
 
-  it('handles isOpenNow filter', async () => {
-    const { calculateOperatingHours } =
-      await import('../../utils/operatingHours');
-    const mockedCalc = vi.mocked(calculateOperatingHours);
+  it('handles isOpenNow filter - filters out closed restaurants', () => {
+    const restaurants = [makeRestaurant({ isOpenNow: false })];
+    const result = filterRestaurants(restaurants, {
+      ...defaultFilters,
+      isOpenNow: true,
+    });
+    expect(result).toHaveLength(0);
+  });
 
-    // Closed restaurant
-    mockedCalc.mockReturnValueOnce(false);
-    const restaurants = [makeRestaurant()];
+  it('handles isOpenNow filter - includes open restaurants', () => {
+    const restaurants = [makeRestaurant({ isOpenNow: true })];
+    const result = filterRestaurants(restaurants, {
+      ...defaultFilters,
+      isOpenNow: true,
+    });
+    expect(result).toHaveLength(1);
+  });
+
+  it('handles isOpenNow filter - filters out undefined when isOpenNow is true', () => {
+    const restaurants = [makeRestaurant({ isOpenNow: undefined })];
     const result = filterRestaurants(restaurants, {
       ...defaultFilters,
       isOpenNow: true,

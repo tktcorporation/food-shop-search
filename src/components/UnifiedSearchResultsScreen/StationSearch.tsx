@@ -81,7 +81,9 @@ const StationSearch: React.FC<StationSearchProps> = ({
                   onClick={() => handleSelect(candidate)}
                   className="w-full px-3 py-2 text-left text-sm hover:bg-primary-50 border-b border-primary-100 last:border-b-0"
                 >
-                  <span className="font-medium text-text">{candidate.name}</span>
+                  <span className="font-medium text-text">
+                    {candidate.name}
+                  </span>
                   <span className="text-text-muted ml-2 text-xs">
                     {candidate.address}
                   </span>

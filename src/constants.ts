@@ -6,9 +6,6 @@
 // API 関連
 // ============================================
 
-/** getDetails APIの最大呼び出し数（コスト制御） */
-export const MAX_DETAILS_REQUESTS = 20;
-
 /** API並列リクエストの最大数 */
 export const MAX_CONCURRENCY = 5;
 
