@@ -20,9 +20,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
       window.location.hostname === '127.0.0.1');
 
   if (!isHttps) {
-    return (
-      <span className="text-xs text-text-muted">HTTPS接続が必要です</span>
-    );
+    return <span className="text-xs text-text-muted">HTTPS接続が必要です</span>;
   }
 
   return (
