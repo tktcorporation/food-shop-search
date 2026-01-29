@@ -190,14 +190,15 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
   return (
     <div className="max-w-4xl mx-auto p-6 relative pb-20">
       <div className="flex flex-col gap-6">
-        <div className="bg-white rounded-lg shadow p-4 mb-2">
-          <div className="flex flex-col sm:flex-row items-center gap-4 justify-center">
+        {/* Search Method Toggle */}
+        <div className="bg-surface-card rounded-lg shadow-md p-4">
+          <div className="flex flex-col sm:flex-row items-center gap-3 justify-center">
             <button
               onClick={() => setSearchMethod('location')}
-              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-base font-medium transition-colors duration-200 ${
+              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-base font-medium transition-all duration-200 cursor-pointer ${
                 searchMethod === 'location'
-                  ? 'bg-primary-500 text-white shadow'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-primary-500 text-text-inverse shadow-md'
+                  : 'bg-surface-muted text-text hover:bg-gray-200'
               }`}
             >
               <MapPin size={20} />
@@ -205,10 +206,10 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
             </button>
             <button
               onClick={() => setSearchMethod('station')}
-              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-base font-medium transition-colors duration-200 ${
+              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-base font-medium transition-all duration-200 cursor-pointer ${
                 searchMethod === 'station'
-                  ? 'bg-primary-500 text-white shadow'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-primary-500 text-text-inverse shadow-md'
+                  : 'bg-surface-muted text-text hover:bg-gray-200'
               }`}
             >
               <Train size={20} />
@@ -257,7 +258,7 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
         {isLoading && (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 text-primary-500 animate-spin" />
-            <span className="ml-2 text-gray-600 text-sm">検索中...</span>
+            <span className="ml-2 text-text-muted text-sm">検索中...</span>
           </div>
         )}
 

@@ -60,7 +60,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
   return (
     <div className="space-y-6">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-text mb-2">
           検索範囲
         </label>
         <div className="flex flex-wrap gap-2">
@@ -77,7 +77,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-text mb-2">
           価格帯
         </label>
         <div className="flex flex-wrap gap-2">
@@ -102,13 +102,13 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-text mb-2">
           最低評価
         </label>
         <select
           value={minRating}
           onChange={(e) => setMinRating(parseFloat(e.target.value))}
-          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+          className="input cursor-pointer"
         >
           <option value={0}>指定なし</option>
           <option value={3}>3以上</option>
@@ -119,13 +119,13 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-text mb-2">
           最低レビュー数
         </label>
         <select
           value={minReviews}
           onChange={(e) => setMinReviews(parseInt(e.target.value))}
-          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
+          className="input cursor-pointer"
         >
           <option value={0}>指定なし</option>
           <option value={50}>50件以上</option>
@@ -136,14 +136,14 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
       </div>
 
       <div>
-        <label className="flex items-center">
+        <label className="flex items-center cursor-pointer">
           <input
             type="checkbox"
             checked={isOpenNow}
             onChange={(e) => setIsOpenNow(e.target.checked)}
-            className="form-checkbox h-5 w-5 text-primary-600 rounded"
+            className="h-5 w-5 text-primary-500 rounded border-gray-300 focus:ring-primary-500 cursor-pointer"
           />
-          <span className="ml-2 text-sm text-gray-700">営業中のみ表示</span>
+          <span className="ml-2 text-sm text-text">営業中のみ表示</span>
         </label>
       </div>
     </div>

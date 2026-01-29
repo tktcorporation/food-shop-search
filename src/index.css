@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* GourmetSpot Design System - Vibrant & Block-based */
+@import url('https://fonts.googleapis.com/css2?family=Karla:wght@300;400;500;600;700&family=Playfair+Display+SC:wght@400;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,24 +7,72 @@
 
 @layer base {
   body {
-    @apply font-sans bg-gradient-to-br from-primary-50 to-primary-100 min-h-screen;
+    @apply font-body bg-surface text-text min-h-screen antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-heading;
   }
 }
 
 @layer components {
-  .btn {
-    @apply px-4 py-2 rounded-lg font-semibold text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+  /* Primary CTA Button - Use sparingly (1 per screen recommended) */
+  .btn-cta {
+    @apply bg-cta-500 text-text-inverse px-6 py-3 rounded-lg font-semibold
+           transition-all duration-200 cursor-pointer
+           hover:opacity-90 hover:-translate-y-0.5
+           focus:outline-none focus:ring-2 focus:ring-cta-500 focus:ring-offset-2;
   }
 
+  /* Primary Button */
   .btn-primary {
-    @apply bg-primary-500 hover:bg-primary-600 focus:ring-primary-500;
+    @apply bg-primary-500 text-text-inverse px-4 py-2 rounded-lg font-semibold
+           transition-all duration-200 cursor-pointer
+           hover:bg-primary-600 hover:-translate-y-0.5
+           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
   }
 
+  /* Secondary/Outline Button */
   .btn-secondary {
-    @apply bg-secondary-500 hover:bg-secondary-600 focus:ring-secondary-500;
+    @apply bg-transparent text-primary-500 border-2 border-primary-500
+           px-4 py-2 rounded-lg font-semibold
+           transition-all duration-200 cursor-pointer
+           hover:bg-primary-50
+           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+
+  /* Card Component */
+  .card {
+    @apply bg-surface-card rounded-lg shadow-md p-6
+           transition-all duration-200 cursor-pointer
+           hover:shadow-lg hover:-translate-y-0.5;
+  }
+
+  /* Input Field */
+  .input {
+    @apply w-full px-4 py-3 border border-gray-200 rounded-lg text-base
+           transition-all duration-200
+           focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20;
+  }
+
+  /* Chip/Tag */
+  .chip {
+    @apply inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium
+           transition-colors duration-200 cursor-pointer;
+  }
+
+  .chip-selected {
+    @apply bg-primary-500 text-text-inverse;
+  }
+
+  .chip-unselected {
+    @apply bg-surface-muted text-text hover:bg-gray-200;
   }
 }
 
+/* Animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -36,50 +85,25 @@
 }
 
 .animate-fadeIn {
-  animation: fadeIn 0.5s ease-out;
+  animation: fadeIn 0.3s ease-out;
 }
 
-@keyframes pulse {
-  0%,
-  100% {
-    transform: scale(1);
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
-  50% {
-    transform: scale(1.02);
-  }
-}
-
-.animate-pulse {
-  animation: pulse 0.5s ease-in-out infinite;
-}
-
-@keyframes colorChange {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-.bg-gradient-animation {
-  background: linear-gradient(270deg, #fef2f2, #fee2e2, #fecaca);
-  background-size: 200% 200%;
-  animation: colorChange 3s ease infinite;
 }
 
 /* Responsive styles */
 @media (max-width: 640px) {
-  .btn {
-    @apply px-3 py-1.5 text-sm;
-  }
-}
-
-@media (max-width: 480px) {
-  .btn {
-    @apply px-2 py-1 text-xs;
+  .btn-cta,
+  .btn-primary,
+  .btn-secondary {
+    @apply px-4 py-2 text-sm;
   }
 }
