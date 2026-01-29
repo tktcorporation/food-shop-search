@@ -49,12 +49,20 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
     );
   };
 
+  const toggleAllPriceLevels = () => {
+    if (selectedPriceLevels.length === PRICE_LEVELS.length) {
+      setSelectedPriceLevels([]);
+    } else {
+      setSelectedPriceLevels(PRICE_LEVELS.map((level) => level.value));
+    }
+  };
+
   return (
     <div className="space-y-4">
-      {/* Search Radius */}
+      {/* 検索範囲 */}
       <div>
         <label className="filter-label mb-2 block">検索範囲</label>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-2">
           {RADIUS_OPTIONS.map((option) => (
             <ToggleChip
               key={option.value}
@@ -67,10 +75,18 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
         </div>
       </div>
 
-      {/* Price Levels */}
+      {/* 価格帯 */}
       <div>
         <label className="filter-label mb-2 block">価格帯</label>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-2">
+          <ToggleChip
+            selected={selectedPriceLevels.length === PRICE_LEVELS.length}
+            onClick={toggleAllPriceLevels}
+          >
+            {selectedPriceLevels.length === PRICE_LEVELS.length
+              ? '全解除'
+              : '全選択'}
+          </ToggleChip>
           {PRICE_LEVELS.map((level) => (
             <ToggleChip
               key={level.value}
@@ -83,7 +99,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
         </div>
       </div>
 
-      {/* Min Rating & Reviews */}
+      {/* 評価・レビュー数 */}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="filter-label mb-1.5 block">最低評価</label>
@@ -93,10 +109,10 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
             className="select text-sm !py-1.5"
           >
             <option value={0}>指定なし</option>
-            <option value={3}>★3以上</option>
-            <option value={3.5}>★3.5以上</option>
-            <option value={4}>★4以上</option>
-            <option value={4.5}>★4.5以上</option>
+            <option value={3}>3.0+</option>
+            <option value={3.5}>3.5+</option>
+            <option value={4}>4.0+</option>
+            <option value={4.5}>4.5+</option>
           </select>
         </div>
 
@@ -108,14 +124,15 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
             className="select text-sm !py-1.5"
           >
             <option value={0}>指定なし</option>
-            <option value={50}>50件以上</option>
-            <option value={100}>100件以上</option>
-            <option value={200}>200件以上</option>
+            <option value={50}>50+</option>
+            <option value={100}>100+</option>
+            <option value={200}>200+</option>
+            <option value={500}>500+</option>
           </select>
         </div>
       </div>
 
-      {/* Open Now Toggle */}
+      {/* 営業中のみ表示 */}
       <label className="flex items-center cursor-pointer py-1">
         <div className="relative">
           <input

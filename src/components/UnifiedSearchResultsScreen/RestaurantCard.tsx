@@ -79,7 +79,7 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
         transition-all duration-200 hover:border-primary-200 hover:shadow-md
         ${businessStatusInfo ? 'opacity-70' : ''}`}
     >
-      {/* Image Section - Compact */}
+      {/* Image Section */}
       <div className="relative aspect-[4/3] bg-primary-50">
         {restaurant.photos?.[0] ? (
           <img
@@ -115,14 +115,14 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
         )}
       </div>
 
-      {/* Content Section - Dense */}
+      {/* Content Section */}
       <div className="p-3">
         {/* Name */}
         <h3 className="font-semibold text-text line-clamp-1 mb-1.5">
           {restaurant.name}
         </h3>
 
-        {/* Rating & Price - Single line */}
+        {/* Rating & Price */}
         <div className="flex items-center gap-2 mb-1.5 text-sm">
           <div className="flex items-center gap-0.5">
             <Star className="text-primary-500" size={14} fill="currentColor" />
