@@ -23,67 +23,60 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
       window.location.hostname === '127.0.0.1');
 
   return (
-    <div className="card">
-      <label className="block text-sm font-semibold text-text mb-3">
-        現在地から検索
-      </label>
-
+    <div>
       {!isHttps && (
-        <div className="alert-info mb-4">
-          <Lock className="shrink-0 mt-0.5" size={18} />
-          <p className="text-sm">
-            位置情報の取得には HTTPS 接続が必要です。
-            現在のページは安全な接続ではないため、位置情報を取得できません。
-          </p>
+        <div className="alert-info mb-3 text-xs">
+          <Lock className="shrink-0" size={14} />
+          <p>HTTPS接続が必要です</p>
         </div>
       )}
 
       {isIOS && !currentLocation && (
-        <div className="alert-info mb-4">
-          <AlertCircle className="shrink-0 mt-0.5 text-primary-500" size={18} />
-          <div>
-            <p className="font-semibold text-text mb-1">iOSをご利用の方へ</p>
-            <p className="text-sm text-text-muted">
+        <details className="mb-3">
+          <summary className="text-xs text-text-muted cursor-pointer hover:text-text">
+            <AlertCircle className="inline mr-1" size={12} />
+            iOSをご利用の方へ（タップで詳細）
+          </summary>
+          <div className="mt-2 p-3 bg-primary-50 rounded-lg text-xs text-text-muted">
+            <p className="mb-2">
               位置情報の許可を求められた際に「許可」を選択してください。
             </p>
-            <p className="text-sm text-text-muted mt-2">
-              既に「許可しない」を選択された場合:
-            </p>
-            <ol className="list-decimal ml-5 mt-1 text-sm text-text-muted">
+            <p className="mb-1">既に「許可しない」を選択された場合:</p>
+            <ol className="list-decimal ml-4 space-y-0.5">
               <li>iOSの設定アプリを開く</li>
               <li>プライバシーとセキュリティ - 位置情報サービス</li>
               <li>Safari - 「このWebサイトの使用中のみ許可」を選択</li>
             </ol>
           </div>
-        </div>
+        </details>
       )}
 
-      <button
-        onClick={onGetCurrentLocation}
-        disabled={isLoading || !isHttps}
-        className="btn-secondary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {isLoading ? (
-          <>
-            <Loader2 className="animate-spin" size={18} />
-            位置情報を取得中...
-          </>
-        ) : (
-          <>
-            <Navigation size={18} />
-            {currentLocation ? '現在地を更新' : '現在地を取得'}
-          </>
-        )}
-      </button>
+      {/* Current Location Display + Button */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onGetCurrentLocation}
+          disabled={isLoading || !isHttps}
+          className="btn-secondary flex-shrink-0 !py-2 !px-3"
+        >
+          {isLoading ? (
+            <Loader2 className="animate-spin" size={16} />
+          ) : (
+            <Navigation size={16} />
+          )}
+        </button>
 
-      {currentLocation && (
-        <div className="mt-4 p-3 bg-surface-muted rounded-lg border border-primary-100">
-          <p className="text-sm font-semibold text-text mb-1">現在地:</p>
-          <p className="text-sm text-text-muted">{currentLocation.address}</p>
+        <div className="flex-1 min-w-0">
+          {currentLocation ? (
+            <p className="text-sm text-text truncate">{currentLocation.address}</p>
+          ) : (
+            <p className="text-sm text-text-muted">
+              {isLoading ? '取得中...' : '現在地を取得'}
+            </p>
+          )}
         </div>
-      )}
+      </div>
 
-      {error && <ErrorAlert message={error} className="mt-3" />}
+      {error && <ErrorAlert message={error} className="mt-2 text-xs" />}
     </div>
   );
 };

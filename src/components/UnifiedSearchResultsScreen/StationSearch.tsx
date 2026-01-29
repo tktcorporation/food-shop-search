@@ -30,79 +30,68 @@ const StationSearch: React.FC<StationSearchProps> = ({
     useNearbyStationSearch(onStationFound);
 
   return (
-    <div className="card">
-      <label
-        htmlFor="station"
-        className="block text-sm font-semibold text-text mb-3"
-      >
-        駅名
-      </label>
+    <div>
+      {/* Search Input */}
       <div className="relative">
         <input
           type="text"
-          id="station"
           value={station}
           onChange={(e) => setStation(e.target.value)}
           className="input pr-10"
-          placeholder="駅名を入力してください"
+          placeholder="駅名を入力"
         />
         <Search
           className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted"
-          size={20}
+          size={18}
         />
       </div>
 
-      <div className="mt-4">
-        {isLoading ? (
-          <div className="flex items-center gap-2 text-sm text-text-muted p-3 bg-surface-muted rounded-lg">
-            <Loader2 className="animate-spin" size={16} />
-            近くの駅を検索中...
+      {/* Nearby Stations */}
+      {isLoading ? (
+        <div className="flex items-center gap-2 mt-2 text-xs text-text-muted">
+          <Loader2 className="animate-spin" size={12} />
+          近くの駅を検索中...
+        </div>
+      ) : (
+        nearbyStations.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {nearbyStations.map((nearbyStation) => (
+              <button
+                key={nearbyStation.name}
+                onClick={() => selectStation(nearbyStation)}
+                className={`text-xs px-2 py-1 rounded-full flex items-center gap-1 transition-colors
+                  ${
+                    station === nearbyStation.name
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-primary-50 text-text-muted hover:bg-primary-100'
+                  }`}
+              >
+                <Navigation size={10} />
+                {nearbyStation.name}
+                {nearbyStation.distance && (
+                  <span className="opacity-75">
+                    {(nearbyStation.distance / 1000).toFixed(1)}km
+                  </span>
+                )}
+              </button>
+            ))}
           </div>
-        ) : (
-          nearbyStations.length > 0 && (
-            <div className="w-full">
-              <p className="text-sm font-medium text-text-muted mb-2">
-                近くの駅:
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {nearbyStations.map((nearbyStation) => (
-                  <button
-                    key={nearbyStation.name}
-                    onClick={() => selectStation(nearbyStation)}
-                    className={`chip flex items-center gap-1.5
-                      ${
-                        station === nearbyStation.name
-                          ? 'chip-selected'
-                          : 'chip-unselected'
-                      }`}
-                  >
-                    <Navigation size={14} />
-                    {nearbyStation.name}
-                    {nearbyStation.distance && (
-                      <span className="text-xs opacity-75">
-                        ({(nearbyStation.distance / 1000).toFixed(1)}km)
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )
-        )}
-      </div>
+        )
+      )}
 
-      {error && <ErrorAlert message={error} className="mt-3" />}
+      {error && <ErrorAlert message={error} className="mt-2 text-xs" />}
 
+      {/* Station Candidates Dropdown */}
       {stationCandidates.length > 0 && (
-        <ul className="mt-3 bg-surface-card border border-primary-200 rounded-lg shadow-md overflow-hidden">
+        <ul className="mt-2 bg-white border border-primary-200 rounded-lg shadow-lg overflow-hidden">
           {stationCandidates.map((candidate, index) => (
             <li
               key={index}
               onClick={() => selectStation(candidate)}
-              className="px-4 py-3 hover:bg-primary-50 cursor-pointer transition-colors duration-200 border-b border-primary-100 last:border-b-0 text-text"
+              className="px-3 py-2 hover:bg-primary-50 cursor-pointer transition-colors text-sm border-b border-primary-100 last:border-b-0"
             >
-              <span className="font-medium">{candidate.name}</span>
-              <span className="text-text-muted ml-2 text-sm">
+              <span className="font-medium text-text">{candidate.name}</span>
+              <span className="text-text-muted ml-2 text-xs">
                 ({candidate.address})
               </span>
             </li>

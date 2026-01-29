@@ -77,7 +77,7 @@ const StoreTypeSelection: React.FC<StoreTypeSelectionProps> = ({
   };
 
   return (
-    <div className="card">
+    <div>
       <label className="block text-sm font-semibold text-text mb-3">
         店舗タイプ
       </label>
@@ -120,7 +120,7 @@ const StoreTypeSelection: React.FC<StoreTypeSelectionProps> = ({
                     className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200
                     ${
                       isFullySelected
-                        ? 'bg-gradient-to-b from-primary-500 to-primary-600 border-primary-500'
+                        ? 'bg-primary-600 border-primary-600'
                         : isPartiallySelected
                           ? 'bg-primary-100 border-primary-400'
                           : 'border-primary-200 bg-white'

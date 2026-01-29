@@ -16,10 +16,10 @@ interface SearchFiltersProps {
 }
 
 const PRICE_LEVELS = [
-  { value: 1, label: '¥ (安価)' },
-  { value: 2, label: '¥¥ (普通)' },
-  { value: 3, label: '¥¥¥ (高価)' },
-  { value: 4, label: '¥¥¥¥ (非常に高価)' },
+  { value: 1, label: '¥' },
+  { value: 2, label: '¥¥' },
+  { value: 3, label: '¥¥¥' },
+  { value: 4, label: '¥¥¥¥' },
 ];
 
 const RADIUS_OPTIONS = [
@@ -49,22 +49,12 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
     );
   };
 
-  const toggleAllPriceLevels = () => {
-    if (selectedPriceLevels.length === PRICE_LEVELS.length) {
-      setSelectedPriceLevels([]);
-    } else {
-      setSelectedPriceLevels(PRICE_LEVELS.map((level) => level.value));
-    }
-  };
-
   return (
-    <div className="card space-y-5">
+    <div className="space-y-4">
       {/* Search Radius */}
       <div>
-        <label className="block text-sm font-semibold text-text mb-3">
-          検索範囲
-        </label>
-        <div className="flex flex-wrap gap-2">
+        <label className="filter-label mb-2 block">検索範囲</label>
+        <div className="flex flex-wrap gap-1.5">
           {RADIUS_OPTIONS.map((option) => (
             <ToggleChip
               key={option.value}
@@ -77,22 +67,10 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
         </div>
       </div>
 
-      <div className="divider !my-4" />
-
       {/* Price Levels */}
       <div>
-        <label className="block text-sm font-semibold text-text mb-3">
-          価格帯
-        </label>
-        <div className="flex flex-wrap gap-2">
-          <ToggleChip
-            selected={selectedPriceLevels.length === PRICE_LEVELS.length}
-            onClick={toggleAllPriceLevels}
-          >
-            {selectedPriceLevels.length === PRICE_LEVELS.length
-              ? '全解除'
-              : '全選択'}
-          </ToggleChip>
+        <label className="filter-label mb-2 block">価格帯</label>
+        <div className="flex flex-wrap gap-1.5">
           {PRICE_LEVELS.map((level) => (
             <ToggleChip
               key={level.value}
@@ -105,65 +83,52 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
         </div>
       </div>
 
-      <div className="divider !my-4" />
-
       {/* Min Rating & Reviews */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm font-semibold text-text mb-2">
-            最低評価
-          </label>
+          <label className="filter-label mb-1.5 block">最低評価</label>
           <select
             value={minRating}
             onChange={(e) => setMinRating(parseFloat(e.target.value))}
-            className="select"
+            className="select text-sm !py-1.5"
           >
             <option value={0}>指定なし</option>
-            <option value={3}>3以上</option>
-            <option value={3.5}>3.5以上</option>
-            <option value={4}>4以上</option>
-            <option value={4.5}>4.5以上</option>
+            <option value={3}>★3以上</option>
+            <option value={3.5}>★3.5以上</option>
+            <option value={4}>★4以上</option>
+            <option value={4.5}>★4.5以上</option>
           </select>
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-text mb-2">
-            最低レビュー数
-          </label>
+          <label className="filter-label mb-1.5 block">レビュー数</label>
           <select
             value={minReviews}
             onChange={(e) => setMinReviews(parseInt(e.target.value))}
-            className="select"
+            className="select text-sm !py-1.5"
           >
             <option value={0}>指定なし</option>
             <option value={50}>50件以上</option>
             <option value={100}>100件以上</option>
             <option value={200}>200件以上</option>
-            <option value={500}>500件以上</option>
           </select>
         </div>
       </div>
 
-      <div className="divider !my-4" />
-
       {/* Open Now Toggle */}
-      <div>
-        <label className="flex items-center cursor-pointer group">
-          <div className="relative">
-            <input
-              type="checkbox"
-              checked={isOpenNow}
-              onChange={(e) => setIsOpenNow(e.target.checked)}
-              className="sr-only peer"
-            />
-            <div className="w-11 h-6 bg-surface-muted border border-primary-200 rounded-full peer peer-checked:bg-gradient-to-b peer-checked:from-primary-500 peer-checked:to-primary-600 peer-checked:border-primary-500 transition-all duration-200"></div>
-            <div className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full shadow-sm transition-transform duration-200 peer-checked:translate-x-5"></div>
-          </div>
-          <span className="ml-3 text-sm font-medium text-text group-hover:text-primary-600 transition-colors">
-            営業中のみ表示
-          </span>
-        </label>
-      </div>
+      <label className="flex items-center cursor-pointer py-1">
+        <div className="relative">
+          <input
+            type="checkbox"
+            checked={isOpenNow}
+            onChange={(e) => setIsOpenNow(e.target.checked)}
+            className="sr-only peer"
+          />
+          <div className="w-9 h-5 bg-primary-100 rounded-full peer peer-checked:bg-primary-600 transition-colors duration-200"></div>
+          <div className="absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full shadow-sm transition-transform duration-200 peer-checked:translate-x-4"></div>
+        </div>
+        <span className="ml-2.5 text-sm text-text">営業中のみ表示</span>
+      </label>
     </div>
   );
 };

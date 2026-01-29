@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  MapPin,
-  Star,
-  Clock,
-  Image as ImageIcon,
-  ExternalLink,
-  AlertCircle,
-} from 'lucide-react';
+import { Star, Image as ImageIcon, AlertCircle } from 'lucide-react';
 import { getKeywordLabel } from '../../utils/keywordOptions';
 import { useOperatingHours } from '../../composables/useOperatingHours';
 import { useAnalytics } from '../../hooks/useAnalytics';
@@ -82,130 +75,95 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
   return (
     <div
       onClick={openInGoogleMaps}
-      className={`card-interactive overflow-hidden group
+      className={`bg-white rounded-lg border border-primary-100 overflow-hidden cursor-pointer
+        transition-all duration-200 hover:border-primary-200 hover:shadow-md
         ${businessStatusInfo ? 'opacity-70' : ''}`}
     >
-      {/* Image Section */}
-      <div className="relative -mx-5 -mt-5 mb-4">
+      {/* Image Section - Compact */}
+      <div className="relative aspect-[4/3] bg-primary-50">
         {restaurant.photos?.[0] ? (
-          <div className="aspect-video w-full relative bg-surface-muted">
-            <img
-              src={restaurant.photos[0].getUrl({
-                maxWidth: 400,
-                maxHeight: 300,
-              })}
-              alt={restaurant.name}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-          </div>
+          <img
+            src={restaurant.photos[0].getUrl({
+              maxWidth: 400,
+              maxHeight: 300,
+            })}
+            alt={restaurant.name}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
         ) : (
-          <div className="aspect-video w-full bg-surface-muted flex items-center justify-center">
-            <ImageIcon size={40} className="text-text-muted" />
+          <div className="w-full h-full flex items-center justify-center">
+            <ImageIcon size={32} className="text-primary-200" />
           </div>
         )}
-
-        {/* External Link Icon */}
-        <div className="absolute top-3 right-3 bg-surface-card/95 backdrop-blur-sm rounded-full p-2 shadow-md opacity-0 group-hover:opacity-100 transition-all duration-200 transform group-hover:scale-105">
-          <ExternalLink size={16} className="text-primary-600" />
-        </div>
 
         {/* Business Status Badge */}
         {businessStatusInfo && (
           <div
-            className={`absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-sm ${businessStatusInfo.className}`}
+            className={`absolute top-2 left-2 px-2 py-0.5 rounded text-xs font-medium flex items-center gap-1 ${businessStatusInfo.className}`}
           >
-            <AlertCircle size={14} />
+            <AlertCircle size={12} />
             {businessStatusInfo.message}
+          </div>
+        )}
+
+        {/* Distance Badge */}
+        {restaurant.distance !== undefined && (
+          <div className="absolute top-2 right-2 bg-white/90 px-2 py-0.5 rounded text-xs font-medium text-text">
+            {formatDistance(restaurant.distance)}
           </div>
         )}
       </div>
 
-      {/* Content Section */}
-      <div>
-        <h3 className="text-lg font-bold mb-2 line-clamp-2 text-text group-hover:text-primary-600 transition-colors duration-200">
+      {/* Content Section - Dense */}
+      <div className="p-3">
+        {/* Name */}
+        <h3 className="font-semibold text-text line-clamp-1 mb-1.5">
           {restaurant.name}
         </h3>
 
-        {/* Rating & Price */}
-        <div className="flex items-center gap-3 mb-3">
-          <div className="flex items-center gap-1 bg-primary-50 px-2 py-1 rounded-full">
-            <Star className="text-primary-500" size={16} fill="currentColor" />
-            <span className="font-bold text-primary-700 text-sm">
-              {restaurant.rating}
-            </span>
-            <span className="text-xs text-text-muted">
+        {/* Rating & Price - Single line */}
+        <div className="flex items-center gap-2 mb-1.5 text-sm">
+          <div className="flex items-center gap-0.5">
+            <Star className="text-primary-500" size={14} fill="currentColor" />
+            <span className="font-medium text-text">{restaurant.rating}</span>
+            <span className="text-text-muted text-xs">
               ({restaurant.user_ratings_total})
             </span>
           </div>
-          <span className="text-text-muted font-medium">
+          <span className="text-text-muted">
             {'¥'.repeat(restaurant.price_level)}
           </span>
+          {isOpen !== null && !businessStatusInfo && (
+            <span
+              className={`text-xs font-medium ${isOpen ? 'text-success' : 'text-text-muted'}`}
+            >
+              {isOpen ? '営業中' : '営業時間外'}
+            </span>
+          )}
         </div>
 
-        {/* Address & Distance */}
-        <div className="text-sm text-text-muted mb-3 flex items-start gap-1.5">
-          <MapPin className="shrink-0 mt-0.5" size={14} />
-          <span className="line-clamp-2">
-            {restaurant.vicinity}
-            {restaurant.distance !== undefined && (
-              <span className="ml-1 text-primary-600 font-semibold">
-                ({formatDistance(restaurant.distance)})
-              </span>
-            )}
-          </span>
-        </div>
+        {/* Address */}
+        <p className="text-xs text-text-muted line-clamp-1 mb-2">
+          {restaurant.vicinity}
+        </p>
 
         {/* Search Keywords */}
         {restaurant.searchKeywords && restaurant.searchKeywords.length > 0 && (
-          <div className="mb-3">
-            <div className="flex flex-wrap gap-1.5">
-              {restaurant.searchKeywords.map((keyword, index) => (
-                <span key={index} className="badge-primary">
-                  {getKeywordLabel(keyword)}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Types */}
-        {restaurant.types && restaurant.types.length > 0 && (
-          <div className="flex flex-wrap mb-3">
-            {restaurant.types.map((type, index, array) => (
-              <span key={index} className="text-xs text-text-muted">
-                {type}
-                {index < array.length - 1 && ', '}
+          <div className="flex flex-wrap gap-1">
+            {restaurant.searchKeywords.slice(0, 3).map((keyword, index) => (
+              <span
+                key={index}
+                className="text-xs bg-primary-50 text-primary-700 px-1.5 py-0.5 rounded"
+              >
+                {getKeywordLabel(keyword)}
               </span>
             ))}
-          </div>
-        )}
-
-        {/* Operating Hours */}
-        {restaurant.opening_hours?.weekday_text && !businessStatusInfo && (
-          <div className="mt-3 pt-3 border-t border-primary-100">
-            {isOpen !== null && (
-              <p
-                className={`text-sm mb-2 font-semibold flex items-center gap-1.5 ${
-                  isOpen ? 'text-success' : 'text-primary-600'
-                }`}
-              >
-                <Clock size={14} />
-                {isOpen ? '営業中' : '営業時間外'}
-              </p>
+            {restaurant.searchKeywords.length > 3 && (
+              <span className="text-xs text-text-muted">
+                +{restaurant.searchKeywords.length - 3}
+              </span>
             )}
-            <details className="text-sm" onClick={(e) => e.stopPropagation()}>
-              <summary className="cursor-pointer text-primary-600 hover:text-primary-700 font-medium transition-colors">
-                営業時間を表示
-              </summary>
-              <ul className="mt-2 space-y-1 text-text-muted bg-surface-muted p-3 rounded-lg">
-                {restaurant.opening_hours.weekday_text.map((day, index) => (
-                  <li key={index} className="text-sm">
-                    {day}
-                  </li>
-                ))}
-              </ul>
-            </details>
           </div>
         )}
       </div>

@@ -1,6 +1,5 @@
-/* GourmetSpot Design System - Soft UI Evolution */
-/* Warm, approachable design with improved contrast (WCAG AA+) */
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700&display=swap');
+/* GourmetSpot Design System - Clean & Functional */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -9,7 +8,6 @@
 @layer base {
   body {
     @apply font-body bg-surface text-text min-h-screen antialiased;
-    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }
 
   h1,
@@ -20,162 +18,171 @@
   h6 {
     @apply font-heading font-semibold text-text;
   }
-
-  /* Improved link styles */
-  a {
-    @apply text-primary-600 hover:text-primary-700 transition-colors duration-200;
-  }
 }
 
 @layer components {
-  /* ===== Soft UI Buttons ===== */
+  /* ===== Buttons - Flat, No Gradients ===== */
 
-  /* Primary Button - Soft gradient with warm amber */
   .btn-primary {
     @apply inline-flex items-center justify-center
-           bg-gradient-to-b from-primary-500 to-primary-600
-           text-white px-5 py-2.5 rounded-lg font-semibold
-           shadow-md
-           transition-all duration-200 ease-soft cursor-pointer
-           hover:shadow-lg hover:from-primary-400 hover:to-primary-500
-           active:shadow-sm active:scale-[0.98]
-           focus:outline-none focus:ring-2 focus:ring-primary-400/50 focus:ring-offset-2
-           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md;
-  }
-
-  /* Secondary Button - Soft outline style */
-  .btn-secondary {
-    @apply inline-flex items-center justify-center
-           bg-surface-card text-primary-600
-           border border-primary-200
-           px-5 py-2.5 rounded-lg font-semibold
-           shadow-sm
-           transition-all duration-200 ease-soft cursor-pointer
-           hover:bg-primary-50 hover:border-primary-300 hover:shadow
-           active:bg-primary-100 active:scale-[0.98]
-           focus:outline-none focus:ring-2 focus:ring-primary-400/50 focus:ring-offset-2
+           bg-primary-600 text-white
+           px-4 py-2.5 rounded-lg font-semibold
+           transition-colors duration-200 cursor-pointer
+           hover:bg-primary-700
+           active:bg-primary-700
+           focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:ring-offset-2
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
-  /* Ghost Button - Minimal style */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center
+           bg-white text-text
+           border border-primary-200
+           px-4 py-2.5 rounded-lg font-medium
+           transition-colors duration-200 cursor-pointer
+           hover:bg-primary-50 hover:border-primary-300
+           active:bg-primary-100
+           focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
   .btn-ghost {
     @apply inline-flex items-center justify-center
            bg-transparent text-primary-600
-           px-4 py-2 rounded-lg font-medium
-           transition-all duration-200 ease-soft cursor-pointer
+           px-3 py-2 rounded-lg font-medium
+           transition-colors duration-200 cursor-pointer
            hover:bg-primary-50
            active:bg-primary-100
-           focus:outline-none focus:ring-2 focus:ring-primary-400/50;
+           focus:outline-none focus:ring-2 focus:ring-primary-500/40;
   }
 
-  /* ===== Soft UI Card ===== */
+  /* ===== Cards - Subtle ===== */
   .card {
-    @apply bg-surface-card rounded-xl p-5
-           shadow
-           transition-all duration-200 ease-soft
-           border border-primary-100/50;
+    @apply bg-white rounded-xl p-4
+           border border-primary-100
+           transition-colors duration-200;
   }
 
   .card-interactive {
     @apply card cursor-pointer
-           hover:shadow-lg hover:-translate-y-0.5 hover:border-primary-200
-           active:shadow-md active:translate-y-0;
+           hover:border-primary-200 hover:bg-primary-50/30
+           active:bg-primary-50;
   }
 
-  /* ===== Soft UI Input ===== */
+  /* ===== Inputs - Clean ===== */
   .input {
-    @apply w-full px-4 py-3
-           bg-surface-card
+    @apply w-full px-3 py-2.5
+           bg-white
            border border-primary-200
            rounded-lg text-base text-text
-           shadow-inner
-           transition-all duration-200 ease-soft
-           placeholder:text-text-muted/60
-           focus:border-primary-400 focus:outline-none
-           focus:ring-2 focus:ring-primary-400/30
-           focus:shadow-focus;
+           transition-colors duration-200
+           placeholder:text-text-muted/50
+           focus:border-primary-500 focus:outline-none
+           focus:ring-2 focus:ring-primary-500/20;
   }
 
-  .input-error {
-    @apply input border-error focus:border-error focus:ring-error/30;
-  }
-
-  /* ===== Soft UI Select ===== */
   .select {
     @apply input appearance-none cursor-pointer
-           bg-no-repeat bg-[right_1rem_center] bg-[length:1.25rem]
-           pr-10;
+           bg-no-repeat bg-[right_0.75rem_center] bg-[length:1rem]
+           pr-8;
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2392400E' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
   }
 
-  /* ===== Soft UI Chips/Tags ===== */
+  /* ===== Chips - Simple Toggle ===== */
   .chip {
-    @apply inline-flex items-center gap-1.5
+    @apply inline-flex items-center gap-1
            px-3 py-1.5 rounded-full
            text-sm font-medium
-           transition-all duration-200 ease-soft cursor-pointer
-           focus:outline-none focus:ring-2 focus:ring-primary-400/50;
+           transition-colors duration-200 cursor-pointer
+           focus:outline-none focus:ring-2 focus:ring-primary-500/40;
   }
 
   .chip-selected {
-    @apply bg-gradient-to-b from-primary-500 to-primary-600
-           text-white shadow-sm;
+    @apply bg-primary-600 text-white;
   }
 
   .chip-unselected {
-    @apply bg-surface-muted text-text-muted
-           border border-primary-100
-           hover:bg-primary-100 hover:text-text hover:border-primary-200;
+    @apply bg-primary-50 text-text-muted
+           hover:bg-primary-100 hover:text-text;
   }
 
-  /* ===== Soft UI Alert/Message ===== */
+  /* ===== Alerts ===== */
   .alert {
-    @apply flex items-start gap-3 p-4 rounded-xl
-           border shadow-sm;
+    @apply flex items-start gap-3 p-3 rounded-lg text-sm;
   }
 
   .alert-info {
-    @apply alert bg-primary-50 border-primary-200 text-text;
-  }
-
-  .alert-success {
-    @apply alert bg-success-light border-success/20 text-success;
+    @apply alert bg-primary-50 text-text;
   }
 
   .alert-error {
-    @apply alert bg-error-light border-error/20 text-error;
+    @apply alert bg-error-light text-error;
   }
 
-  /* ===== Soft UI Badge ===== */
+  /* ===== Badge ===== */
   .badge {
-    @apply inline-flex items-center px-2.5 py-0.5
-           rounded-full text-xs font-semibold;
+    @apply inline-flex items-center px-2 py-0.5
+           rounded text-xs font-medium;
   }
 
   .badge-primary {
     @apply badge bg-primary-100 text-primary-700;
   }
 
-  .badge-success {
-    @apply badge bg-success-light text-success;
+  /* ===== Section Header ===== */
+  .section-header {
+    @apply flex items-center justify-between py-2;
   }
 
-  .badge-error {
-    @apply badge bg-error-light text-error;
+  .section-title {
+    @apply text-sm font-semibold text-text;
   }
 
-  /* ===== Section/Container ===== */
-  .section {
-    @apply py-8 px-4 sm:px-6 lg:px-8;
-  }
-
-  .container-soft {
-    @apply max-w-6xl mx-auto;
+  /* ===== Collapsible ===== */
+  .collapsible-trigger {
+    @apply flex items-center justify-between w-full py-3 px-4
+           bg-primary-50 rounded-lg
+           text-left font-medium text-text
+           cursor-pointer transition-colors duration-200
+           hover:bg-primary-100;
   }
 
   /* ===== Divider ===== */
   .divider {
-    @apply border-t border-primary-100 my-6;
+    @apply border-t border-primary-100 my-4;
+  }
+
+  /* ===== Tab-like Toggle ===== */
+  .tab-group {
+    @apply flex bg-primary-50 p-1 rounded-lg;
+  }
+
+  .tab-item {
+    @apply flex-1 flex items-center justify-center gap-2
+           px-4 py-2.5 rounded-md
+           text-sm font-medium
+           transition-colors duration-200 cursor-pointer;
+  }
+
+  .tab-item-active {
+    @apply tab-item bg-white text-primary-700 shadow-sm;
+  }
+
+  .tab-item-inactive {
+    @apply tab-item text-text-muted hover:text-text;
+  }
+
+  /* ===== Filter Panel ===== */
+  .filter-section {
+    @apply space-y-3;
+  }
+
+  .filter-label {
+    @apply text-xs font-semibold text-text-muted uppercase tracking-wide;
+  }
+
+  .filter-row {
+    @apply flex items-center gap-2 flex-wrap;
   }
 }
 
@@ -183,75 +190,43 @@
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(12px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(24px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes pulse-soft {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
   }
 }
 
 .animate-fadeIn {
-  animation: fadeIn 0.25s ease-out;
+  animation: fadeIn 0.2s ease-out;
 }
 
-.animate-slideUp {
-  animation: slideUp 0.3s ease-out;
-}
-
-.animate-pulse-soft {
-  animation: pulse-soft 2s ease-in-out infinite;
-}
-
-/* ===== Reduced motion support ===== */
+/* ===== Reduced motion ===== */
 @media (prefers-reduced-motion: reduce) {
   *,
   ::before,
   ::after {
     animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }
 
-/* ===== Focus Visible (Keyboard Navigation) ===== */
+/* ===== Focus Visible ===== */
 :focus:not(:focus-visible) {
   outline: none;
 }
 
 :focus-visible {
-  @apply outline-none ring-2 ring-primary-400/50 ring-offset-2;
+  @apply outline-none ring-2 ring-primary-500/40 ring-offset-2;
 }
 
-/* ===== Scrollbar Styling ===== */
+/* ===== Scrollbar ===== */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-surface-muted rounded-full;
+  @apply bg-transparent;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -260,17 +235,4 @@
 
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-primary-300;
-}
-
-/* ===== Responsive styles ===== */
-@media (max-width: 640px) {
-  .btn-primary,
-  .btn-secondary,
-  .btn-ghost {
-    @apply px-4 py-2 text-sm;
-  }
-
-  .card {
-    @apply p-4 rounded-lg;
-  }
 }
