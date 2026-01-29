@@ -8,7 +8,8 @@ import CustomKeywordModal from './CustomKeywordModal';
 import useStationSearch from '../../composables/useStationSearch';
 import { useLocationSearch } from '../../composables/useLocationSearch';
 import { keyWordOptions } from '../../utils/keywordOptions';
-import { MapPin, Train } from 'lucide-react';
+import { MapPin, Train, Loader2 } from 'lucide-react';
+import ErrorAlert from '../ui/ErrorAlert';
 import type {
   Restaurant,
   Location,
@@ -189,13 +190,13 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
   return (
     <div className="max-w-4xl mx-auto p-6 relative pb-20">
       <div className="flex flex-col gap-6">
-        <div className="bg-white rounded-lg shadow-md p-4 mb-2">
+        <div className="bg-white rounded-lg shadow p-4 mb-2">
           <div className="flex flex-col sm:flex-row items-center gap-4 justify-center">
             <button
               onClick={() => setSearchMethod('location')}
-              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
+              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-base font-medium transition-colors duration-200 ${
                 searchMethod === 'location'
-                  ? 'bg-primary-500 text-white shadow-md transform -translate-y-0.5'
+                  ? 'bg-primary-500 text-white shadow'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
@@ -204,9 +205,9 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
             </button>
             <button
               onClick={() => setSearchMethod('station')}
-              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
+              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-base font-medium transition-colors duration-200 ${
                 searchMethod === 'station'
-                  ? 'bg-primary-500 text-white shadow-md transform -translate-y-0.5'
+                  ? 'bg-primary-500 text-white shadow'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
@@ -253,9 +254,14 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
           setSearchRadius={setSearchRadius}
         />
 
-        {isLoading && <p>Loading...</p>}
+        {isLoading && (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 text-primary-500 animate-spin" />
+            <span className="ml-2 text-gray-600 text-sm">検索中...</span>
+          </div>
+        )}
 
-        {searchError && <p className="text-red-500">{searchError}</p>}
+        {searchError && <ErrorAlert message={searchError} />}
 
         <SearchResults
           restaurants={restaurants}

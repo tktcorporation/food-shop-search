@@ -327,6 +327,49 @@ const libraries: ('places' | 'geometry')[] = ['places', 'geometry'];
 <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100">
 ```
 
+IMPORTANT: **UI/UX実装時は必ず `.claude/rules/ui-ux-design.md` を参照してください。** このファイルはClaude Codeが自動的にコンテキストとして読み込みます。
+
+このガイドラインには以下が含まれます：
+- AI向けプロンプティング手法（制約ベースプロンプティング、TC-EBCフレームワーク）
+- デザインシステムの定義（カラー、スペーシング、タイポグラフィ）
+- AIっぽさを避けるルール（禁止事項と推奨アプローチ）
+- コンポーネント設計パターン
+- 実装チェックリスト
+
+### UI/UX実装時の必須制約
+
+```markdown
+<ui-constraints>
+以下はUI実装時の必須制約です：
+
+角丸: rounded-lg に統一（チップのみ rounded-full 許可）
+シャドウ: shadow-lg 以下のみ使用可
+アニメーション: transition-colors duration-200 のみ
+カラー: tailwind.config.js で定義されたもののみ
+グラデーション: 同系色2色まで（primary-50 to primary-100 など）
+
+禁止事項:
+- グラデーションテキスト
+- shadow-2xl 以上のシャドウ
+- rounded-2xl 以上の角丸
+- ネオンカラー/グロー効果
+- 装飾目的だけの要素
+- カスタムCSSの追加
+- 新しいデザインパターンの発明
+</ui-constraints>
+```
+
+### 既存UIコンポーネントの参照
+
+新しいUIを実装する前に、以下の既存コンポーネントを確認してください：
+
+| コンポーネント | パス | 用途 |
+|---------------|------|------|
+| ToggleChip | `src/components/ui/ToggleChip.tsx` | 選択可能なチップ |
+| ErrorAlert | `src/components/ui/ErrorAlert.tsx` | エラー表示 |
+| RestaurantCard | `src/components/UnifiedSearchResultsScreen/RestaurantCard.tsx` | カードレイアウト |
+| SearchFilters | `src/components/UnifiedSearchResultsScreen/SearchFilters.tsx` | フィルターUI |
+
 ## テストとビルド
 
 ### 開発サーバー

@@ -1,7 +1,8 @@
 import { useLoadScript } from '@react-google-maps/api';
 import UnifiedSearchResultsScreen from './components/UnifiedSearchResultsScreen';
 import useRestaurantSearch from './composables/useRestaurantSearch';
-import { ExternalLink } from 'lucide-react';
+import ErrorAlert from './components/ui/ErrorAlert';
+import { ExternalLink, Loader2 } from 'lucide-react';
 
 const libraries: ('places' | 'geometry')[] = ['places', 'geometry'];
 
@@ -20,11 +21,24 @@ function App() {
   } = useRestaurantSearch();
 
   if (loadError) {
-    return <div>Google Maps APIの読み込みに失敗しました。</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center p-6">
+        <div className="max-w-md w-full">
+          <ErrorAlert message="Google Maps APIの読み込みに失敗しました。ページを再読み込みしてください。" />
+        </div>
+      </div>
+    );
   }
 
   if (!isLoaded) {
-    return <div>読み込み中...</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 text-primary-500 animate-spin" />
+          <p className="text-gray-600 text-sm">読み込み中...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
