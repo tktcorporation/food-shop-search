@@ -15,10 +15,10 @@ const ToggleChip: React.FC<ToggleChipProps> = ({
 }) => (
   <button
     onClick={onClick}
-    className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200 ${
+    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors duration-200 ${
       selected
-        ? 'bg-primary-500 text-white'
-        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+        ? 'bg-primary-500 text-white shadow-sm'
+        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
     } ${className}`}
   >
     {children}

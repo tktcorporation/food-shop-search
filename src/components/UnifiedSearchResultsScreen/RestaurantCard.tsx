@@ -82,7 +82,7 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
   return (
     <div
       onClick={openInGoogleMaps}
-      className={`bg-white rounded-lg shadow-lg overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-[1.02] hover:shadow-xl group
+      className={`bg-white rounded-lg shadow-lg overflow-hidden cursor-pointer transition-all duration-200 hover:scale-[1.01] hover:shadow-xl group
         ${businessStatusInfo ? 'opacity-75' : ''}`}
     >
       <div className="relative">

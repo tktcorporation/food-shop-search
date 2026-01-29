@@ -47,27 +47,27 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   if (restaurants.length === 0) {
     const suggestions = getSuggestions();
     return (
-      <div className="mt-8 p-6 bg-white rounded-lg shadow-md">
-        <div className="flex items-start gap-3 text-amber-600 mb-4">
-          <AlertCircle size={24} className="shrink-0 mt-0.5" />
+      <div className="p-4 bg-white rounded-lg shadow-lg">
+        <div className="flex items-start gap-3 text-amber-600 mb-3">
+          <AlertCircle size={20} className="shrink-0 mt-0.5" />
           <div>
-            <h3 className="font-semibold mb-2">
+            <h3 className="font-semibold text-sm mb-1">
               検索結果が見つかりませんでした
             </h3>
-            <p className="text-sm text-gray-600">
-              以下の条件を変更して再度お試しください：
+            <p className="text-xs text-gray-600">
+              以下の条件を変更して再度お試しください
             </p>
           </div>
         </div>
 
         {suggestions.length > 0 && (
-          <ul className="mt-4 space-y-2">
+          <ul className="space-y-1.5 pl-8">
             {suggestions.map((suggestion, index) => (
               <li
                 key={index}
-                className="flex items-center gap-2 text-sm text-gray-700"
+                className="flex items-center gap-2 text-xs text-gray-600"
               >
-                <Settings size={16} className="text-primary-500" />
+                <Settings size={14} className="text-primary-500 shrink-0" />
                 {suggestion}
               </li>
             ))}
@@ -78,13 +78,13 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   }
 
   return (
-    <div className="mt-8">
-      <div className="flex justify-between items-center mb-6">
-        <span className="text-gray-600 bg-gray-100 px-3 py-1 rounded-full text-sm">
-          {restaurants.length}件見つかりました
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
+          {restaurants.length}件
         </span>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {restaurants.map((restaurant) => (
           <RestaurantCard key={restaurant.place_id} restaurant={restaurant} />
         ))}

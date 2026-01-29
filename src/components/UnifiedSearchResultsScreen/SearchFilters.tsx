@@ -58,9 +58,10 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      {/* 検索範囲 */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-xs font-medium text-gray-500 mb-2">
           検索範囲
         </label>
         <div className="flex flex-wrap gap-2">
@@ -76,8 +77,9 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
         </div>
       </div>
 
+      {/* 価格帯 */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-xs font-medium text-gray-500 mb-2">
           価格帯
         </label>
         <div className="flex flex-wrap gap-2">
@@ -101,47 +103,51 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
         </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          最低評価
-        </label>
-        <select
-          value={minRating}
-          onChange={(e) => setMinRating(parseFloat(e.target.value))}
-          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
-        >
-          <option value={0}>指定なし</option>
-          <option value={3}>3以上</option>
-          <option value={3.5}>3.5以上</option>
-          <option value={4}>4以上</option>
-          <option value={4.5}>4.5以上</option>
-        </select>
+      {/* 評価・レビュー数のセレクト（グリッドで並べる） */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-medium text-gray-500 mb-2">
+            最低評価
+          </label>
+          <select
+            value={minRating}
+            onChange={(e) => setMinRating(parseFloat(e.target.value))}
+            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white"
+          >
+            <option value={0}>指定なし</option>
+            <option value={3}>3.0+</option>
+            <option value={3.5}>3.5+</option>
+            <option value={4}>4.0+</option>
+            <option value={4.5}>4.5+</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-gray-500 mb-2">
+            最低レビュー数
+          </label>
+          <select
+            value={minReviews}
+            onChange={(e) => setMinReviews(parseInt(e.target.value))}
+            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white"
+          >
+            <option value={0}>指定なし</option>
+            <option value={50}>50+</option>
+            <option value={100}>100+</option>
+            <option value={200}>200+</option>
+            <option value={500}>500+</option>
+          </select>
+        </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          最低レビュー数
-        </label>
-        <select
-          value={minReviews}
-          onChange={(e) => setMinReviews(parseInt(e.target.value))}
-          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
-        >
-          <option value={0}>指定なし</option>
-          <option value={50}>50件以上</option>
-          <option value={100}>100件以上</option>
-          <option value={200}>200件以上</option>
-          <option value={500}>500件以上</option>
-        </select>
-      </div>
-
-      <div>
-        <label className="flex items-center">
+      {/* 営業中のみ表示 */}
+      <div className="pt-2 border-t border-gray-100">
+        <label className="flex items-center cursor-pointer">
           <input
             type="checkbox"
             checked={isOpenNow}
             onChange={(e) => setIsOpenNow(e.target.checked)}
-            className="form-checkbox h-5 w-5 text-primary-600 rounded"
+            className="h-4 w-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
           />
           <span className="ml-2 text-sm text-gray-700">営業中のみ表示</span>
         </label>
