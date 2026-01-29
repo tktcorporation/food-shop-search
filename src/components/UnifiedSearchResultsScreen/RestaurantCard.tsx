@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  MapPin,
-  Star,
-  Clock,
-  Image as ImageIcon,
-  ExternalLink,
-  AlertCircle,
-} from 'lucide-react';
+import { Star, Image as ImageIcon, AlertCircle } from 'lucide-react';
 import { getKeywordLabel } from '../../utils/keywordOptions';
 import { useOperatingHours } from '../../composables/useOperatingHours';
 import { useAnalytics } from '../../hooks/useAnalytics';
@@ -39,12 +32,12 @@ const getBusinessStatusInfo = (status?: string) => {
     case 'CLOSED_TEMPORARILY':
       return {
         message: '一時休業中',
-        className: 'bg-yellow-100 text-yellow-800',
+        className: 'bg-primary-100 text-primary-700',
       };
     case 'CLOSED_PERMANENTLY':
       return {
         message: '閉店',
-        className: 'bg-red-100 text-red-800',
+        className: 'bg-error-light text-error',
       };
     default:
       return null;
@@ -82,117 +75,95 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
   return (
     <div
       onClick={openInGoogleMaps}
-      className={`bg-white rounded-lg shadow-lg overflow-hidden cursor-pointer transition-all duration-200 hover:scale-[1.01] hover:shadow-xl group
-        ${businessStatusInfo ? 'opacity-75' : ''}`}
+      className={`bg-white rounded-lg border border-primary-100 overflow-hidden cursor-pointer
+        transition-all duration-200 hover:border-primary-200 hover:shadow-md
+        ${businessStatusInfo ? 'opacity-70' : ''}`}
     >
-      <div className="relative">
+      {/* Image Section */}
+      <div className="relative aspect-[4/3] bg-primary-50">
         {restaurant.photos?.[0] ? (
-          <div className="aspect-video w-full relative bg-gray-100">
-            <img
-              src={restaurant.photos[0].getUrl({
-                maxWidth: 400,
-                maxHeight: 300,
-              })}
-              alt={restaurant.name}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-          </div>
+          <img
+            src={restaurant.photos[0].getUrl({
+              maxWidth: 400,
+              maxHeight: 300,
+            })}
+            alt={restaurant.name}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
         ) : (
-          <div className="aspect-video w-full bg-gray-100 flex items-center justify-center">
-            <ImageIcon size={40} className="text-gray-400" />
+          <div className="w-full h-full flex items-center justify-center">
+            <ImageIcon size={32} className="text-primary-200" />
           </div>
         )}
-        <div className="absolute top-2 right-2 bg-white/90 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-          <ExternalLink size={16} className="text-primary-600" />
-        </div>
+
+        {/* Business Status Badge */}
         {businessStatusInfo && (
           <div
-            className={`absolute top-2 left-2 px-2 py-1 rounded-md text-xs font-medium flex items-center gap-1 ${businessStatusInfo.className}`}
+            className={`absolute top-2 left-2 px-2 py-0.5 rounded text-xs font-medium flex items-center gap-1 ${businessStatusInfo.className}`}
           >
-            <AlertCircle size={14} />
+            <AlertCircle size={12} />
             {businessStatusInfo.message}
+          </div>
+        )}
+
+        {/* Distance Badge */}
+        {restaurant.distance !== undefined && (
+          <div className="absolute top-2 right-2 bg-white/90 px-2 py-0.5 rounded text-xs font-medium text-text">
+            {formatDistance(restaurant.distance)}
           </div>
         )}
       </div>
 
-      <div className="p-4">
-        <h3 className="text-lg font-semibold mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors duration-200">
+      {/* Content Section */}
+      <div className="p-3">
+        {/* Name */}
+        <h3 className="font-semibold text-text line-clamp-1 mb-1.5">
           {restaurant.name}
         </h3>
 
-        <div className="flex items-center gap-2 mb-2">
-          <div className="flex items-center text-yellow-500">
-            <Star className="inline-block mr-1" size={16} />
-            <span className="font-medium">{restaurant.rating}</span>
+        {/* Rating & Price */}
+        <div className="flex items-center gap-2 mb-1.5 text-sm">
+          <div className="flex items-center gap-0.5">
+            <Star className="text-primary-500" size={14} fill="currentColor" />
+            <span className="font-medium text-text">{restaurant.rating}</span>
+            <span className="text-text-muted text-xs">
+              ({restaurant.user_ratings_total})
+            </span>
           </div>
-          <span className="text-xs text-gray-500">
-            ({restaurant.user_ratings_total}件)
-          </span>
-          <span className="text-gray-400">|</span>
-          <span className="text-gray-600">
+          <span className="text-text-muted">
             {'¥'.repeat(restaurant.price_level)}
           </span>
+          {isOpen !== null && !businessStatusInfo && (
+            <span
+              className={`text-xs font-medium ${isOpen ? 'text-success' : 'text-text-muted'}`}
+            >
+              {isOpen ? '営業中' : '営業時間外'}
+            </span>
+          )}
         </div>
 
-        <div className="text-xs text-gray-500 mb-2 flex items-start">
-          <MapPin className="inline-block mr-1 shrink-0" size={14} />
-          <span className="line-clamp-2">
-            {restaurant.vicinity}
-            {restaurant.distance !== undefined && (
-              <span className="ml-1 text-primary-600">
-                ({formatDistance(restaurant.distance)})
-              </span>
-            )}
-          </span>
-        </div>
+        {/* Address */}
+        <p className="text-xs text-text-muted line-clamp-1 mb-2">
+          {restaurant.vicinity}
+        </p>
 
+        {/* Search Keywords */}
         {restaurant.searchKeywords && restaurant.searchKeywords.length > 0 && (
-          <div className="mb-2">
-            <div className="flex flex-wrap gap-1">
-              {restaurant.searchKeywords.map((keyword, index) => (
-                <span
-                  key={index}
-                  className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full"
-                >
-                  {getKeywordLabel(keyword)}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {restaurant.types && restaurant.types.length > 0 && (
-          <div className="flex flex-wrap mb-2">
-            {restaurant.types.map((type, index, array) => (
-              <span key={index} className="text-xs text-gray-600 rounded-full">
-                {type}
-                {index < array.length - 1 && ', '}
+          <div className="flex flex-wrap gap-1">
+            {restaurant.searchKeywords.slice(0, 3).map((keyword, index) => (
+              <span
+                key={index}
+                className="text-xs bg-primary-50 text-primary-700 px-1.5 py-0.5 rounded"
+              >
+                {getKeywordLabel(keyword)}
               </span>
             ))}
-          </div>
-        )}
-
-        {restaurant.opening_hours?.weekday_text && !businessStatusInfo && (
-          <div className="mt-2 border-t pt-2">
-            {isOpen !== null && (
-              <p
-                className={`text-xs mb-1 ${isOpen ? 'text-green-600' : 'text-red-600'}`}
-              >
-                <Clock className="inline-block mr-1" size={14} />
-                {isOpen ? '営業中' : '営業時間外'}
-              </p>
+            {restaurant.searchKeywords.length > 3 && (
+              <span className="text-xs text-text-muted">
+                +{restaurant.searchKeywords.length - 3}
+              </span>
             )}
-            <details className="text-xs" onClick={(e) => e.stopPropagation()}>
-              <summary className="cursor-pointer text-primary-600">
-                営業時間を表示
-              </summary>
-              <ul className="mt-1 space-y-0.5 text-gray-600">
-                {restaurant.opening_hours.weekday_text.map((day, index) => (
-                  <li key={index}>{day}</li>
-                ))}
-              </ul>
-            </details>
           </div>
         )}
       </div>

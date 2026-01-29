@@ -7,8 +7,15 @@ import SearchResults from './SearchResults';
 import CustomKeywordModal from './CustomKeywordModal';
 import useStationSearch from '../../composables/useStationSearch';
 import { useLocationSearch } from '../../composables/useLocationSearch';
-import { keyWordOptions } from '../../utils/keywordOptions';
-import { MapPin, Train, Loader2 } from 'lucide-react';
+import { keyWordOptions, getKeywordLabel } from '../../utils/keywordOptions';
+import {
+  MapPin,
+  Train,
+  Loader2,
+  SlidersHorizontal,
+  ChevronRight,
+  X,
+} from 'lucide-react';
 import ErrorAlert from '../ui/ErrorAlert';
 import type {
   Restaurant,
@@ -83,6 +90,10 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
     'location',
   );
 
+  // UI state - panels
+  const [isStoreTypesOpen, setIsStoreTypesOpen] = useState(false);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+
   // 初回検索済みフラグ
   const hasSearchedRef = useRef(false);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -117,7 +128,6 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
   ]);
 
   // API呼び出しが必要なパラメータ変更時（デバウンス付き）
-  // triggerSearchは意図的に依存から除外: フィルター変更ではAPI再呼び出ししない
   useEffect(() => {
     const searchLocation =
       searchMethod === 'location' ? currentLocation : selectedStation;
@@ -132,7 +142,7 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
         triggerSearch();
       },
       hasSearchedRef.current ? SEARCH_DEBOUNCE_MS : 0,
-    ); // 初回は即実行
+    );
 
     return () => {
       if (searchDebounceRef.current) {
@@ -148,8 +158,7 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
     searchMethod,
   ]);
 
-  // フィルターのみの変更時（API呼び出し不要、クライアント側で再フィルタリング）
-  // searchRadiusはAPI検索でも使うため、ここではreapplyFiltersに渡すが依存には含めない
+  // フィルターのみの変更時
   useEffect(() => {
     if (!hasSearchedRef.current) return;
 
@@ -172,7 +181,7 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
     ) {
       getCurrentLocation();
     }
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- getCurrentLocationは安定参照のため除外
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [searchMethod, currentLocation, isLocationLoading, hasPermissionError]);
 
   const handleAddCustomKeyword = (keyword: string) => {
@@ -187,111 +196,223 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
     setSelectedKeywords((prev) => prev.filter((k) => k !== keyword));
   };
 
+  const toggleKeyword = (keyword: string) => {
+    setSelectedKeywords((prev) =>
+      prev.includes(keyword)
+        ? prev.filter((k) => k !== keyword)
+        : [...prev, keyword],
+    );
+  };
+
+  // Count active filters
+  const activeFilterCount = [
+    minRating > 0,
+    minReviews > 0,
+    isOpenNow,
+    selectedPriceLevels.length < 4,
+  ].filter(Boolean).length;
+
+  const allKeywordsCount = keyWordOptions.length + customKeywords.length;
+  const isAllSelected = selectedKeywords.length === allKeywordsCount;
+
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-6 relative pb-20">
-      <div className="space-y-4">
-        {/* 検索方法セクション */}
-        <section className="bg-white rounded-lg shadow-lg p-4">
-          <h2 className="text-sm font-semibold text-gray-700 mb-3">検索方法</h2>
-          <div className="flex gap-2">
+    <div className="max-w-4xl mx-auto pb-20">
+      {/* ===== Header ===== */}
+      <div className="sticky top-0 z-20 bg-surface">
+        {/* Location Bar */}
+        <div className="p-4 border-b border-primary-100">
+          <div className="flex items-center gap-3">
+            {/* Search Method Toggle */}
             <button
               onClick={() => setSearchMethod('location')}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 ${
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
                 searchMethod === 'location'
-                  ? 'bg-primary-500 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-primary-50 text-text-muted hover:bg-primary-100'
               }`}
             >
               <MapPin size={18} />
-              現在地
+              <span className="hidden sm:inline">現在地</span>
             </button>
             <button
               onClick={() => setSearchMethod('station')}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 ${
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
                 searchMethod === 'station'
-                  ? 'bg-primary-500 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-primary-50 text-text-muted hover:bg-primary-100'
               }`}
             >
               <Train size={18} />
-              駅名
+              <span className="hidden sm:inline">駅名</span>
+            </button>
+
+            {/* Location Display */}
+            <div className="flex-1 min-w-0">
+              {searchMethod === 'location' ? (
+                <LocationSearch
+                  isLoading={isLocationLoading}
+                  error={locationError}
+                  currentLocation={currentLocation}
+                  onGetCurrentLocation={getCurrentLocation}
+                />
+              ) : (
+                <StationSearch
+                  station={station}
+                  setStation={setStation}
+                  stationCandidates={stationCandidates}
+                  selectStation={selectStation}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Store Types - Core Feature (Always Visible) */}
+        <div className="px-4 py-3 bg-white border-b border-primary-100">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold text-text shrink-0">
+              食べたいもの
+            </span>
+
+            {/* Horizontal scrollable chips */}
+            <div className="flex-1 overflow-x-auto scrollbar-hide">
+              <div className="flex gap-2 pb-1">
+                {selectedKeywords.length === 0 ? (
+                  <span className="text-sm text-text-muted italic">
+                    選択してください
+                  </span>
+                ) : isAllSelected ? (
+                  <span className="text-sm text-primary-600 font-medium">
+                    すべて選択中
+                  </span>
+                ) : (
+                  selectedKeywords.slice(0, 5).map((keyword) => (
+                    <button
+                      key={keyword}
+                      onClick={() => toggleKeyword(keyword)}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-primary-100 text-primary-700 rounded-full text-sm font-medium whitespace-nowrap hover:bg-primary-200 transition-colors"
+                    >
+                      {getKeywordLabel(keyword)}
+                      <X size={14} className="opacity-60" />
+                    </button>
+                  ))
+                )}
+                {!isAllSelected && selectedKeywords.length > 5 && (
+                  <span className="text-sm text-text-muted self-center">
+                    +{selectedKeywords.length - 5}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Edit Button */}
+            <button
+              onClick={() => setIsStoreTypesOpen(true)}
+              className="shrink-0 flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+            >
+              編集
+              <ChevronRight size={16} />
             </button>
           </div>
+        </div>
 
-          <div className="mt-4">
-            {searchMethod === 'location' ? (
-              <LocationSearch
-                isLoading={isLocationLoading}
-                error={locationError}
-                currentLocation={currentLocation}
-                onGetCurrentLocation={getCurrentLocation}
-              />
-            ) : (
-              <StationSearch
-                station={station}
-                setStation={setStation}
-                stationCandidates={stationCandidates}
-                selectStation={selectStation}
-              />
+        {/* Filters Toggle - Secondary */}
+        <button
+          onClick={() => setIsFiltersOpen(!isFiltersOpen)}
+          className="w-full px-4 py-3 flex items-center justify-between bg-primary-50/50 border-b border-primary-100 text-sm hover:bg-primary-50 transition-colors"
+        >
+          <div className="flex items-center gap-2 text-text-muted">
+            <SlidersHorizontal size={18} />
+            <span>フィルター</span>
+            {activeFilterCount > 0 && (
+              <span className="bg-primary-600 text-white text-xs px-1.5 py-0.5 rounded-full">
+                {activeFilterCount}
+              </span>
             )}
           </div>
-        </section>
-
-        {/* 店舗タイプセクション */}
-        <section className="bg-white rounded-lg shadow-lg p-4">
-          <StoreTypeSelection
-            selectedKeywords={selectedKeywords}
-            setSelectedKeywords={setSelectedKeywords}
-            customKeywords={customKeywords}
-            onAddCustomKeyword={() => setIsModalOpen(true)}
-            onRemoveCustomKeyword={handleRemoveCustomKeyword}
+          <ChevronRight
+            size={16}
+            className={`text-text-muted transition-transform ${isFiltersOpen ? 'rotate-90' : ''}`}
           />
-        </section>
+        </button>
 
-        {/* フィルターセクション */}
-        <section className="bg-white rounded-lg shadow-lg p-4">
-          <h2 className="text-sm font-semibold text-gray-700 mb-3">
-            絞り込み条件
-          </h2>
-          <SearchFilters
-            selectedPriceLevels={selectedPriceLevels}
-            setSelectedPriceLevels={setSelectedPriceLevels}
-            minRating={minRating}
-            setMinRating={setMinRating}
-            minReviews={minReviews}
-            setMinReviews={setMinReviews}
-            isOpenNow={isOpenNow}
-            setIsOpenNow={setIsOpenNow}
-            searchRadius={searchRadius}
-            setSearchRadius={setSearchRadius}
-          />
-        </section>
+        {/* Filters Panel */}
+        {isFiltersOpen && (
+          <div className="p-4 bg-white border-b border-primary-100 animate-fadeIn">
+            <SearchFilters
+              selectedPriceLevels={selectedPriceLevels}
+              setSelectedPriceLevels={setSelectedPriceLevels}
+              minRating={minRating}
+              setMinRating={setMinRating}
+              minReviews={minReviews}
+              setMinReviews={setMinReviews}
+              isOpenNow={isOpenNow}
+              setIsOpenNow={setIsOpenNow}
+              searchRadius={searchRadius}
+              setSearchRadius={setSearchRadius}
+            />
+          </div>
+        )}
+      </div>
 
-        {/* 検索結果セクション */}
+      {/* ===== Main Content: Results ===== */}
+      <div className="p-4">
+        {/* Loading State */}
         {isLoading && (
-          <div className="flex items-center justify-center py-8">
+          <div className="flex items-center justify-center py-12">
             <Loader2 className="h-6 w-6 text-primary-500 animate-spin" />
-            <span className="ml-2 text-gray-600 text-sm">検索中...</span>
+            <span className="ml-3 text-text-muted">検索中...</span>
           </div>
         )}
 
+        {/* Error State */}
         {searchError && <ErrorAlert message={searchError} />}
 
-        <SearchResults
-          restaurants={restaurants}
-          minRating={minRating}
-          minReviews={minReviews}
-          searchRadius={searchRadius}
-          isOpenNow={isOpenNow}
-          selectedPriceLevels={selectedPriceLevels}
-        />
-
-        <CustomKeywordModal
-          isOpen={isModalOpen}
-          setIsOpen={setIsModalOpen}
-          addCustomKeyword={handleAddCustomKeyword}
-        />
+        {/* Results */}
+        {!isLoading && (
+          <SearchResults
+            restaurants={restaurants}
+            minRating={minRating}
+            minReviews={minReviews}
+            searchRadius={searchRadius}
+            isOpenNow={isOpenNow}
+            selectedPriceLevels={selectedPriceLevels}
+          />
+        )}
       </div>
+
+      {/* ===== Store Types Modal (Full Screen) ===== */}
+      {isStoreTypesOpen && (
+        <div className="fixed inset-0 z-50 bg-surface">
+          <div className="sticky top-0 bg-white border-b border-primary-100 px-4 py-3 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-text">
+              食べたいものを選ぶ
+            </h2>
+            <button
+              onClick={() => setIsStoreTypesOpen(false)}
+              className="p-2 -mr-2 text-text-muted hover:text-text transition-colors"
+            >
+              <X size={24} />
+            </button>
+          </div>
+          <div className="p-4 overflow-y-auto h-[calc(100vh-60px)]">
+            <StoreTypeSelection
+              selectedKeywords={selectedKeywords}
+              setSelectedKeywords={setSelectedKeywords}
+              customKeywords={customKeywords}
+              onAddCustomKeyword={() => setIsModalOpen(true)}
+              onRemoveCustomKeyword={handleRemoveCustomKeyword}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Custom Keyword Modal */}
+      <CustomKeywordModal
+        isOpen={isModalOpen}
+        setIsOpen={setIsModalOpen}
+        addCustomKeyword={handleAddCustomKeyword}
+      />
     </div>
   );
 };

@@ -16,10 +16,10 @@ interface SearchFiltersProps {
 }
 
 const PRICE_LEVELS = [
-  { value: 1, label: '¥ (安価)' },
-  { value: 2, label: '¥¥ (普通)' },
-  { value: 3, label: '¥¥¥ (高価)' },
-  { value: 4, label: '¥¥¥¥ (非常に高価)' },
+  { value: 1, label: '¥' },
+  { value: 2, label: '¥¥' },
+  { value: 3, label: '¥¥¥' },
+  { value: 4, label: '¥¥¥¥' },
 ];
 
 const RADIUS_OPTIONS = [
@@ -61,9 +61,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
     <div className="space-y-4">
       {/* 検索範囲 */}
       <div>
-        <label className="block text-xs font-medium text-gray-500 mb-2">
-          検索範囲
-        </label>
+        <label className="filter-label mb-2 block">検索範囲</label>
         <div className="flex flex-wrap gap-2">
           {RADIUS_OPTIONS.map((option) => (
             <ToggleChip
@@ -79,9 +77,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
 
       {/* 価格帯 */}
       <div>
-        <label className="block text-xs font-medium text-gray-500 mb-2">
-          価格帯
-        </label>
+        <label className="filter-label mb-2 block">価格帯</label>
         <div className="flex flex-wrap gap-2">
           <ToggleChip
             selected={selectedPriceLevels.length === PRICE_LEVELS.length}
@@ -103,16 +99,14 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
         </div>
       </div>
 
-      {/* 評価・レビュー数のセレクト（グリッドで並べる） */}
+      {/* 評価・レビュー数 */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-medium text-gray-500 mb-2">
-            最低評価
-          </label>
+          <label className="filter-label mb-1.5 block">最低評価</label>
           <select
             value={minRating}
             onChange={(e) => setMinRating(parseFloat(e.target.value))}
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white"
+            className="select text-sm !py-1.5"
           >
             <option value={0}>指定なし</option>
             <option value={3}>3.0+</option>
@@ -123,13 +117,11 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-500 mb-2">
-            最低レビュー数
-          </label>
+          <label className="filter-label mb-1.5 block">レビュー数</label>
           <select
             value={minReviews}
             onChange={(e) => setMinReviews(parseInt(e.target.value))}
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white"
+            className="select text-sm !py-1.5"
           >
             <option value={0}>指定なし</option>
             <option value={50}>50+</option>
@@ -141,17 +133,19 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
       </div>
 
       {/* 営業中のみ表示 */}
-      <div className="pt-2 border-t border-gray-100">
-        <label className="flex items-center cursor-pointer">
+      <label className="flex items-center cursor-pointer py-1">
+        <div className="relative">
           <input
             type="checkbox"
             checked={isOpenNow}
             onChange={(e) => setIsOpenNow(e.target.checked)}
-            className="h-4 w-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
+            className="sr-only peer"
           />
-          <span className="ml-2 text-sm text-gray-700">営業中のみ表示</span>
-        </label>
-      </div>
+          <div className="w-9 h-5 bg-primary-100 rounded-full peer peer-checked:bg-primary-600 transition-colors duration-200"></div>
+          <div className="absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full shadow-sm transition-transform duration-200 peer-checked:translate-x-4"></div>
+        </div>
+        <span className="ml-2.5 text-sm text-text">営業中のみ表示</span>
+      </label>
     </div>
   );
 };

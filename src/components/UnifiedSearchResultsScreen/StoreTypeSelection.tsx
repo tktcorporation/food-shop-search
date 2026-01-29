@@ -78,23 +78,25 @@ const StoreTypeSelection: React.FC<StoreTypeSelectionProps> = ({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-semibold text-gray-700">店舗タイプ</h2>
-        <ToggleChip
-          selected={
-            selectedKeywords.length ===
-            keywordCategories.flatMap((c) => c.keywords).length
-          }
-          onClick={toggleAllKeywords}
-        >
-          {selectedKeywords.length ===
-          keywordCategories.flatMap((c) => c.keywords).length
-            ? '全解除'
-            : '全選択'}
-        </ToggleChip>
-      </div>
+      <label className="block text-sm font-semibold text-text mb-3">
+        店舗タイプ
+      </label>
 
-      <div className="space-y-2">
+      <ToggleChip
+        selected={
+          selectedKeywords.length ===
+          keywordCategories.flatMap((c) => c.keywords).length
+        }
+        onClick={toggleAllKeywords}
+        className="mb-3"
+      >
+        {selectedKeywords.length ===
+        keywordCategories.flatMap((c) => c.keywords).length
+          ? '全解除'
+          : '全選択'}
+      </ToggleChip>
+
+      <div className="space-y-3">
         {keywordCategories.map((category) => {
           const categoryKeywords = category.keywords.map((k) => k.value);
           const selectedCount = categoryKeywords.filter((k) =>
@@ -107,21 +109,21 @@ const StoreTypeSelection: React.FC<StoreTypeSelectionProps> = ({
           return (
             <div
               key={category.name}
-              className="border border-gray-200 rounded-lg overflow-hidden"
+              className="border border-primary-200 rounded-xl overflow-hidden bg-surface-card"
             >
-              <div className="flex items-center bg-gray-50">
+              <div className="flex items-center bg-surface-muted">
                 <button
                   onClick={(e) => toggleCategoryKeywords(category.keywords, e)}
-                  className="flex-1 px-3 py-2 text-left hover:bg-gray-100 flex items-center gap-2 transition-colors duration-200"
+                  className="flex-1 px-4 py-3 text-left hover:bg-primary-50 flex items-center gap-3 cursor-pointer transition-colors duration-200"
                 >
                   <div
-                    className={`w-4 h-4 rounded border flex items-center justify-center transition-colors duration-200
+                    className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200
                     ${
                       isFullySelected
-                        ? 'bg-primary-500 border-primary-500'
+                        ? 'bg-primary-600 border-primary-600'
                         : isPartiallySelected
-                          ? 'bg-primary-200 border-primary-500'
-                          : 'border-gray-300'
+                          ? 'bg-primary-100 border-primary-400'
+                          : 'border-primary-200 bg-white'
                     }`}
                   >
                     {isFullySelected && (
@@ -139,28 +141,28 @@ const StoreTypeSelection: React.FC<StoreTypeSelectionProps> = ({
                       <div className="w-2 h-2 bg-primary-500 rounded-sm"></div>
                     )}
                   </div>
-                  <span className="text-sm font-medium text-gray-700 flex-1">
+                  <span className="font-semibold flex-1 text-text">
                     {category.name}
                   </span>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-sm text-text-muted bg-primary-100 px-2 py-0.5 rounded-full">
                     {selectedCount}/{categoryKeywords.length}
                   </span>
                 </button>
                 <button
                   onClick={(e) => toggleCategory(category.name, e)}
-                  className="px-3 py-2 hover:bg-gray-100 text-gray-500 transition-colors duration-200"
+                  className="px-4 py-3 hover:bg-primary-50 cursor-pointer transition-colors duration-200 text-text-muted"
                 >
                   {expandedCategories.includes(category.name) ? (
-                    <ChevronUp size={18} />
+                    <ChevronUp size={20} />
                   ) : (
-                    <ChevronDown size={18} />
+                    <ChevronDown size={20} />
                   )}
                 </button>
               </div>
 
               {expandedCategories.includes(category.name) && (
-                <div className="p-2 bg-white border-t border-gray-100">
-                  <div className="flex flex-wrap gap-1.5">
+                <div className="p-4 bg-surface-card border-t border-primary-100">
+                  <div className="flex flex-wrap gap-2">
                     {category.keywords.map((keyword) => (
                       <ToggleChip
                         key={keyword.value}
@@ -179,11 +181,11 @@ const StoreTypeSelection: React.FC<StoreTypeSelectionProps> = ({
       </div>
 
       {customKeywords.length > 0 && (
-        <div className="mt-3 pt-3 border-t border-gray-100">
-          <h3 className="text-xs font-medium text-gray-500 mb-2">
+        <div className="mt-5 pt-4 border-t border-primary-100">
+          <h4 className="text-sm font-semibold text-text mb-3">
             カスタム検索タイプ
-          </h3>
-          <div className="flex flex-wrap gap-1.5">
+          </h4>
+          <div className="flex flex-wrap gap-2">
             {customKeywords.map((keyword) => (
               <ToggleChip
                 key={keyword}
@@ -194,7 +196,7 @@ const StoreTypeSelection: React.FC<StoreTypeSelectionProps> = ({
                 {keyword}
                 <X
                   size={14}
-                  className="ml-1 inline-block opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                  className="ml-1 inline-block opacity-0 group-hover:opacity-100 transition-opacity"
                   onClick={(e) => {
                     e.stopPropagation();
                     onRemoveCustomKeyword(keyword);
@@ -208,10 +210,10 @@ const StoreTypeSelection: React.FC<StoreTypeSelectionProps> = ({
 
       <button
         onClick={onAddCustomKeyword}
-        className="mt-3 flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium text-primary-600 hover:bg-primary-50 transition-colors duration-200"
+        className="btn-secondary mt-5 text-sm"
       >
-        <Plus size={16} />
-        店舗タイプを追加
+        <Plus size={16} className="mr-1.5" />
+        新しい店舗タイプを追加
       </button>
     </div>
   );

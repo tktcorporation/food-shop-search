@@ -4,66 +4,90 @@ export default {
   theme: {
     extend: {
       colors: {
+        // GourmetSpot Design System - Soft UI Evolution + Warm Food Palette
+        // Warm, approachable colors with improved contrast (WCAG AA+)
         primary: {
-          50: '#f0f9ff',
-          100: '#e0f2fe',
-          200: '#bae6fd',
-          300: '#7dd3fc',
-          400: '#38bdf8',
-          500: '#0ea5e9',
-          600: '#0284c7',
-          700: '#0369a1',
-          800: '#075985',
-          900: '#0c4a6e',
+          DEFAULT: '#B45309', // Soft amber brown
+          50: '#FFFBEB', // Very soft cream
+          100: '#FEF3C7', // Light cream
+          200: '#FDE68A', // Soft gold
+          300: '#FCD34D', // Warm yellow
+          400: '#FBBF24', // Amber
+          500: '#D97706', // Main amber (softer)
+          600: '#B45309', // Deep amber
+          700: '#92400E', // Rich brown
         },
-        secondary: {
-          50: '#ecfdf5',
-          100: '#d1fae5',
-          200: '#a7f3d0',
-          300: '#6ee7b7',
-          400: '#34d399',
-          500: '#10b981',
-          600: '#059669',
-          700: '#047857',
-          800: '#065f46',
-          900: '#064e3b',
-        },
+        // Soft accent colors for actions
         accent: {
-          50: '#fff1f2',
-          100: '#ffe4e6',
-          200: '#fecdd3',
-          300: '#fda4af',
-          400: '#fb7185',
-          500: '#f43f5e',
-          600: '#e11d48',
-          700: '#be123c',
-          800: '#9f1239',
-          900: '#881337',
+          DEFAULT: '#F59E0B',
+          light: '#FEF3C7',
+          dark: '#D97706',
+        },
+        // Surface colors for Soft UI depth
+        surface: {
+          DEFAULT: '#FFFBEB', // Warm cream background
+          card: '#FFFFFF', // Pure white cards
+          muted: '#FEF3C7', // Muted cream
+          elevated: '#FFFFFF', // Elevated elements
+        },
+        // Text colors with warm undertones
+        text: {
+          DEFAULT: '#78350F', // Warm brown (readable)
+          muted: '#92400E', // Softer brown
+          light: '#B45309', // Light text
+          inverse: '#FFFFFF', // White text
+        },
+        // Success/Error states
+        success: {
+          DEFAULT: '#059669',
+          light: '#D1FAE5',
+        },
+        error: {
+          DEFAULT: '#DC2626',
+          light: '#FEE2E2',
         },
       },
       fontFamily: {
-        sans: [
-          'system-ui',
-          '-apple-system',
-          'BlinkMacSystemFont',
-          '"Hiragino Kaku Gothic ProN"',
-          '"Hiragino Sans"',
-          'Meiryo',
-          'sans-serif',
-          '"Segoe UI Emoji"',
-        ],
-        serif: [
-          '"Hiragino Kaku Gothic ProN"',
-          '"Hiragino Sans"',
-          'Meiryo',
-          'sans-serif',
-        ],
+        // Soft UI Evolution typography - friendly and modern
+        heading: ['Nunito', 'system-ui', 'sans-serif'],
+        body: ['Nunito', 'system-ui', 'sans-serif'],
+        sans: ['Nunito', 'system-ui', 'sans-serif'],
+      },
+      spacing: {
+        18: '4.5rem',
+        22: '5.5rem',
+      },
+      borderRadius: {
+        // Soft UI Evolution - moderate rounding (8-12px)
+        DEFAULT: '10px',
+        sm: '6px',
+        md: '10px',
+        lg: '12px',
+        xl: '16px',
       },
       boxShadow: {
-        'inner-lg': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)',
+        // Soft UI Evolution shadows - softer than flat, clearer than neumorphism
+        sm: '0 1px 3px rgba(120, 53, 15, 0.08)',
+        DEFAULT:
+          '0 2px 8px rgba(120, 53, 15, 0.08), 0 1px 3px rgba(120, 53, 15, 0.04)',
+        md: '0 4px 12px rgba(120, 53, 15, 0.1), 0 2px 4px rgba(120, 53, 15, 0.04)',
+        lg: '0 8px 24px rgba(120, 53, 15, 0.1), 0 4px 8px rgba(120, 53, 15, 0.04)',
+        xl: '0 16px 32px rgba(120, 53, 15, 0.12), 0 8px 16px rgba(120, 53, 15, 0.06)',
+        // Soft inner shadow for inputs
+        inner: 'inset 0 1px 2px rgba(120, 53, 15, 0.06)',
+        // Focus ring shadow
+        focus: '0 0 0 3px rgba(245, 158, 11, 0.3)',
       },
-      animation: {
-        'spin-slow': 'spin 3s linear infinite',
+      transitionDuration: {
+        // Soft UI Evolution - modern animations (200-300ms)
+        DEFAULT: '200ms',
+        fast: '150ms',
+        normal: '250ms',
+        slow: '300ms',
+      },
+      transitionTimingFunction: {
+        // Smooth easing
+        soft: 'cubic-bezier(0.4, 0, 0.2, 1)',
       },
     },
   },

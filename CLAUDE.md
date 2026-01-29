@@ -330,6 +330,7 @@ const libraries: ('places' | 'geometry')[] = ['places', 'geometry'];
 IMPORTANT: **UI/UX実装時は必ず `.claude/rules/ui-ux-design.md` を参照してください。** このファイルはClaude Codeが自動的にコンテキストとして読み込みます。
 
 このガイドラインには以下が含まれます：
+
 - AI向けプロンプティング手法（制約ベースプロンプティング、TC-EBCフレームワーク）
 - デザインシステムの定義（カラー、スペーシング、タイポグラフィ）
 - AIっぽさを避けるルール（禁止事項と推奨アプローチ）
@@ -349,6 +350,7 @@ IMPORTANT: **UI/UX実装時は必ず `.claude/rules/ui-ux-design.md` を参照�
 グラデーション: 同系色2色まで（primary-50 to primary-100 など）
 
 禁止事項:
+
 - グラデーションテキスト
 - shadow-2xl 以上のシャドウ
 - rounded-2xl 以上の角丸
@@ -356,19 +358,19 @@ IMPORTANT: **UI/UX実装時は必ず `.claude/rules/ui-ux-design.md` を参照�
 - 装飾目的だけの要素
 - カスタムCSSの追加
 - 新しいデザインパターンの発明
-</ui-constraints>
+  </ui-constraints>
 ```
 
 ### 既存UIコンポーネントの参照
 
 新しいUIを実装する前に、以下の既存コンポーネントを確認してください：
 
-| コンポーネント | パス | 用途 |
-|---------------|------|------|
-| ToggleChip | `src/components/ui/ToggleChip.tsx` | 選択可能なチップ |
-| ErrorAlert | `src/components/ui/ErrorAlert.tsx` | エラー表示 |
+| コンポーネント | パス                                                           | 用途             |
+| -------------- | -------------------------------------------------------------- | ---------------- |
+| ToggleChip     | `src/components/ui/ToggleChip.tsx`                             | 選択可能なチップ |
+| ErrorAlert     | `src/components/ui/ErrorAlert.tsx`                             | エラー表示       |
 | RestaurantCard | `src/components/UnifiedSearchResultsScreen/RestaurantCard.tsx` | カードレイアウト |
-| SearchFilters | `src/components/UnifiedSearchResultsScreen/SearchFilters.tsx` | フィルターUI |
+| SearchFilters  | `src/components/UnifiedSearchResultsScreen/SearchFilters.tsx`  | フィルターUI     |
 
 ## テストとビルド
 
