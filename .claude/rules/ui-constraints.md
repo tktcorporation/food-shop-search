@@ -5,24 +5,28 @@ IMPORTANT: このファイルはUI/UX実装時に自動適用される制約で�
 ## 視覚スタイル制約
 
 ### 角丸（Border Radius）
+
 ```
 許可: rounded-sm, rounded, rounded-md, rounded-lg, rounded-full（チップのみ）
 禁止: rounded-xl, rounded-2xl, rounded-3xl
 ```
 
 ### シャドウ（Box Shadow）
+
 ```
 許可: shadow-sm, shadow, shadow-md, shadow-lg
 禁止: shadow-xl, shadow-2xl, 色付きシャドウ（shadow-primary-500/50等）
 ```
 
 ### トランジション
+
 ```
 許可: duration-150, duration-200
 禁止: duration-300以上, 複数アニメーション同時使用
 ```
 
 ### カラー
+
 ```
 許可: tailwind.config.js で定義されたカラーのみ
   - primary-*（メインアクション）
@@ -33,6 +37,7 @@ IMPORTANT: このファイルはUI/UX実装時に自動適用される制約で�
 ```
 
 ### グラデーション
+
 ```
 許可: 同系色2色まで（例: from-primary-50 to-primary-100）
 禁止: 3色以上, 虹色, テキストへの適用
@@ -42,6 +47,7 @@ IMPORTANT: このファイルはUI/UX実装時に自動適用される制約で�
 
 ```markdown
 NEVER:
+
 - グラデーションテキスト
 - グロー/ネオン効果
 - 装飾目的だけの要素
@@ -53,13 +59,13 @@ NEVER:
 
 ## コンポーネント参照（実装前に必ず確認）
 
-| 用途 | 参照コンポーネント |
-|------|-------------------|
-| チップ/タグ | `src/components/ui/ToggleChip.tsx` |
-| カード | `src/components/UnifiedSearchResultsScreen/RestaurantCard.tsx` |
-| フィルターUI | `src/components/UnifiedSearchResultsScreen/SearchFilters.tsx` |
-| エラー表示 | `src/components/ui/ErrorAlert.tsx` |
-| ボタン | `src/index.css` の .btn クラス |
+| 用途         | 参照コンポーネント                                             |
+| ------------ | -------------------------------------------------------------- |
+| チップ/タグ  | `src/components/ui/ToggleChip.tsx`                             |
+| カード       | `src/components/UnifiedSearchResultsScreen/RestaurantCard.tsx` |
+| フィルターUI | `src/components/UnifiedSearchResultsScreen/SearchFilters.tsx`  |
+| エラー表示   | `src/components/ui/ErrorAlert.tsx`                             |
+| ボタン       | `src/index.css` の .btn クラス                                 |
 
 ## 実装後チェック
 
