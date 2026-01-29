@@ -23,11 +23,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({
       window.location.hostname === '127.0.0.1');
 
   return (
-    <div className="mb-6">
-      <label className="block text-sm font-medium text-gray-700 mb-2">
-        現在地から検索
-      </label>
-
+    <div>
       {!isHttps && (
         <div className="mb-3 p-3 bg-yellow-50 text-yellow-700 rounded-md text-sm flex items-start">
           <Lock className="shrink-0 mt-0.5 mr-2" size={16} />

@@ -30,13 +30,7 @@ const StationSearch: React.FC<StationSearchProps> = ({
     useNearbyStationSearch(onStationFound);
 
   return (
-    <div className="mb-6">
-      <label
-        htmlFor="station"
-        className="block text-sm font-medium text-gray-700 mb-2"
-      >
-        駅名
-      </label>
+    <div>
       <div className="relative">
         <input
           type="text"
