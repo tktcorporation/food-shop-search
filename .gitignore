@@ -29,6 +29,9 @@ dist-ssr
 # TypeScript build info
 *.tsbuildinfo
 
+# Wrangler
+.wrangler
+
 # Claude Code personal settings
 CLAUDE.local.md
 .claude/CLAUDE.local.md
