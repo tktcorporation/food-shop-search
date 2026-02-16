@@ -20,7 +20,7 @@ IMPORTANT: このプロジェクトは **mise** を使用してNode.jsバージ�
 
 ```bash
 # 推奨セットアップ
-mise install        # Node.js 20 LTSを自動インストール
+mise install        # Node.js 22 LTSを自動インストール
 npm install         # 依存関係のインストール
 npm run dev         # 開発サーバー起動
 ```

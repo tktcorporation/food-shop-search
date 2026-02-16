@@ -30,7 +30,7 @@
 
 ## 前提条件
 
-- Node.js (v18以上推奨、v20 LTS推奨)
+- Node.js (v20以上推奨、v22 LTS推奨)
 - npm または yarn
 - Google Maps API キー
 - (オプション) [mise](https://mise.jdx.dev/) - ツールバージョン管理
@@ -58,11 +58,11 @@ curl https://mise.run | sh
 mise install
 ```
 
-miseは `.mise.toml` ファイルを読み込み、Node.js 20 LTSを自動的にインストールして使用します。
+miseは `.mise.toml` ファイルを読み込み、Node.js 22 LTSを自動的にインストールして使用します。
 
 #### オプションB: 手動でNode.jsをインストールする場合
 
-Node.js v18以上（v20 LTS推奨）を[公式サイト](https://nodejs.org/)からインストールするか、nvmなどのバージョンマネージャーを使用してください。
+Node.js v20以上（v22 LTS推奨）を[公式サイト](https://nodejs.org/)からインストールするか、nvmなどのバージョンマネージャーを使用してください。
 
 ### 3. 依存関係のインストール
 
