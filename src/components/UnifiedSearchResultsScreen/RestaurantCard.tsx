@@ -11,8 +11,8 @@ interface Restaurant {
   user_ratings_total: number;
   price_level: number;
   types: string[];
-  photos?: google.maps.places.PlacePhoto[];
-  /** Nearby Search の isOpen() から取得した営業状態 */
+  photoUrls: string[];
+  /** サーバー側の営業状態判定 */
   isOpenNow?: boolean;
   distance?: number;
   searchKeywords: string[];
@@ -78,12 +78,9 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
     >
       {/* Image Section */}
       <div className="relative aspect-[4/3] bg-primary-50">
-        {restaurant.photos?.[0] ? (
+        {restaurant.photoUrls?.[0] ? (
           <img
-            src={restaurant.photos[0].getUrl({
-              maxWidth: 400,
-              maxHeight: 300,
-            })}
+            src={restaurant.photoUrls[0]}
             alt={restaurant.name}
             className="w-full h-full object-cover"
             loading="lazy"

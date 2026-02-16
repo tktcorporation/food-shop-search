@@ -1,17 +1,11 @@
-import { Effect, Option } from 'effect';
+import { Effect } from 'effect';
 import type {
   GeocodeError,
   GeolocationError,
-  GoogleMapsAuthError,
   HttpsRequiredError,
   GeolocationUnsupportedError,
 } from '../errors';
-import {
-  GeolocationService,
-  GoogleMapsGeocoderService,
-  CacheService,
-} from '../services';
-import { CACHE_CONFIGS } from '../utils/cacheManager';
+import { GeolocationService, ApiService } from '../services';
 
 export interface LocationData {
   lat: number;
@@ -23,52 +17,29 @@ export interface LocationData {
  * 現在地取得の Effect プログラム。
  *
  * 1. ブラウザから位置情報を取得
- * 2. キャッシュチェック
- * 3. 逆ジオコーディングで住所を取得
- * 4. キャッシュに保存
+ * 2. Worker API で逆ジオコーディングして住所を取得
  */
 export const getLocationProgram = (): Effect.Effect<
   LocationData,
   | GeolocationError
   | HttpsRequiredError
   | GeolocationUnsupportedError
-  | GoogleMapsAuthError
   | GeocodeError,
-  GeolocationService | GoogleMapsGeocoderService | CacheService
+  GeolocationService | ApiService
 > =>
   Effect.gen(function* () {
     const geolocationService = yield* GeolocationService;
-    const geocoderService = yield* GoogleMapsGeocoderService;
-    const cacheService = yield* CacheService;
+    const api = yield* ApiService;
 
-    // 1. ブラウザから位置情報を取得
+    // ブラウザから位置情報を取得
     const position = yield* geolocationService.getCurrentPosition();
     const { latitude, longitude } = position.coords;
-    const cacheKey = `${latitude},${longitude}`;
 
-    // 2. キャッシュチェック
-    const cached = yield* cacheService.get<LocationData>(
-      CACHE_CONFIGS.GEOCODE,
-      cacheKey,
-    );
+    const result = yield* api.geocodeReverse(latitude, longitude);
 
-    if (Option.isSome(cached)) {
-      return cached.value;
-    }
-
-    // 3. 逆ジオコーディングで住所を取得
-    const result = yield* geocoderService.geocode({
-      location: { lat: latitude, lng: longitude },
-    });
-
-    const locationData: LocationData = {
+    return {
       lat: latitude,
       lng: longitude,
-      address: result.formatted_address,
+      address: result.address,
     };
-
-    // 4. キャッシュに保存
-    yield* cacheService.set(CACHE_CONFIGS.GEOCODE, cacheKey, locationData);
-
-    return locationData;
   });
