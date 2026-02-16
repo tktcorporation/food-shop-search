@@ -1,3 +1,8 @@
+// Result type for error handling without throw
+export type Result<T> =
+  | { readonly ok: true; readonly data: T }
+  | { readonly ok: false; readonly error: string };
+
 // Location type
 export interface Location {
   lat: number;

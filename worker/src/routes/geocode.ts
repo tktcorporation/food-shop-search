@@ -30,53 +30,53 @@ geocodeRoutes.post('/geocode/forward', async (c) => {
   const apiKey = c.env.GOOGLE_MAPS_API_KEY;
   const address = body.address.trim();
 
-  try {
-    const cacheKey = address;
+  const cacheKey = address;
 
-    // Check cache
-    const cached = await getCache<GoogleGeocodeResult[]>(
+  // Check cache
+  const cached = await getCache<GoogleGeocodeResult[]>(
+    db,
+    'geocode_forward',
+    cacheKey,
+  );
+
+  let results: GoogleGeocodeResult[];
+  if (cached) {
+    results = cached;
+  } else {
+    const result = await geocodeForward(apiKey, address);
+
+    if (!result.ok) {
+      return c.json({ success: false, error: result.error }, 500);
+    }
+
+    results = result.data;
+
+    // Store in cache
+    await setCache(
       db,
       'geocode_forward',
       cacheKey,
+      results,
+      CACHE_TTL.geocode_forward,
     );
-
-    let results: GoogleGeocodeResult[];
-    if (cached) {
-      results = cached;
-    } else {
-      results = await geocodeForward(apiKey, address);
-
-      // Store in cache
-      await setCache(
-        db,
-        'geocode_forward',
-        cacheKey,
-        results,
-        CACHE_TTL.geocode_forward,
-      );
-    }
-
-    if (results.length === 0) {
-      return c.json(
-        { success: false, error: 'No results found for the given address' },
-        404,
-      );
-    }
-
-    const first = results[0];
-    return c.json({
-      success: true,
-      data: {
-        lat: first.geometry.location.lat,
-        lng: first.geometry.location.lng,
-        formatted_address: first.formatted_address,
-      },
-    });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Unknown error occurred';
-    return c.json({ success: false, error: message }, 500);
   }
+
+  if (results.length === 0) {
+    return c.json(
+      { success: false, error: 'No results found for the given address' },
+      404,
+    );
+  }
+
+  const first = results[0];
+  return c.json({
+    success: true,
+    data: {
+      lat: first.geometry.location.lat,
+      lng: first.geometry.location.lng,
+      formatted_address: first.formatted_address,
+    },
+  });
 });
 
 /**
@@ -94,54 +94,54 @@ geocodeRoutes.post('/geocode/reverse', async (c) => {
   const apiKey = c.env.GOOGLE_MAPS_API_KEY;
   const { lat, lng } = body;
 
-  try {
-    const cacheKey = `${lat}-${lng}`;
+  const cacheKey = `${lat}-${lng}`;
 
-    // Check cache
-    const cached = await getCache<GoogleGeocodeResult[]>(
+  // Check cache
+  const cached = await getCache<GoogleGeocodeResult[]>(
+    db,
+    'geocode_reverse',
+    cacheKey,
+  );
+
+  let results: GoogleGeocodeResult[];
+  if (cached) {
+    results = cached;
+  } else {
+    const result = await geocodeReverse(apiKey, lat, lng);
+
+    if (!result.ok) {
+      return c.json({ success: false, error: result.error }, 500);
+    }
+
+    results = result.data;
+
+    // Store in cache
+    await setCache(
       db,
       'geocode_reverse',
       cacheKey,
+      results,
+      CACHE_TTL.geocode_reverse,
     );
-
-    let results: GoogleGeocodeResult[];
-    if (cached) {
-      results = cached;
-    } else {
-      results = await geocodeReverse(apiKey, lat, lng);
-
-      // Store in cache
-      await setCache(
-        db,
-        'geocode_reverse',
-        cacheKey,
-        results,
-        CACHE_TTL.geocode_reverse,
-      );
-    }
-
-    if (results.length === 0) {
-      return c.json(
-        {
-          success: false,
-          error: 'No results found for the given coordinates',
-        },
-        404,
-      );
-    }
-
-    const first = results[0];
-    return c.json({
-      success: true,
-      data: {
-        lat,
-        lng,
-        address: first.formatted_address,
-      },
-    });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Unknown error occurred';
-    return c.json({ success: false, error: message }, 500);
   }
+
+  if (results.length === 0) {
+    return c.json(
+      {
+        success: false,
+        error: 'No results found for the given coordinates',
+      },
+      404,
+    );
+  }
+
+  const first = results[0];
+  return c.json({
+    success: true,
+    data: {
+      lat,
+      lng,
+      address: first.formatted_address,
+    },
+  });
 });

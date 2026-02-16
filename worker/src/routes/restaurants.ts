@@ -92,72 +92,80 @@ restaurantRoutes.post('/restaurants/search', async (c) => {
   const apiKey = c.env.GOOGLE_MAPS_API_KEY;
   const { keywords, location, radius } = body;
 
-  try {
-    // For each keyword, check cache and fetch if needed
-    // oxlint-disable-next-line effect-enforce/no-promise-static-methods
-    const keywordResults = await Promise.all(
-      keywords.map(async (keyword) => {
-        const cacheKey = `${keyword}-${location.lat}-${location.lng}-${radius}`;
+  // Start all keyword fetches in parallel, then await sequentially
+  const pending = keywords.map(async (keyword) => {
+    const cacheKey = `${keyword}-${location.lat}-${location.lng}-${radius}`;
 
-        // Check cache first
-        const cached = await getCache<GooglePlaceResult[]>(
-          db,
-          'restaurant_search',
-          cacheKey,
-        );
-
-        if (cached) {
-          return { keyword, places: cached };
-        }
-
-        // Cache miss - call Google Maps API
-        const places = await searchNearbyPlaces(
-          apiKey,
-          location.lat,
-          location.lng,
-          radius,
-          keyword,
-        );
-
-        // Store in cache
-        await setCache(
-          db,
-          'restaurant_search',
-          cacheKey,
-          places,
-          CACHE_TTL.restaurant_search,
-        );
-
-        return { keyword, places };
-      }),
+    // Check cache first
+    const cached = await getCache<GooglePlaceResult[]>(
+      db,
+      'restaurant_search',
+      cacheKey,
     );
 
-    // Combine and deduplicate results by place_id
-    const restaurantMap = new Map<string, Restaurant>();
-
-    for (const { keyword, places } of keywordResults) {
-      for (const place of places) {
-        const existing = restaurantMap.get(place.place_id);
-        if (existing) {
-          // Merge search keywords
-          if (!existing.searchKeywords.includes(keyword)) {
-            existing.searchKeywords.push(keyword);
-          }
-        } else {
-          restaurantMap.set(
-            place.place_id,
-            toRestaurant(place, apiKey, keyword, location.lat, location.lng),
-          );
-        }
-      }
+    if (cached) {
+      return { keyword, places: cached, error: undefined };
     }
 
-    const restaurants = Array.from(restaurantMap.values());
+    // Cache miss - call Google Maps API
+    const result = await searchNearbyPlaces(
+      apiKey,
+      location.lat,
+      location.lng,
+      radius,
+      keyword,
+    );
 
-    return c.json({ success: true, data: restaurants });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Unknown error occurred';
-    return c.json({ success: false, error: message }, 500);
+    if (!result.ok) {
+      return {
+        keyword,
+        places: [] as GooglePlaceResult[],
+        error: result.error,
+      };
+    }
+
+    // Store in cache
+    await setCache(
+      db,
+      'restaurant_search',
+      cacheKey,
+      result.data,
+      CACHE_TTL.restaurant_search,
+    );
+
+    return { keyword, places: result.data, error: undefined };
+  });
+
+  const keywordResults = [];
+  for (const p of pending) {
+    const result = await p;
+    if (result.error) {
+      return c.json({ success: false, error: result.error }, 500);
+    }
+    keywordResults.push(result);
   }
+
+  // Combine and deduplicate results by place_id
+  const restaurantMap = new Map<string, Restaurant>();
+
+  for (const { keyword, places } of keywordResults) {
+    for (const place of places) {
+      const existing = restaurantMap.get(place.place_id);
+      if (existing) {
+        // Merge search keywords
+        if (!existing.searchKeywords.includes(keyword)) {
+          existing.searchKeywords.push(keyword);
+        }
+      } else {
+        restaurantMap.set(
+          place.place_id,
+          toRestaurant(place, apiKey, keyword, location.lat, location.lng),
+        );
+      }
+    }
+  }
+
+  const restaurants = Array.from(restaurantMap.values());
+
+  return c.json({ success: true, data: restaurants });
 });

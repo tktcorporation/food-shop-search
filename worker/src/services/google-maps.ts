@@ -1,4 +1,5 @@
 import type {
+  Result,
   GoogleNearbySearchResponse,
   GoogleAutocompleteResponse,
   GoogleGeocodeResponse,
@@ -18,7 +19,7 @@ export async function searchNearbyPlaces(
   lng: number,
   radius: number,
   keyword: string,
-): Promise<GooglePlaceResult[]> {
+): Promise<Result<GooglePlaceResult[]>> {
   const params = new URLSearchParams({
     location: `${lat},${lng}`,
     radius: String(radius),
@@ -31,20 +32,22 @@ export async function searchNearbyPlaces(
   const response = await fetch(url);
 
   if (!response.ok) {
-    // oxlint-disable-next-line effect-enforce/no-throw-statement
-    throw new Error(
-      `Google Nearby Search API request failed: ${response.status} ${response.statusText}`,
-    );
+    return {
+      ok: false,
+      error: `Google Nearby Search API request failed: ${response.status} ${response.statusText}`,
+    };
   }
 
   const data: GoogleNearbySearchResponse = await response.json();
 
   if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-    // oxlint-disable-next-line effect-enforce/no-throw-statement
-    throw new Error(`Google Nearby Search API error: ${data.status}`);
+    return {
+      ok: false,
+      error: `Google Nearby Search API error: ${data.status}`,
+    };
   }
 
-  return data.results;
+  return { ok: true, data: data.results };
 }
 
 /**
@@ -53,7 +56,7 @@ export async function searchNearbyPlaces(
 export async function getAutocompletePredictions(
   apiKey: string,
   input: string,
-): Promise<GoogleAutocompletePrediction[]> {
+): Promise<Result<GoogleAutocompletePrediction[]>> {
   const params = new URLSearchParams({
     input,
     types: 'transit_station|train_station|airport|subway_station',
@@ -66,20 +69,22 @@ export async function getAutocompletePredictions(
   const response = await fetch(url);
 
   if (!response.ok) {
-    // oxlint-disable-next-line effect-enforce/no-throw-statement
-    throw new Error(
-      `Google Autocomplete API request failed: ${response.status} ${response.statusText}`,
-    );
+    return {
+      ok: false,
+      error: `Google Autocomplete API request failed: ${response.status} ${response.statusText}`,
+    };
   }
 
   const data: GoogleAutocompleteResponse = await response.json();
 
   if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-    // oxlint-disable-next-line effect-enforce/no-throw-statement
-    throw new Error(`Google Autocomplete API error: ${data.status}`);
+    return {
+      ok: false,
+      error: `Google Autocomplete API error: ${data.status}`,
+    };
   }
 
-  return data.predictions;
+  return { ok: true, data: data.predictions };
 }
 
 /**
@@ -88,7 +93,7 @@ export async function getAutocompletePredictions(
 export async function geocodeForward(
   apiKey: string,
   address: string,
-): Promise<GoogleGeocodeResult[]> {
+): Promise<Result<GoogleGeocodeResult[]>> {
   const params = new URLSearchParams({
     address,
     language: 'ja',
@@ -99,20 +104,19 @@ export async function geocodeForward(
   const response = await fetch(url);
 
   if (!response.ok) {
-    // oxlint-disable-next-line effect-enforce/no-throw-statement
-    throw new Error(
-      `Google Geocoding API request failed: ${response.status} ${response.statusText}`,
-    );
+    return {
+      ok: false,
+      error: `Google Geocoding API request failed: ${response.status} ${response.statusText}`,
+    };
   }
 
   const data: GoogleGeocodeResponse = await response.json();
 
   if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-    // oxlint-disable-next-line effect-enforce/no-throw-statement
-    throw new Error(`Google Geocoding API error: ${data.status}`);
+    return { ok: false, error: `Google Geocoding API error: ${data.status}` };
   }
 
-  return data.results;
+  return { ok: true, data: data.results };
 }
 
 /**
@@ -122,7 +126,7 @@ export async function geocodeReverse(
   apiKey: string,
   lat: number,
   lng: number,
-): Promise<GoogleGeocodeResult[]> {
+): Promise<Result<GoogleGeocodeResult[]>> {
   const params = new URLSearchParams({
     latlng: `${lat},${lng}`,
     language: 'ja',
@@ -133,20 +137,22 @@ export async function geocodeReverse(
   const response = await fetch(url);
 
   if (!response.ok) {
-    // oxlint-disable-next-line effect-enforce/no-throw-statement
-    throw new Error(
-      `Google Geocoding API (reverse) request failed: ${response.status} ${response.statusText}`,
-    );
+    return {
+      ok: false,
+      error: `Google Geocoding API (reverse) request failed: ${response.status} ${response.statusText}`,
+    };
   }
 
   const data: GoogleGeocodeResponse = await response.json();
 
   if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-    // oxlint-disable-next-line effect-enforce/no-throw-statement
-    throw new Error(`Google Geocoding API (reverse) error: ${data.status}`);
+    return {
+      ok: false,
+      error: `Google Geocoding API (reverse) error: ${data.status}`,
+    };
   }
 
-  return data.results;
+  return { ok: true, data: data.results };
 }
 
 /**

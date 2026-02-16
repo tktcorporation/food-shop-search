@@ -89,41 +89,41 @@ stationRoutes.post('/stations/search', async (c) => {
   const apiKey = c.env.GOOGLE_MAPS_API_KEY;
   const input = body.input.trim();
 
-  try {
-    const cacheKey = input;
+  const cacheKey = input;
 
-    // Check cache
-    const cached = await getCache<GoogleAutocompletePrediction[]>(
+  // Check cache
+  const cached = await getCache<GoogleAutocompletePrediction[]>(
+    db,
+    'station_predictions',
+    cacheKey,
+  );
+
+  let predictions: GoogleAutocompletePrediction[];
+  if (cached) {
+    predictions = cached;
+  } else {
+    // Call Google Autocomplete API
+    const result = await getAutocompletePredictions(apiKey, input);
+
+    if (!result.ok) {
+      return c.json({ success: false, error: result.error }, 500);
+    }
+
+    predictions = result.data;
+
+    // Store in cache
+    await setCache(
       db,
       'station_predictions',
       cacheKey,
+      predictions,
+      CACHE_TTL.station_predictions,
     );
-
-    let predictions: GoogleAutocompletePrediction[];
-    if (cached) {
-      predictions = cached;
-    } else {
-      // Call Google Autocomplete API
-      predictions = await getAutocompletePredictions(apiKey, input);
-
-      // Store in cache
-      await setCache(
-        db,
-        'station_predictions',
-        cacheKey,
-        predictions,
-        CACHE_TTL.station_predictions,
-      );
-    }
-
-    const stations: Station[] = predictions.map(predictionToStation);
-
-    return c.json({ success: true, data: stations });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Unknown error occurred';
-    return c.json({ success: false, error: message }, 500);
   }
+
+  const stations: Station[] = predictions.map(predictionToStation);
+
+  return c.json({ success: true, data: stations });
 });
 
 /**
@@ -141,44 +141,44 @@ stationRoutes.post('/stations/nearby', async (c) => {
   const apiKey = c.env.GOOGLE_MAPS_API_KEY;
   const { lat, lng } = body;
 
-  try {
-    // Coarse location for cache key (2 decimal places ~ 1.1km precision)
-    const cacheKey = `${lat.toFixed(2)}-${lng.toFixed(2)}`;
+  // Coarse location for cache key (2 decimal places ~ 1.1km precision)
+  const cacheKey = `${lat.toFixed(2)}-${lng.toFixed(2)}`;
 
-    // Check cache
-    const cached = await getCache<GooglePlaceResult[]>(
+  // Check cache
+  const cached = await getCache<GooglePlaceResult[]>(
+    db,
+    'nearby_stations',
+    cacheKey,
+  );
+
+  let places: GooglePlaceResult[];
+  if (cached) {
+    places = cached;
+  } else {
+    // Search for train stations within 5km
+    const result = await searchNearbyPlaces(apiKey, lat, lng, 5000, '駅');
+
+    if (!result.ok) {
+      return c.json({ success: false, error: result.error }, 500);
+    }
+
+    places = result.data;
+
+    // Store in cache
+    await setCache(
       db,
       'nearby_stations',
       cacheKey,
+      places,
+      CACHE_TTL.nearby_stations,
     );
-
-    let places: GooglePlaceResult[];
-    if (cached) {
-      places = cached;
-    } else {
-      // Search for train stations within 5km
-      places = await searchNearbyPlaces(apiKey, lat, lng, 5000, '駅');
-
-      // Store in cache
-      await setCache(
-        db,
-        'nearby_stations',
-        cacheKey,
-        places,
-        CACHE_TTL.nearby_stations,
-      );
-    }
-
-    // Convert to Station[], calculate distances, sort by distance, take top 5
-    const stations: Station[] = places
-      .map((place) => placeToStation(place, lat, lng))
-      .sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity))
-      .slice(0, 5);
-
-    return c.json({ success: true, data: stations });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Unknown error occurred';
-    return c.json({ success: false, error: message }, 500);
   }
+
+  // Convert to Station[], calculate distances, sort by distance, take top 5
+  const stations: Station[] = places
+    .map((place) => placeToStation(place, lat, lng))
+    .sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity))
+    .slice(0, 5);
+
+  return c.json({ success: true, data: stations });
 });
