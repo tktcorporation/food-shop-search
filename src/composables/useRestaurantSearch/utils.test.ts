@@ -10,6 +10,7 @@ const makeRestaurant = (overrides: Partial<Restaurant> = {}): Restaurant => ({
   user_ratings_total: 200,
   price_level: 2,
   types: ['restaurant'],
+  photoUrls: [],
   searchKeywords: ['テスト'],
   ...overrides,
 });

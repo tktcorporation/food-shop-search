@@ -1,14 +1,4 @@
-import { Restaurant } from './types';
-
-export const generateCacheKey = (
-  request: google.maps.places.PlaceSearchRequest,
-): string => {
-  const loc = request.location;
-  if (!loc) return `${request.keyword}-unknown-${request.radius}`;
-  const lat = typeof loc.lat === 'function' ? loc.lat() : loc.lat;
-  const lng = typeof loc.lng === 'function' ? loc.lng() : loc.lng;
-  return `${request.keyword}-${lat}-${lng}-${request.radius}`;
-};
+import type { Restaurant } from './types';
 
 export const filterRestaurants = (
   restaurants: Restaurant[],
@@ -38,7 +28,7 @@ export const filterRestaurants = (
         place.user_ratings_total >= minReviews &&
         selectedPriceLevels.includes(place.price_level);
 
-      // isOpenNow フィルター: Nearby Search の isOpen() 結果を使用
+      // isOpenNow フィルター
       if (isOpenNow && place.isOpenNow !== true) {
         return false;
       }

@@ -3,5 +3,5 @@ export interface Station {
   prefecture: string;
   address: string;
   distance?: number;
-  rawPrediction: google.maps.places.AutocompletePrediction;
+  placeId: string;
 }
