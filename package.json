@@ -1,5 +1,5 @@
 {
-  "name": "gourmet-spot-search",
+  "name": "peconavi",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -21,8 +21,8 @@
     "deploy": "npm run build && wrangler deploy",
     "deploy:preview": "npm run build && wrangler deploy --branch preview",
     "db:generate": "drizzle-kit generate",
-    "db:migrate:local": "wrangler d1 migrations apply gourmet-spot-cache --local",
-    "db:migrate:remote": "wrangler d1 migrations apply gourmet-spot-cache --remote"
+    "db:migrate:local": "wrangler d1 migrations apply peconavi-cache --local",
+    "db:migrate:remote": "wrangler d1 migrations apply peconavi-cache --remote"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.1",

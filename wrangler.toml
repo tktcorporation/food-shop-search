@@ -1,5 +1,5 @@
 #:schema node_modules/wrangler/config-schema.json
-name = "gourmet-spot-search"
+name = "peconavi"
 main = "worker/src/index.ts"
 compatibility_date = "2026-02-16"
 compatibility_flags = ["nodejs_compat"]
@@ -9,5 +9,5 @@ directory = "./dist"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "gourmet-spot-cache"
+database_name = "peconavi-cache"
 database_id = "placeholder-will-be-set-after-d1-create"

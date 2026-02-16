@@ -6,13 +6,13 @@
 
 ## エンドポイント対応表
 
-| 用途 | 旧 API (Legacy) | 新 API (New) |
-|---|---|---|
-| 近隣検索 | `GET .../place/nearbysearch/json` | `POST places.googleapis.com/v1/places:searchNearby` |
-| テキスト検索 | `GET .../place/textsearch/json` | `POST places.googleapis.com/v1/places:searchText` |
-| オートコンプリート | `GET .../place/autocomplete/json` | `POST places.googleapis.com/v1/places:autocomplete` |
-| 写真 | `GET .../place/photo` | `GET places.googleapis.com/v1/places/{id}/photos/{ref}/media` |
-| ジオコーディング | `GET .../geocode/json` | **変更なし（別API）** |
+| 用途               | 旧 API (Legacy)                   | 新 API (New)                                                  |
+| ------------------ | --------------------------------- | ------------------------------------------------------------- |
+| 近隣検索           | `GET .../place/nearbysearch/json` | `POST places.googleapis.com/v1/places:searchNearby`           |
+| テキスト検索       | `GET .../place/textsearch/json`   | `POST places.googleapis.com/v1/places:searchText`             |
+| オートコンプリート | `GET .../place/autocomplete/json` | `POST places.googleapis.com/v1/places:autocomplete`           |
+| 写真               | `GET .../place/photo`             | `GET places.googleapis.com/v1/places/{id}/photos/{ref}/media` |
+| ジオコーディング   | `GET .../geocode/json`            | **変更なし（別API）**                                         |
 
 ## 認証方式
 
@@ -76,14 +76,14 @@ X-Goog-FieldMask: places.id,places.displayName,places.formattedAddress,...
 }
 ```
 
-| パラメータ | 必須 | 説明 |
-|---|---|---|
-| `locationRestriction` | 必須 | 検索範囲（center + radius、0-50000m） |
-| `includedTypes` | 任意 | タイプフィルタ（例: `["restaurant"]`） |
-| `excludedTypes` | 任意 | 除外タイプ |
-| `maxResultCount` | 任意 | 1-20、デフォルト20 |
-| `rankPreference` | 任意 | `POPULARITY` / `DISTANCE` |
-| `languageCode` | 任意 | 言語コード |
+| パラメータ            | 必須 | 説明                                   |
+| --------------------- | ---- | -------------------------------------- |
+| `locationRestriction` | 必須 | 検索範囲（center + radius、0-50000m）  |
+| `includedTypes`       | 任意 | タイプフィルタ（例: `["restaurant"]`） |
+| `excludedTypes`       | 任意 | 除外タイプ                             |
+| `maxResultCount`      | 任意 | 1-20、デフォルト20                     |
+| `rankPreference`      | 任意 | `POPULARITY` / `DISTANCE`              |
+| `languageCode`        | 任意 | 言語コード                             |
 
 ### レスポンス
 
@@ -126,7 +126,12 @@ X-Goog-Api-Key: API_KEY
 ```json
 {
   "input": "東京駅",
-  "includedPrimaryTypes": ["transit_station", "train_station", "airport", "subway_station"],
+  "includedPrimaryTypes": [
+    "transit_station",
+    "train_station",
+    "airport",
+    "subway_station"
+  ],
   "includedRegionCodes": ["jp"],
   "languageCode": "ja"
 }
@@ -168,41 +173,41 @@ GET https://places.googleapis.com/v1/{photos[].name}/media?maxWidthPx=400&key=AP
 
 ## フィールド名マッピング
 
-| 旧フィールド | 新フィールド |
-|---|---|
-| `results` | `places` |
-| `place_id` | `id` |
-| `name` | `displayName.text` |
-| `vicinity` | `formattedAddress` / `shortFormattedAddress` |
-| `user_ratings_total` | `userRatingCount` |
-| `price_level` (数値 0-4) | `priceLevel` (文字列 enum) |
-| `photos[].photo_reference` | `photos[].name` (リソースパス) |
-| `opening_hours.open_now` | `regularOpeningHours.openNow` |
-| `geometry.location.lat/lng` | `location.latitude/longitude` |
-| `status: "OK"` | HTTPステータスコードで判定 |
-| `next_page_token` | 廃止 |
-| `predictions` | `suggestions[].placePrediction` |
-| `structured_formatting` | `structuredFormat` |
+| 旧フィールド                | 新フィールド                                 |
+| --------------------------- | -------------------------------------------- |
+| `results`                   | `places`                                     |
+| `place_id`                  | `id`                                         |
+| `name`                      | `displayName.text`                           |
+| `vicinity`                  | `formattedAddress` / `shortFormattedAddress` |
+| `user_ratings_total`        | `userRatingCount`                            |
+| `price_level` (数値 0-4)    | `priceLevel` (文字列 enum)                   |
+| `photos[].photo_reference`  | `photos[].name` (リソースパス)               |
+| `opening_hours.open_now`    | `regularOpeningHours.openNow`                |
+| `geometry.location.lat/lng` | `location.latitude/longitude`                |
+| `status: "OK"`              | HTTPステータスコードで判定                   |
+| `next_page_token`           | 廃止                                         |
+| `predictions`               | `suggestions[].placePrediction`              |
+| `structured_formatting`     | `structuredFormat`                           |
 
 ## priceLevel の値
 
-| 旧 (数値) | 新 (文字列) |
-|---|---|
-| 0 | `PRICE_LEVEL_FREE` |
-| 1 | `PRICE_LEVEL_INEXPENSIVE` |
-| 2 | `PRICE_LEVEL_MODERATE` |
-| 3 | `PRICE_LEVEL_EXPENSIVE` |
-| 4 | `PRICE_LEVEL_VERY_EXPENSIVE` |
+| 旧 (数値) | 新 (文字列)                  |
+| --------- | ---------------------------- |
+| 0         | `PRICE_LEVEL_FREE`           |
+| 1         | `PRICE_LEVEL_INEXPENSIVE`    |
+| 2         | `PRICE_LEVEL_MODERATE`       |
+| 3         | `PRICE_LEVEL_EXPENSIVE`      |
+| 4         | `PRICE_LEVEL_VERY_EXPENSIVE` |
 
 ## 料金比較
 
 rating, userRatingCount, priceLevel, regularOpeningHours を取得する場合は Enterprise ティア:
 
-| API | 旧料金 (/1K) | 新料金 (/1K) |
-|---|---|---|
-| Nearby/Text Search | $32.00 | $35.00 (Enterprise) |
-| Autocomplete | $2.83 | $2.83 (Essentials) |
-| Place Photo | $7.00 | $7.00 (Enterprise) |
+| API                | 旧料金 (/1K) | 新料金 (/1K)        |
+| ------------------ | ------------ | ------------------- |
+| Nearby/Text Search | $32.00       | $35.00 (Enterprise) |
+| Autocomplete       | $2.83        | $2.83 (Essentials)  |
+| Place Photo        | $7.00        | $7.00 (Enterprise)  |
 
 FieldMask で要求フィールドを絞ると低いティア（安い料金）になる。
 
