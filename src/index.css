@@ -261,8 +261,15 @@ layer(base);
 }
 
 @layer base {
+  html {
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
+  }
+
   body {
     @apply font-body bg-white text-text min-h-screen antialiased;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
   }
 
   h1,
@@ -272,6 +279,13 @@ layer(base);
   h5,
   h6 {
     @apply font-heading font-semibold text-gray-900;
+  }
+
+  /* iOS auto-zoom prevention: ensure all form elements are at least 16px */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
   }
 }
 
