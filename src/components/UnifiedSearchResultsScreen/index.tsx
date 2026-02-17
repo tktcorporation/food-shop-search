@@ -213,37 +213,52 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
         {/* Store Types - Core Feature (Always Visible) */}
         <div className="px-4 py-3 bg-white border-b border-primary-100">
           <div className="flex items-center gap-3">
-            <span className="text-sm font-semibold text-text shrink-0">
-              食べたいもの
-            </span>
+            <div className="shrink-0 flex items-center gap-2">
+              <span className="filter-label whitespace-nowrap">
+                食べたいもの
+              </span>
+              {selectedKeywords.length > 0 && (
+                <span className="text-xs text-primary-600 bg-primary-50 px-1.5 py-0.5 rounded-full font-medium whitespace-nowrap">
+                  {isAllSelected ? 'すべて' : `${selectedKeywords.length}件`}
+                </span>
+              )}
+            </div>
 
-            {/* Horizontal scrollable chips */}
-            <div className="flex-1 overflow-x-auto scrollbar-hide">
-              <div className="flex gap-2 pb-1">
+            {/* Selected keywords preview */}
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <div className="flex items-center gap-1.5">
                 {selectedKeywords.length === 0 ? (
-                  <span className="text-sm text-text-muted italic">
-                    選択してください
-                  </span>
-                ) : isAllSelected ? (
-                  <span className="text-sm text-primary-600 font-medium">
-                    すべて選択中
-                  </span>
+                  <span className="text-xs text-text-muted italic">未選択</span>
                 ) : (
-                  selectedKeywords.slice(0, 5).map((keyword) => (
-                    <button
-                      key={keyword}
-                      onClick={() => toggleKeyword(keyword)}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-primary-100 text-primary-700 rounded-full text-sm font-medium whitespace-nowrap hover:bg-primary-200 transition-colors"
-                    >
-                      {getKeywordLabel(keyword)}
-                      <X size={14} className="opacity-60" />
-                    </button>
-                  ))
-                )}
-                {!isAllSelected && selectedKeywords.length > 5 && (
-                  <span className="text-sm text-text-muted self-center">
-                    +{selectedKeywords.length - 5}
-                  </span>
+                  <>
+                    {selectedKeywords
+                      .slice(0, isAllSelected ? 4 : 5)
+                      .map((keyword) =>
+                        isAllSelected ? (
+                          <span
+                            key={keyword}
+                            className="inline-flex items-center px-2 py-0.5 bg-primary-50 text-primary-700 rounded-full text-xs font-medium whitespace-nowrap"
+                          >
+                            {getKeywordLabel(keyword)}
+                          </span>
+                        ) : (
+                          <button
+                            key={keyword}
+                            onClick={() => toggleKeyword(keyword)}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full text-xs font-medium whitespace-nowrap hover:bg-primary-200 transition-colors"
+                          >
+                            {getKeywordLabel(keyword)}
+                            <X size={12} className="opacity-60" />
+                          </button>
+                        ),
+                      )}
+                    {selectedKeywords.length > (isAllSelected ? 4 : 5) && (
+                      <span className="text-xs text-text-muted shrink-0 whitespace-nowrap">
+                        …他
+                        {selectedKeywords.length - (isAllSelected ? 4 : 5)}件
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -251,10 +266,10 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
             {/* Edit Button */}
             <button
               onClick={() => setIsStoreTypesOpen(true)}
-              className="shrink-0 flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+              className="shrink-0 flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
             >
               編集
-              <ChevronRight size={16} />
+              <ChevronRight size={14} />
             </button>
           </div>
         </div>
@@ -265,13 +280,21 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
           className="w-full px-4 py-3 flex items-center justify-between bg-primary-50/50 border-b border-primary-100 text-sm hover:bg-primary-50 transition-colors"
         >
           <div className="flex items-center gap-2 text-text-muted">
-            <SlidersHorizontal size={18} />
-            <span>フィルター</span>
+            <SlidersHorizontal size={16} />
+            <span className="filter-label">フィルター</span>
             {activeFilterCount > 0 && (
               <span className="bg-primary-600 text-white text-xs px-1.5 py-0.5 rounded-full">
                 {activeFilterCount}
               </span>
             )}
+            {/* Active filter summary */}
+            <span className="text-xs text-text-muted">
+              {searchRadius}m
+              {selectedPriceLevels.length < 4 &&
+                ` · ${selectedPriceLevels.map((l) => '¥'.repeat(l)).join(' ')}`}
+              {minRating > 0 && ` · ${minRating}+`}
+              {isOpenNow && ' · 営業中'}
+            </span>
           </div>
           <ChevronRight
             size={16}
