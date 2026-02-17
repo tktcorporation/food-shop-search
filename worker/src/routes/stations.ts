@@ -6,6 +6,7 @@ import {
   searchNearbyPlaces,
 } from '../services/google-maps';
 import { haversineDistance } from '../lib/haversine';
+import { isStation } from '../lib/station-filter';
 import type {
   StationSearchRequest,
   NearbyStationsRequest,
@@ -121,7 +122,9 @@ stationRoutes.post('/stations/search', async (c) => {
     );
   }
 
-  const stations: Station[] = predictions.map(predictionToStation);
+  const stations: Station[] = predictions
+    .filter((p) => isStation(p.types))
+    .map(predictionToStation);
 
   return c.json({ success: true, data: stations });
 });
@@ -181,8 +184,9 @@ stationRoutes.post('/stations/nearby', async (c) => {
     );
   }
 
-  // Convert to Station[], calculate distances, sort by distance, take top 5
+  // Convert to Station[], filter to actual stations, sort by distance, take top 5
   const stations: Station[] = places
+    .filter((p) => isStation(p.types))
     .map((place) => placeToStation(place, lat, lng))
     .sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity))
     .slice(0, 5);
