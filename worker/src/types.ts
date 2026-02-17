@@ -39,6 +39,7 @@ export interface RestaurantSearchRequest {
   keywords: string[];
   location: Location;
   radius: number;
+  stationPlaceId: string; // for stable cache key
 }
 
 export interface StationSearchRequest {

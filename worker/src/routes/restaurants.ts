@@ -1,13 +1,16 @@
 import { Hono } from 'hono';
 import { createDb } from '../db';
-import { getCache, setCache, CACHE_TTL } from '../services/cache';
+import {
+  getCache,
+  setCache,
+  getPlacesByIds,
+  upsertPlaces,
+  CACHE_TTL,
+  type PlaceCacheRow,
+} from '../services/cache';
 import { searchNearbyPlaces, getPhotoUrl } from '../services/google-maps';
 import { haversineDistance } from '../lib/haversine';
-import type {
-  RestaurantSearchRequest,
-  Restaurant,
-  GooglePlaceResult,
-} from '../types';
+import type { RestaurantSearchRequest, Restaurant } from '../types';
 
 type Bindings = {
   DB: D1Database;
@@ -17,42 +20,37 @@ type Bindings = {
 export const restaurantRoutes = new Hono<{ Bindings: Bindings }>();
 
 /**
- * Convert a Google Place result to our Restaurant type.
+ * Convert a PlaceCacheRow to our Restaurant type.
  */
-function toRestaurant(
-  place: GooglePlaceResult,
+function toRestaurantFromCache(
+  place: PlaceCacheRow,
   apiKey: string,
   keyword: string,
   searchLat: number,
   searchLng: number,
 ): Restaurant {
-  const photoUrls = (place.photos ?? []).map((photo) =>
-    getPhotoUrl(apiKey, photo.photo_reference, 400),
+  const photoUrls = place.photoReferences.map((ref) =>
+    getPhotoUrl(apiKey, ref, 400),
   );
 
   let distance: number | undefined;
-  if (place.geometry?.location) {
-    distance = haversineDistance(
-      searchLat,
-      searchLng,
-      place.geometry.location.lat,
-      place.geometry.location.lng,
-    );
+  if (place.lat != null && place.lng != null) {
+    distance = haversineDistance(searchLat, searchLng, place.lat, place.lng);
   }
 
   return {
-    place_id: place.place_id,
+    place_id: place.placeId,
     name: place.name,
     vicinity: place.vicinity,
-    rating: place.rating ?? 0,
-    user_ratings_total: place.user_ratings_total ?? 0,
-    price_level: place.price_level ?? -1,
-    types: place.types ?? [],
+    rating: place.rating,
+    user_ratings_total: place.userRatingsTotal,
+    price_level: place.priceLevel,
+    types: place.types,
     photoUrls,
     searchKeywords: [keyword],
-    isOpenNow: place.opening_hours?.open_now,
+    isOpenNow: place.isOpenNow,
     distance,
-    business_status: place.business_status,
+    business_status: place.businessStatus,
   };
 }
 
@@ -88,23 +86,29 @@ restaurantRoutes.post('/restaurants/search', async (c) => {
     );
   }
 
+  if (!body.stationPlaceId) {
+    return c.json({ success: false, error: 'stationPlaceId is required' }, 400);
+  }
+
   const db = createDb(c.env.DB);
   const apiKey = c.env.GOOGLE_MAPS_API_KEY;
-  const { keywords, location, radius } = body;
+  const { keywords, location, radius, stationPlaceId } = body;
 
-  // Start all keyword fetches in parallel, then await sequentially
+  // Start all keyword fetches in parallel
   const pending = keywords.map(async (keyword) => {
-    const cacheKey = `${keyword}-${location.lat}-${location.lng}-${radius}`;
+    const cacheKey = `${keyword}-${stationPlaceId}-${radius}`;
 
-    // Check cache first
-    const cached = await getCache<GooglePlaceResult[]>(
+    // Check search result cache (place_id list)
+    const cachedPlaceIds = await getCache<string[]>(
       db,
       'restaurant_search',
       cacheKey,
     );
 
-    if (cached) {
-      return { keyword, places: cached, error: undefined };
+    if (cachedPlaceIds) {
+      // Fetch details from place_cache
+      const placeMap = await getPlacesByIds(db, cachedPlaceIds);
+      return { keyword, placeMap, error: undefined };
     }
 
     // Cache miss - call Google Maps API
@@ -119,21 +123,27 @@ restaurantRoutes.post('/restaurants/search', async (c) => {
     if (!result.ok) {
       return {
         keyword,
-        places: [] as GooglePlaceResult[],
+        placeMap: new Map<string, PlaceCacheRow>(),
         error: result.error,
       };
     }
 
-    // Store in cache
+    // Upsert each place into place_cache
+    await upsertPlaces(db, result.data);
+
+    // Save place_id list to api_cache
+    const placeIds = result.data.map((p) => p.place_id);
     await setCache(
       db,
       'restaurant_search',
       cacheKey,
-      result.data,
+      placeIds,
       CACHE_TTL.restaurant_search,
     );
 
-    return { keyword, places: result.data, error: undefined };
+    // Build map from fresh data
+    const placeMap = await getPlacesByIds(db, placeIds);
+    return { keyword, placeMap, error: undefined };
   });
 
   const keywordResults = [];
@@ -148,9 +158,9 @@ restaurantRoutes.post('/restaurants/search', async (c) => {
   // Combine and deduplicate results by place_id
   const restaurantMap = new Map<string, Restaurant>();
 
-  for (const { keyword, places } of keywordResults) {
-    for (const place of places) {
-      const existing = restaurantMap.get(place.place_id);
+  for (const { keyword, placeMap } of keywordResults) {
+    for (const [placeId, place] of placeMap) {
+      const existing = restaurantMap.get(placeId);
       if (existing) {
         // Merge search keywords
         if (!existing.searchKeywords.includes(keyword)) {
@@ -158,8 +168,14 @@ restaurantRoutes.post('/restaurants/search', async (c) => {
         }
       } else {
         restaurantMap.set(
-          place.place_id,
-          toRestaurant(place, apiKey, keyword, location.lat, location.lng),
+          placeId,
+          toRestaurantFromCache(
+            place,
+            apiKey,
+            keyword,
+            location.lat,
+            location.lng,
+          ),
         );
       }
     }
