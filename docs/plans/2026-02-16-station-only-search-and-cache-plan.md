@@ -747,7 +747,7 @@ Expected: New migration file in `drizzle/` directory with CREATE TABLE place_cac
 
 **Step 2: Apply migration to remote D1**
 
-Run: `npx wrangler d1 migrations apply pekonavi-cache --remote`
+Run: `npx wrangler d1 migrations apply pekosearch-cache --remote`
 Expected: Migration applied successfully
 
 **Step 3: Run full check**
