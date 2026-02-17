@@ -6,18 +6,22 @@ describe('CACHE_TTL', () => {
     expect(CACHE_TTL.restaurant_search).toBe(172800); // 48h
     expect(CACHE_TTL.geocode_forward).toBe(604800); // 7d
     expect(CACHE_TTL.station_predictions).toBe(86400); // 24h
-    expect(CACHE_TTL.nearby_stations).toBe(43200); // 12h
+    expect(CACHE_TTL.nearby_stations).toBe(604800); // 7d
     expect(CACHE_TTL.geocode_reverse).toBe(86400); // 24h
+    expect(CACHE_TTL.place_detail).toBe(1209600); // 14d
   });
 
-  it('geocode_forward is the longest TTL', () => {
+  it('place_detail is the longest TTL', () => {
     const values = Object.values(CACHE_TTL);
-    expect(Math.max(...values)).toBe(CACHE_TTL.geocode_forward);
+    expect(Math.max(...values)).toBe(CACHE_TTL.place_detail);
   });
 
-  it('nearby_stations is the shortest TTL', () => {
+  it('station_predictions and geocode_reverse are the shortest TTL', () => {
     const values = Object.values(CACHE_TTL);
-    expect(Math.min(...values)).toBe(CACHE_TTL.nearby_stations);
+    const minTTL = Math.min(...values);
+    expect(minTTL).toBe(86400);
+    expect(CACHE_TTL.station_predictions).toBe(minTTL);
+    expect(CACHE_TTL.geocode_reverse).toBe(minTTL);
   });
 });
 

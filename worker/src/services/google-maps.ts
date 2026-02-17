@@ -19,6 +19,7 @@ export async function searchNearbyPlaces(
   lng: number,
   radius: number,
   keyword: string,
+  type?: string,
 ): Promise<Result<GooglePlaceResult[]>> {
   const params = new URLSearchParams({
     location: `${lat},${lng}`,
@@ -27,6 +28,9 @@ export async function searchNearbyPlaces(
     language: 'ja',
     key: apiKey,
   });
+  if (type) {
+    params.set('type', type);
+  }
 
   const url = `${MAPS_BASE_URL}/maps/api/place/nearbysearch/json?${params.toString()}`;
   const response = await fetch(url);
@@ -59,7 +63,7 @@ export async function getAutocompletePredictions(
 ): Promise<Result<GoogleAutocompletePrediction[]>> {
   const params = new URLSearchParams({
     input,
-    types: 'transit_station|train_station|airport|subway_station',
+    types: 'train_station|subway_station',
     components: 'country:jp',
     language: 'ja',
     key: apiKey,

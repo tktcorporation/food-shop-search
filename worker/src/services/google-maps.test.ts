@@ -94,6 +94,30 @@ describe('searchNearbyPlaces', () => {
       expect(result.error).toContain('REQUEST_DENIED');
     }
   });
+
+  it('includes type parameter when provided', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ results: [], status: 'ZERO_RESULTS' }),
+    });
+
+    await searchNearbyPlaces('test-key', 35.68, 139.76, 5000, '駅', 'train_station');
+
+    const calledUrl = mockFetch.mock.calls[0][0] as string;
+    expect(calledUrl).toContain('type=train_station');
+  });
+
+  it('does not include type parameter when not provided', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ results: [], status: 'ZERO_RESULTS' }),
+    });
+
+    await searchNearbyPlaces('test-key', 35.68, 139.76, 1000, 'ramen');
+
+    const calledUrl = mockFetch.mock.calls[0][0] as string;
+    expect(calledUrl).not.toContain('type=');
+  });
 });
 
 describe('getAutocompletePredictions', () => {
@@ -122,6 +146,8 @@ describe('getAutocompletePredictions', () => {
     const calledUrl = mockFetch.mock.calls[0][0] as string;
     expect(calledUrl).toContain('autocomplete');
     expect(calledUrl).toContain('country%3Ajp');
+    expect(calledUrl).toContain('train_station');
+    expect(calledUrl).not.toContain('airport');
   });
 });
 
