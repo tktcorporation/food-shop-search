@@ -284,16 +284,16 @@ const shadows = {
 
 ### カラー使用ルール
 
-| 用途                       | カラー                         | クラス例                                           |
-| -------------------------- | ------------------------------ | -------------------------------------------------- |
-| メインアクション（ボタン） | primary-500/600                | `bg-primary-500 hover:bg-primary-600`              |
-| 成功・確認                 | secondary-500 または green-500 | `text-green-600`                                   |
-| 警告・エラー               | accent-500 または red-500      | `text-red-600`                                     |
-| 本文テキスト               | gray-700                       | `text-gray-700`                                    |
-| 補足テキスト               | gray-500                       | `text-gray-500`                                    |
-| ボーダー                   | gray-200/300                   | `border-gray-200`                                  |
-| 背景（ページ）             | primary-50 to primary-100      | `bg-gradient-to-br from-primary-50 to-primary-100` |
-| 背景（カード）             | white                          | `bg-white`                                         |
+| 用途                       | カラー                         | クラス例                                         |
+| -------------------------- | ------------------------------ | ------------------------------------------------ |
+| メインアクション（ボタン） | primary-500/600                | `bg-primary-500 hover:bg-primary-600`            |
+| 成功・確認                 | secondary-500 または green-500 | `text-green-600`                                 |
+| 警告・エラー               | accent-500 または red-500      | `text-red-600`                                   |
+| 本文テキスト               | gray-700                       | `text-gray-700`                                  |
+| 補足テキスト               | gray-500                       | `text-gray-500`                                  |
+| ボーダー                   | gray-200/300                   | `border-gray-200`                                |
+| 背景（ページ）             | primary-50 to primary-100      | `bg-linear-to-br from-primary-50 to-primary-100` |
+| 背景（カード）             | white                          | `bg-white`                                       |
 
 ---
 

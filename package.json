@@ -27,27 +27,27 @@
   "dependencies": {
     "drizzle-orm": "^0.45.1",
     "effect": "^3.19.17",
-    "framer-motion": "^10.12.16",
     "hono": "^4.11.9",
     "lucide-react": "^0.564.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "motion": "^12.34.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260214.0",
-    "@types/react": "^18.3.28",
-    "@types/react-dom": "^18.3.7",
+    "@cloudflare/workers-types": "^4.20260217.0",
+    "@tailwindcss/postcss": "^4.1.18",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "@typescript/native-preview": "^7.0.0-dev.20260216.1",
-    "@vitejs/plugin-react": "^4.7.0",
-    "autoprefixer": "^10.4.24",
+    "@vitejs/plugin-react": "^5.1.4",
     "drizzle-kit": "^0.31.9",
     "oxfmt": "^0.33.0",
     "oxlint": "^1.48.0",
-    "oxlint-tsgolint": "^0.13.0",
+    "oxlint-tsgolint": "^0.14.0",
     "postcss": "^8.4.35",
-    "tailwindcss": "^3.4.1",
+    "tailwindcss": "^4.1.18",
     "typescript": "^5.9.3",
-    "vite": "^5.4.21",
+    "vite": "^7.3.1",
     "vitest": "^4.0.18",
     "wrangler": "^4.65.0"
   }

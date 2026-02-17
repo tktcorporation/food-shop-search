@@ -1,9 +1,264 @@
 /* GourmetSpot Design System - Clean & Pop */
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap')
+layer(base);
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@theme {
+  --color-primary-50: #fff7ed;
+  --color-primary-100: #ffedd5;
+  --color-primary-200: #fed7aa;
+  --color-primary-300: #fdba74;
+  --color-primary-400: #fb923c;
+  --color-primary-500: #f97316;
+  --color-primary-600: #ea580c;
+  --color-primary-700: #c2410c;
+  --color-primary: #f97316;
+
+  --color-surface: #ffffff;
+  --color-surface-card: #ffffff;
+  --color-surface-muted: #f9fafb;
+  --color-surface-elevated: #ffffff;
+
+  --color-text: #1f2937;
+  --color-text-muted: #6b7280;
+  --color-text-light: #9ca3af;
+  --color-text-inverse: #ffffff;
+
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+
+  --color-success: #10b981;
+  --color-success-light: #d1fae5;
+  --color-success-dark: #059669;
+
+  --color-error: #ef4444;
+  --color-error-light: #fee2e2;
+  --color-error-dark: #dc2626;
+
+  --font-heading: Nunito, system-ui, sans-serif;
+  --font-body: Nunito, system-ui, sans-serif;
+  --font-sans: Nunito, system-ui, sans-serif;
+
+  --radius: 10px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-focus: 0 0 0 3px rgba(249, 115, 22, 0.3);
+
+  --default-transition-duration: 200ms;
+  --transition-duration-fast: 150ms;
+  --transition-duration-normal: 250ms;
+  --transition-duration-slow: 300ms;
+
+  --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+@utility btn-primary {
+  /* ===== Buttons - Clean & Pop ===== */
+  @apply inline-flex items-center justify-center
+           bg-primary-500 text-white
+           px-4 py-2.5 rounded-lg font-semibold
+           transition-colors duration-200 cursor-pointer
+           hover:bg-primary-600
+           active:bg-primary-700
+           focus:outline-hidden focus:ring-2 focus:ring-primary-500/40 focus:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+@utility btn-secondary {
+  @apply inline-flex items-center justify-center
+           bg-white text-gray-700
+           border border-gray-300
+           px-4 py-2.5 rounded-lg font-medium
+           transition-colors duration-200 cursor-pointer
+           hover:bg-gray-50 hover:border-gray-400
+           active:bg-gray-100
+           focus:outline-hidden focus:ring-2 focus:ring-primary-500/40 focus:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+@utility btn-ghost {
+  @apply inline-flex items-center justify-center
+           bg-transparent text-primary-500
+           px-3 py-2 rounded-lg font-medium
+           transition-colors duration-200 cursor-pointer
+           hover:bg-primary-50
+           active:bg-primary-100
+           focus:outline-hidden focus:ring-2 focus:ring-primary-500/40;
+}
+
+@utility card {
+  /* ===== Cards - White with subtle shadow ===== */
+  @apply bg-white rounded-xl p-4
+           border border-gray-200
+           shadow-card
+           transition-shadow duration-200;
+}
+
+@utility card-interactive {
+  @apply card cursor-pointer
+           hover:shadow-lg hover:border-gray-300
+           active:shadow-md;
+}
+
+@utility input {
+  /* ===== Inputs - Clean with clear focus ===== */
+  @apply w-full px-3 py-2.5
+           bg-white
+           border border-gray-300
+           rounded-lg text-base text-gray-800
+           transition-colors duration-200
+           placeholder:text-gray-400
+           focus:border-primary-500 focus:outline-hidden
+           focus:ring-2 focus:ring-primary-500/20;
+}
+
+@utility select {
+  @apply input appearance-none cursor-pointer
+           bg-no-repeat bg-position-[right_0.75rem_center] bg-size-[1rem]
+           pr-8;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+}
+
+@utility chip {
+  /* ===== Chips - Clear selected state ===== */
+  @apply inline-flex items-center gap-1
+           px-3 py-1.5 rounded-full
+           text-sm font-medium
+           transition-colors duration-200 cursor-pointer
+           focus:outline-hidden focus:ring-2 focus:ring-primary-500/40;
+}
+
+@utility chip-selected {
+  @apply bg-primary-500 text-white;
+}
+
+@utility chip-unselected {
+  @apply bg-gray-100 text-gray-600
+           hover:bg-gray-200 hover:text-gray-800;
+}
+
+@utility alert {
+  /* ===== Alerts ===== */
+  @apply flex items-start gap-3 p-3 rounded-lg text-sm;
+}
+
+@utility alert-info {
+  @apply alert bg-primary-50 text-gray-800;
+}
+
+@utility alert-error {
+  @apply alert bg-error-light text-error-dark;
+}
+
+@utility badge {
+  /* ===== Badge ===== */
+  @apply inline-flex items-center px-2 py-0.5
+           rounded text-xs font-medium;
+}
+
+@utility badge-primary {
+  @apply badge bg-primary-100 text-primary-700;
+}
+
+@utility section-header {
+  /* ===== Section Header ===== */
+  @apply flex items-center justify-between py-2;
+}
+
+@utility section-title {
+  @apply text-sm font-semibold text-gray-800;
+}
+
+@utility collapsible-trigger {
+  /* ===== Collapsible ===== */
+  @apply flex items-center justify-between w-full py-3 px-4
+           bg-gray-100 rounded-lg
+           text-left font-medium text-gray-800
+           cursor-pointer transition-colors duration-200
+           hover:bg-gray-200;
+}
+
+@utility divider {
+  /* ===== Divider ===== */
+  @apply border-t border-gray-200 my-4;
+}
+
+@utility tab-group {
+  /* ===== Tab-like Toggle ===== */
+  @apply flex bg-gray-100 p-1 rounded-lg;
+}
+
+@utility tab-item {
+  @apply flex-1 flex items-center justify-center gap-2
+           px-4 py-2.5 rounded-md
+           text-sm font-medium
+           transition-colors duration-200 cursor-pointer;
+}
+
+@utility tab-item-active {
+  @apply tab-item bg-white text-primary-600 shadow-sm;
+}
+
+@utility tab-item-inactive {
+  @apply tab-item text-gray-500 hover:text-gray-700;
+}
+
+@utility filter-section {
+  /* ===== Filter Panel ===== */
+  @apply space-y-3;
+}
+
+@utility filter-label {
+  @apply text-xs font-semibold text-gray-500 uppercase tracking-wide;
+}
+
+@utility filter-row {
+  @apply flex items-center gap-2 flex-wrap;
+}
+
+@utility location-bar {
+  /* ===== Location Bar - 最も目立つ要素 ===== */
+  @apply bg-primary-500 text-white
+           px-4 py-3 rounded-lg
+           font-semibold
+           shadow-md;
+}
 
 @layer base {
   body {
@@ -17,181 +272,6 @@
   h5,
   h6 {
     @apply font-heading font-semibold text-gray-900;
-  }
-}
-
-@layer components {
-  /* ===== Buttons - Clean & Pop ===== */
-
-  .btn-primary {
-    @apply inline-flex items-center justify-center
-           bg-primary-500 text-white
-           px-4 py-2.5 rounded-lg font-semibold
-           transition-colors duration-200 cursor-pointer
-           hover:bg-primary-600
-           active:bg-primary-700
-           focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:ring-offset-2
-           disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-
-  .btn-secondary {
-    @apply inline-flex items-center justify-center
-           bg-white text-gray-700
-           border border-gray-300
-           px-4 py-2.5 rounded-lg font-medium
-           transition-colors duration-200 cursor-pointer
-           hover:bg-gray-50 hover:border-gray-400
-           active:bg-gray-100
-           focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:ring-offset-2
-           disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-
-  .btn-ghost {
-    @apply inline-flex items-center justify-center
-           bg-transparent text-primary-500
-           px-3 py-2 rounded-lg font-medium
-           transition-colors duration-200 cursor-pointer
-           hover:bg-primary-50
-           active:bg-primary-100
-           focus:outline-none focus:ring-2 focus:ring-primary-500/40;
-  }
-
-  /* ===== Cards - White with subtle shadow ===== */
-  .card {
-    @apply bg-white rounded-xl p-4
-           border border-gray-200
-           shadow-card
-           transition-shadow duration-200;
-  }
-
-  .card-interactive {
-    @apply card cursor-pointer
-           hover:shadow-lg hover:border-gray-300
-           active:shadow-md;
-  }
-
-  /* ===== Inputs - Clean with clear focus ===== */
-  .input {
-    @apply w-full px-3 py-2.5
-           bg-white
-           border border-gray-300
-           rounded-lg text-base text-gray-800
-           transition-colors duration-200
-           placeholder:text-gray-400
-           focus:border-primary-500 focus:outline-none
-           focus:ring-2 focus:ring-primary-500/20;
-  }
-
-  .select {
-    @apply input appearance-none cursor-pointer
-           bg-no-repeat bg-[right_0.75rem_center] bg-[length:1rem]
-           pr-8;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-  }
-
-  /* ===== Chips - Clear selected state ===== */
-  .chip {
-    @apply inline-flex items-center gap-1
-           px-3 py-1.5 rounded-full
-           text-sm font-medium
-           transition-colors duration-200 cursor-pointer
-           focus:outline-none focus:ring-2 focus:ring-primary-500/40;
-  }
-
-  .chip-selected {
-    @apply bg-primary-500 text-white;
-  }
-
-  .chip-unselected {
-    @apply bg-gray-100 text-gray-600
-           hover:bg-gray-200 hover:text-gray-800;
-  }
-
-  /* ===== Alerts ===== */
-  .alert {
-    @apply flex items-start gap-3 p-3 rounded-lg text-sm;
-  }
-
-  .alert-info {
-    @apply alert bg-primary-50 text-gray-800;
-  }
-
-  .alert-error {
-    @apply alert bg-error-light text-error-dark;
-  }
-
-  /* ===== Badge ===== */
-  .badge {
-    @apply inline-flex items-center px-2 py-0.5
-           rounded text-xs font-medium;
-  }
-
-  .badge-primary {
-    @apply badge bg-primary-100 text-primary-700;
-  }
-
-  /* ===== Section Header ===== */
-  .section-header {
-    @apply flex items-center justify-between py-2;
-  }
-
-  .section-title {
-    @apply text-sm font-semibold text-gray-800;
-  }
-
-  /* ===== Collapsible ===== */
-  .collapsible-trigger {
-    @apply flex items-center justify-between w-full py-3 px-4
-           bg-gray-100 rounded-lg
-           text-left font-medium text-gray-800
-           cursor-pointer transition-colors duration-200
-           hover:bg-gray-200;
-  }
-
-  /* ===== Divider ===== */
-  .divider {
-    @apply border-t border-gray-200 my-4;
-  }
-
-  /* ===== Tab-like Toggle ===== */
-  .tab-group {
-    @apply flex bg-gray-100 p-1 rounded-lg;
-  }
-
-  .tab-item {
-    @apply flex-1 flex items-center justify-center gap-2
-           px-4 py-2.5 rounded-md
-           text-sm font-medium
-           transition-colors duration-200 cursor-pointer;
-  }
-
-  .tab-item-active {
-    @apply tab-item bg-white text-primary-600 shadow-sm;
-  }
-
-  .tab-item-inactive {
-    @apply tab-item text-gray-500 hover:text-gray-700;
-  }
-
-  /* ===== Filter Panel ===== */
-  .filter-section {
-    @apply space-y-3;
-  }
-
-  .filter-label {
-    @apply text-xs font-semibold text-gray-500 uppercase tracking-wide;
-  }
-
-  .filter-row {
-    @apply flex items-center gap-2 flex-wrap;
-  }
-
-  /* ===== Location Bar - 最も目立つ要素 ===== */
-  .location-bar {
-    @apply bg-primary-500 text-white
-           px-4 py-3 rounded-lg
-           font-semibold
-           shadow-md;
   }
 }
 
@@ -225,7 +305,7 @@
 }
 
 :focus-visible {
-  @apply outline-none ring-2 ring-primary-500/40 ring-offset-2;
+  @apply outline-hidden ring-2 ring-primary-500/40 ring-offset-2;
 }
 
 /* ===== Scrollbar ===== */

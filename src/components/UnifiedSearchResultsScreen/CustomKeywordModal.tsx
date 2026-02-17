@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { X } from 'lucide-react';
 
 interface CustomKeywordModalProps {
@@ -39,7 +39,7 @@ const CustomKeywordModal: React.FC<CustomKeywordModalProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-text/40 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-text/40 backdrop-blur-xs z-40"
             onClick={() => setIsOpen(false)}
           />
 

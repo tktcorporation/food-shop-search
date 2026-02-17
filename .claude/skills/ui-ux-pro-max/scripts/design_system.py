@@ -704,7 +704,7 @@ def format_master_md(design_system: dict) -> str:
     lines.append("")
     lines.append(".input:focus {")
     lines.append(f"  border-color: {colors.get('primary', '#2563EB')};")
-    lines.append("  outline: none;")
+    lines.append("  outline-solid: none;")
     lines.append(f"  box-shadow: 0 0 0 3px {colors.get('primary', '#2563EB')}20;")
     lines.append("}")
     lines.append("```")

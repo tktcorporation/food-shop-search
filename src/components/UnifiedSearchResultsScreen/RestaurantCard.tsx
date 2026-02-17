@@ -77,7 +77,7 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
         ${businessStatusInfo ? 'opacity-70' : ''}`}
     >
       {/* Image Section */}
-      <div className="relative aspect-[4/3] bg-primary-50">
+      <div className="relative aspect-4/3 bg-primary-50">
         {restaurant.photoUrls?.[0] ? (
           <img
             src={restaurant.photoUrls[0]}

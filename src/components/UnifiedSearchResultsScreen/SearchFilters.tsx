@@ -106,7 +106,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
           <select
             value={minRating}
             onChange={(e) => setMinRating(parseFloat(e.target.value))}
-            className="select text-sm !py-1.5"
+            className="select text-sm py-1.5!"
           >
             <option value={0}>指定なし</option>
             <option value={3}>3.0+</option>
@@ -121,7 +121,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
           <select
             value={minReviews}
             onChange={(e) => setMinReviews(parseInt(e.target.value))}
-            className="select text-sm !py-1.5"
+            className="select text-sm py-1.5!"
           >
             <option value={0}>指定なし</option>
             <option value={50}>50+</option>

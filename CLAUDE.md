@@ -324,7 +324,7 @@ const libraries: ('places' | 'geometry')[] = ['places', 'geometry'];
 
 ```tsx
 // 例: グラデーション背景
-<div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100">
+<div className="min-h-screen bg-linear-to-br from-primary-50 to-primary-100">
 ```
 
 IMPORTANT: **UI/UX実装時は必ず `.claude/rules/ui-ux-design.md` を参照してください。** このファイルはClaude Codeが自動的にコンテキストとして読み込みます。
