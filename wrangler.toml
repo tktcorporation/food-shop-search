@@ -1,5 +1,5 @@
 #:schema node_modules/wrangler/config-schema.json
-name = "pekonavi"
+name = "pekosearch"
 main = "worker/src/index.ts"
 compatibility_date = "2026-02-16"
 compatibility_flags = ["nodejs_compat"]
@@ -9,6 +9,6 @@ directory = "./dist"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "pekonavi-cache"
+database_name = "pekosearch-cache"
 database_id = "9a1e61b6-d6bf-42d3-b310-62e495183698"
 migrations_dir = "drizzle"
