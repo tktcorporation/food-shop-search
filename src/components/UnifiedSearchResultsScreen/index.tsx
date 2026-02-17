@@ -6,6 +6,7 @@ import SearchResults from './SearchResults';
 import CustomKeywordModal from './CustomKeywordModal';
 import useStationSearch from '../../composables/useStationSearch';
 import { keyWordOptions, getKeywordLabel } from '../../utils/keywordOptions';
+import { formatKeywordSummary } from '../../utils/formatFilterSummary';
 import {
   Train,
   Loader2,
@@ -218,17 +219,7 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
               </span>
             )}
             <span className="text-xs text-text-muted truncate">
-              {selectedKeywords.length === 0
-                ? '未選択'
-                : isAllSelected
-                  ? 'すべて'
-                  : selectedKeywords
-                      .slice(0, 3)
-                      .map((k) => getKeywordLabel(k))
-                      .join('、') +
-                    (selectedKeywords.length > 3
-                      ? ` 他${selectedKeywords.length - 3}件`
-                      : '')}
+              {formatKeywordSummary(selectedKeywords, getKeywordLabel)}
             </span>
           </div>
           <ChevronRight
@@ -268,6 +259,7 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
               {selectedPriceLevels.length < 4 &&
                 ` · ${selectedPriceLevels.map((l) => '¥'.repeat(l)).join(' ')}`}
               {minRating > 0 && ` · ${minRating}+`}
+              {minReviews > 0 && ` · ${minReviews}+件`}
               {isOpenNow && ' · 営業中'}
             </span>
           </div>
