@@ -15,6 +15,11 @@ interface FilterParams {
   selectedPriceLevels: number[];
 }
 
+/** 検索結果のインメモリキャッシュキーを生成 */
+function buildCacheKey(stationPlaceId: string, keywords: string[]): string {
+  return `${stationPlaceId}:${[...keywords].sort().join(',')}`;
+}
+
 const useRestaurantSearch = () => {
   const [allRestaurants, setAllRestaurants] = useState<Restaurant[]>([]);
   const [filteredRestaurants, setFilteredRestaurants] = useState<Restaurant[]>(
@@ -24,6 +29,8 @@ const useRestaurantSearch = () => {
   const [error, setError] = useState<string | null>(null);
 
   const lastFilterParamsRef = useRef<FilterParams | null>(null);
+  /** 検索結果のインメモリキャッシュ（駅+キーワード → レストラン配列） */
+  const searchCacheRef = useRef(new Map<string, Restaurant[]>());
 
   // フィルターのみ再適用（API呼び出しなし）
   const reapplyFilters = useCallback(
@@ -47,9 +54,6 @@ const useRestaurantSearch = () => {
       searchRadius: number,
       selectedPriceLevels: number[],
     ) => {
-      setIsLoading(true);
-      setError(null);
-
       const filterParams: FilterParams = {
         minRating,
         minReviews,
@@ -58,6 +62,19 @@ const useRestaurantSearch = () => {
         selectedPriceLevels,
       };
       lastFilterParamsRef.current = filterParams;
+
+      // インメモリキャッシュをチェック
+      const cacheKey = buildCacheKey(searchLocation.placeId, keywords);
+      const cached = searchCacheRef.current.get(cacheKey);
+      if (cached) {
+        setAllRestaurants(cached);
+        const filtered = filterRestaurants(cached, filterParams);
+        setFilteredRestaurants(sortByDistance(filtered));
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
 
       // Effect プログラムを構築して AppLive レイヤーで提供
       const program = searchRestaurantsProgram({
@@ -75,6 +92,8 @@ const useRestaurantSearch = () => {
       void Effect.runPromiseExit(runnable).then((exit) => {
         if (exit._tag === 'Success') {
           const detailedResults = exit.value;
+          // キャッシュに保存
+          searchCacheRef.current.set(cacheKey, detailedResults);
           setAllRestaurants(detailedResults);
           const filtered = filterRestaurants(detailedResults, filterParams);
           setFilteredRestaurants(sortByDistance(filtered));

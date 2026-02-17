@@ -130,7 +130,7 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
       }
     };
     // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedKeywords, selectedStation, searchRadius]);
+  }, [selectedKeywords, selectedStation]);
 
   // フィルターのみの変更時
   useEffect(() => {
@@ -144,7 +144,7 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
       selectedPriceLevels,
     });
     // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [minRating, minReviews, isOpenNow, selectedPriceLevels]);
+  }, [minRating, minReviews, isOpenNow, searchRadius, selectedPriceLevels]);
 
   const handleAddCustomKeyword = (keyword: string) => {
     if (!customKeywords.includes(keyword)) {
