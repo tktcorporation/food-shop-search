@@ -1,182 +1,120 @@
-# グルメスポット検索
+# ペコナビ
 
-現在地や駅周辺のレストランを簡単に検索できるWebアプリケーション。
+今いる場所から、すぐ見つかるお店探し。
+
+現在地や駅周辺のレストランをサクッと検索できるWebアプリ。価格帯・評価・営業時間でフィルターして、あなたにぴったりの一軒が見つかります。
 
 ## 主な機能
 
-- 現在地からの検索
-- 駅周辺のレストラン検索
-- 詳細な検索フィルター
-  - 価格帯
-  - 評価
-  - レビュー数
-  - 営業時間
-- 検索範囲の指定（300m〜5km）
-- レストラン情報の詳細表示
-  - 写真
-  - 評価
-  - 営業時間
-  - Google Mapsへのリンク
+- **現在地から検索** - GPS連動で周辺のお店を即座に表示
+- **駅名で検索** - 駅名を入力して周辺のお店を探索
+- **スマートフィルター** - 価格帯・評価・レビュー数・営業時間で絞り込み
+- **検索範囲の調整** - 300m〜5kmの範囲を自由に設定
+- **店舗詳細** - 写真・評価・営業時間・Google Mapsリンクを確認
 
 ## 技術スタック
 
-- **フロントエンド**: React 18 + TypeScript
-- **ビルドツール**: Vite
-- **スタイリング**: Tailwind CSS
-- **アニメーション**: Framer Motion
+- **フロントエンド**: React 19 + TypeScript + Vite 7 + Tailwind CSS 4
+- **バックエンド**: Hono (Cloudflare Workers) + D1 (SQLite) + Drizzle ORM
 - **地図**: Google Maps API (@react-google-maps/api)
-- **アイコン**: Lucide React
-- **リンター**: ESLint
+- **ライブラリ**: Effect, Motion, Lucide React
+- **ツールチェーン**: oxlint / oxfmt / tsgo / Vitest
 
-## 前提条件
+## セットアップ
 
-- Node.js (v20以上推奨、v22 LTS推奨)
-- npm または yarn
-- Google Maps API キー
-- (オプション) [mise](https://mise.jdx.dev/) - ツールバージョン管理
+### 前提条件
 
-## セットアップ手順
+- Node.js v22 LTS（[mise](https://mise.jdx.dev/) での管理を推奨）
+- Google Maps API キー（Maps JavaScript API / Places API / Geocoding API を有効化）
 
-### 1. リポジトリのクローン
+### インストール
 
 ```bash
 git clone https://github.com/tktcorporation/food-shop-search.git
 cd food-shop-search
-```
 
-### 2. Node.js環境のセットアップ
-
-#### オプションA: miseを使用する場合（推奨）
-
-[mise](https://mise.jdx.dev/)を使用すると、プロジェクトで指定されたNode.jsバージョンを自動的に使用できます。
-
-```bash
-# miseのインストール（まだの場合）
-curl https://mise.run | sh
-
-# プロジェクトで指定されたNode.jsバージョンをインストール・有効化
+# Node.js バージョンの自動セットアップ（mise使用時）
 mise install
-```
 
-miseは `.mise.toml` ファイルを読み込み、Node.js 22 LTSを自動的にインストールして使用します。
-
-#### オプションB: 手動でNode.jsをインストールする場合
-
-Node.js v20以上（v22 LTS推奨）を[公式サイト](https://nodejs.org/)からインストールするか、nvmなどのバージョンマネージャーを使用してください。
-
-### 3. 依存関係のインストール
-
-```bash
+# 依存関係のインストール
 npm install
 ```
 
-### 4. 環境変数の設定
-
-`.env.example` をコピーして `.env` ファイルを作成します：
+### 環境変数
 
 ```bash
 cp .env.example .env
 ```
 
-`.env` ファイルを編集し、Google Maps API キーを設定します：
+`.env` に Google Maps API キーを設定：
 
 ```env
 VITE_GOOGLE_MAPS_API_KEY=your_actual_api_key_here
 ```
 
-#### Google Maps API キーの取得方法
-
-1. [Google Cloud Console](https://console.cloud.google.com/) にアクセス
-2. 新しいプロジェクトを作成（または既存のプロジェクトを選択）
-3. 「APIとサービス」→「認証情報」に移動
-4. 「認証情報を作成」→「APIキー」を選択
-5. 以下のAPIを有効化：
-   - Maps JavaScript API
-   - Places API
-   - Geocoding API
-6. 作成したAPIキーを `.env` ファイルに貼り付け
-
-### 5. 開発サーバーの起動
+### 開発サーバー
 
 ```bash
-npm run dev
+npm run dev         # フロントエンド (http://localhost:5173)
+npm run dev:worker  # バックエンド (Wrangler)
+npm run dev:all     # フロント + バックエンド同時起動
 ```
 
-ブラウザで [http://localhost:5173](http://localhost:5173) を開いてアプリケーションを確認できます。
+## スクリプト一覧
 
-## 利用可能なスクリプト
-
-- `npm run dev` - 開発サーバーを起動
-- `npm run build` - 本番用にビルド
-- `npm run preview` - ビルドしたアプリケーションをプレビュー
-- `npm run lint` - ESLintでコードをチェック
+| コマンド         | 内容                                     |
+| ---------------- | ---------------------------------------- |
+| `npm run dev`    | Vite 開発サーバー                        |
+| `npm run build`  | 本番ビルド（型チェック込み）             |
+| `npm run check`  | lint + format:check + typecheck 一括実行 |
+| `npm run test`   | 全テスト実行                             |
+| `npm run deploy` | 本番デプロイ                             |
 
 ## プロジェクト構造
 
 ```
-src/
-├── components/     # Reactコンポーネント
-├── composables/    # 再利用可能なロジック
-├── hooks/          # カスタムReactフック
-├── utils/          # ユーティリティ関数
-├── App.tsx         # メインアプリケーションコンポーネント
-├── main.tsx        # エントリーポイント
-└── index.css       # グローバルスタイル
+src/                  # フロントエンド (React)
+├── components/       # UI コンポーネント
+├── composables/      # ビジネスロジック用フック
+├── hooks/            # React 固有フック
+├── utils/            # ユーティリティ
+├── App.tsx           # メインアプリケーション
+└── index.css         # グローバルスタイル
+
+worker/src/           # バックエンド (Hono / Cloudflare Workers)
+├── routes/           # API ルート
+├── services/         # 外部サービス連携
+├── lib/              # ユーティリティ
+└── db/               # データベース
 ```
-
-## デプロイ
-
-### ビルド
-
-```bash
-npm run build
-```
-
-ビルドされたファイルは `dist/` ディレクトリに出力されます。
-
-### 注意事項
-
-- Google Maps API キーは公開リポジトリにコミットしないでください
-- 本番環境では API キーに適切な制限を設定してください（HTTPリファラー、IPアドレスなど）
-
-## ライセンス
-
-このプロジェクトはプライベートプロジェクトです。
 
 ## Claude Code との開発
 
-このプロジェクトは[Claude Code](https://claude.com/claude-code)に最適化されています。
+このプロジェクトは [Claude Code](https://claude.com/claude-code) に最適化されています。
 
 ### カスタムコマンド
 
-`.claude/commands/` ディレクトリに以下のカスタムコマンドが用意されています：
-
 - `/project:dev-check` - 開発環境のセットアップと動作確認
 - `/project:build-check` - 本番ビルド前の総合チェック
-- `/project:api-debug` - Google Maps API関連の問題デバッグ
-- `/project:add-feature <機能名>` - 新機能追加時のチェックリスト実行
-
-### プロンプトテンプレート
-
-`.claude/prompts/` ディレクトリに効果的なコミュニケーションのためのテンプレートが用意されています：
-
-- **feature-implementation.md** - 新機能実装の依頼テンプレート
-- **bug-fix.md** - バグ修正の依頼テンプレート（思考プロセス付き）
-- **code-review.md** - コードレビューの依頼テンプレート
-- **refactoring.md** - リファクタリングの依頼テンプレート
-- **README.md** - テンプレートの使い方とベストプラクティス
-
-これらのテンプレートは、XMLタグでの構造化、段階的思考、Few-shot examplesなど、
-Anthropicの最新プロンプトエンジニアリングベストプラクティスに基づいています。
+- `/project:api-debug` - Google Maps API 関連の問題デバッグ
+- `/project:add-feature <機能名>` - 新機能追加時のチェックリスト
 
 ### プロジェクト設定
 
-- **CLAUDE.md** - プロジェクト固有の開発ガイドライン（コンテキスト最適化含む）
-- **.mcp.json** - MCP (Model Context Protocol) サーバー設定
+- **CLAUDE.md** - プロジェクト固有の開発ガイドライン
+- **.mcp.json** - MCP サーバー設定
 - **.claude/settings.json** - チーム共有の権限設定
+- **.claude/prompts/** - プロンプトテンプレート
 
-個人用の設定は `CLAUDE.local.md` ファイルを作成してください（Gitには含まれません）。
+## 注意事項
 
-## 開発
+- Google Maps API キーは公開リポジトリにコミットしないでください
+- 本番環境では API キーに適切なリファラー制限を設定してください
 
-[Edit in StackBlitz next generation editor ⚡️](https://stackblitz.com/~/github.com/tktcorporation/food-shop-search)
+## フィードバック
+
+バグ報告・機能要望: https://forms.gle/MyyDc8ybQJcR5JYs9
+
+## ライセンス
+
+Private
