@@ -13,6 +13,7 @@
 ### Task 1: Add `place_cache` table to DB schema
 
 **Files:**
+
 - Modify: `worker/src/db/schema.ts`
 
 **Step 1: Add place_cache table definition**
@@ -27,8 +28,12 @@ export const placeCache = sqliteTable(
     name: text('name').notNull(),
     vicinity: text('vicinity').notNull(),
     rating: integer('rating', { mode: 'number' }).notNull().default(0),
-    userRatingsTotal: integer('user_ratings_total', { mode: 'number' }).notNull().default(0),
-    priceLevel: integer('price_level', { mode: 'number' }).notNull().default(-1),
+    userRatingsTotal: integer('user_ratings_total', { mode: 'number' })
+      .notNull()
+      .default(0),
+    priceLevel: integer('price_level', { mode: 'number' })
+      .notNull()
+      .default(-1),
     types: text('types').notNull(), // JSON array
     photoReferences: text('photo_references').notNull(), // JSON array of photo_reference strings
     isOpenNow: integer('is_open_now', { mode: 'number' }),
@@ -61,6 +66,7 @@ git commit -m "feat: add place_cache table for place_id-level caching"
 ### Task 2: Add place cache service functions
 
 **Files:**
+
 - Modify: `worker/src/services/cache.ts`
 - Modify: `worker/src/services/cache.test.ts`
 
@@ -230,6 +236,7 @@ git commit -m "feat: add place_cache service functions and update TTLs"
 ### Task 3: Filter stations to train/subway only
 
 **Files:**
+
 - Modify: `worker/src/services/google-maps.ts`
 - Modify: `worker/src/routes/stations.ts`
 - Modify: `worker/src/services/google-maps.test.ts`
@@ -237,10 +244,13 @@ git commit -m "feat: add place_cache service functions and update TTLs"
 **Step 1: Update Autocomplete types**
 
 In `worker/src/services/google-maps.ts`, change `getAutocompletePredictions` function's `types` parameter from:
+
 ```
 'transit_station|train_station|airport|subway_station'
 ```
+
 to:
+
 ```
 'train_station|subway_station'
 ```
@@ -274,12 +284,22 @@ export async function searchNearbyPlaces(
 **Step 3: Update stations route to use type filter**
 
 In `worker/src/routes/stations.ts`, line 159, change:
+
 ```typescript
 const result = await searchNearbyPlaces(apiKey, lat, lng, 5000, '駅');
 ```
+
 to:
+
 ```typescript
-const result = await searchNearbyPlaces(apiKey, lat, lng, 5000, '駅', 'train_station');
+const result = await searchNearbyPlaces(
+  apiKey,
+  lat,
+  lng,
+  5000,
+  '駅',
+  'train_station',
+);
 ```
 
 **Step 4: Update google-maps tests**
@@ -302,7 +322,14 @@ it('includes type parameter when provided', async () => {
     json: async () => ({ results: [], status: 'ZERO_RESULTS' }),
   });
 
-  await searchNearbyPlaces('test-key', 35.68, 139.76, 5000, '駅', 'train_station');
+  await searchNearbyPlaces(
+    'test-key',
+    35.68,
+    139.76,
+    5000,
+    '駅',
+    'train_station',
+  );
 
   const calledUrl = mockFetch.mock.calls[0][0] as string;
   expect(calledUrl).toContain('type=train_station');
@@ -326,6 +353,7 @@ git commit -m "feat: filter station search to train/subway only"
 ### Task 4: Refactor restaurant search to use place_id cache
 
 **Files:**
+
 - Modify: `worker/src/types.ts` (add `stationPlaceId` to `RestaurantSearchRequest`)
 - Modify: `worker/src/routes/restaurants.ts`
 
@@ -355,7 +383,13 @@ Replace the handler in `worker/src/routes/restaurants.ts` with new logic that:
 Key changes to the route handler:
 
 ```typescript
-import { getCache, setCache, getPlacesByIds, upsertPlaces, CACHE_TTL } from '../services/cache';
+import {
+  getCache,
+  setCache,
+  getPlacesByIds,
+  upsertPlaces,
+  CACHE_TTL,
+} from '../services/cache';
 
 // In the handler:
 const { keywords, location, radius, stationPlaceId } = body;
@@ -369,7 +403,11 @@ const pending = keywords.map(async (keyword) => {
   const cacheKey = `${keyword}-${stationPlaceId}-${radius}`;
 
   // Check search result cache (place_id list)
-  const cachedPlaceIds = await getCache<string[]>(db, 'restaurant_search', cacheKey);
+  const cachedPlaceIds = await getCache<string[]>(
+    db,
+    'restaurant_search',
+    cacheKey,
+  );
 
   if (cachedPlaceIds) {
     // Fetch details from place_cache
@@ -378,7 +416,13 @@ const pending = keywords.map(async (keyword) => {
   }
 
   // Cache miss - call Google Maps API
-  const result = await searchNearbyPlaces(apiKey, location.lat, location.lng, radius, keyword);
+  const result = await searchNearbyPlaces(
+    apiKey,
+    location.lat,
+    location.lng,
+    radius,
+    keyword,
+  );
 
   if (!result.ok) {
     return { keyword, placeMap: new Map(), error: result.error };
@@ -389,7 +433,13 @@ const pending = keywords.map(async (keyword) => {
 
   // Save place_id list to api_cache
   const placeIds = result.data.map((p) => p.place_id);
-  await setCache(db, 'restaurant_search', cacheKey, placeIds, CACHE_TTL.restaurant_search);
+  await setCache(
+    db,
+    'restaurant_search',
+    cacheKey,
+    placeIds,
+    CACHE_TTL.restaurant_search,
+  );
 
   // Build map from fresh data
   const placeMap = await getPlacesByIds(db, placeIds);
@@ -407,7 +457,9 @@ function toRestaurantFromCache(
   searchLat: number,
   searchLng: number,
 ): Restaurant {
-  const photoUrls = place.photoReferences.map((ref) => getPhotoUrl(apiKey, ref, 400));
+  const photoUrls = place.photoReferences.map((ref) =>
+    getPhotoUrl(apiKey, ref, 400),
+  );
   let distance: number | undefined;
   if (place.lat != null && place.lng != null) {
     distance = haversineDistance(searchLat, searchLng, place.lat, place.lng);
@@ -446,6 +498,7 @@ git commit -m "feat: refactor restaurant search to use place_id cache with stati
 ### Task 5: Update frontend API to pass stationPlaceId
 
 **Files:**
+
 - Modify: `src/services/ApiService.ts`
 - Modify: `src/composables/useRestaurantSearch/types.ts`
 - Modify: `src/programs/searchRestaurants.ts`
@@ -545,12 +598,14 @@ git commit -m "feat: pass stationPlaceId through frontend API for stable cache k
 ### Task 6: Refactor UI to station-only mode with auto-init
 
 **Files:**
+
 - Modify: `src/composables/useStationSearch.ts`
 - Modify: `src/components/UnifiedSearchResultsScreen/index.tsx`
 
 **Step 1: Add auto-init to useStationSearch**
 
 Rewrite `src/composables/useStationSearch.ts` to:
+
 1. On mount, call `searchNearbyStationsProgram()` (browser GPS -> find nearest stations)
 2. Auto-select the first (nearest) station
 3. Expose `isInitializing` state for the loading indicator
@@ -586,7 +641,9 @@ const useStationSearch = () => {
         setStation(nearest.name);
         setSelectedStation(nearest);
       } else {
-        setInitError('最寄り駅を取得できませんでした。駅名を入力してください。');
+        setInitError(
+          '最寄り駅を取得できませんでした。駅名を入力してください。',
+        );
       }
       setIsInitializing(false);
     });
@@ -595,7 +652,10 @@ const useStationSearch = () => {
   // Manual station search (text input)
   const handleStationInput = useCallback(
     (input: string) => {
-      if (!input.trim() || (selectedStation && selectedStation.name === input)) {
+      if (
+        !input.trim() ||
+        (selectedStation && selectedStation.name === input)
+      ) {
         return;
       }
 
@@ -656,6 +716,7 @@ In `src/components/UnifiedSearchResultsScreen/index.tsx`:
 7. Use `isInitializing` from useStationSearch for initial loading state
 
 Key changes:
+
 - Remove `searchMethod` state (line 89-91)
 - Remove location/station toggle buttons (lines 226-247)
 - Remove `LocationSearch` component rendering
@@ -717,6 +778,7 @@ npx wrangler deploy
 ## Parallel Execution Groups
 
 Tasks that can run in parallel:
+
 - **Group A (Backend):** Tasks 1, 2, 3 (DB schema, cache service, station filter) - independent of each other
 - **Group B (Backend):** Task 4 (restaurant route) - depends on Tasks 1, 2
 - **Group C (Frontend):** Tasks 5, 6 (API + UI) - depends on Task 4

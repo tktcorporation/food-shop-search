@@ -156,7 +156,14 @@ stationRoutes.post('/stations/nearby', async (c) => {
     places = cached;
   } else {
     // Search for train stations within 5km
-    const result = await searchNearbyPlaces(apiKey, lat, lng, 5000, '駅', 'train_station');
+    const result = await searchNearbyPlaces(
+      apiKey,
+      lat,
+      lng,
+      5000,
+      '駅',
+      'train_station',
+    );
 
     if (!result.ok) {
       return c.json({ success: false, error: result.error }, 500);

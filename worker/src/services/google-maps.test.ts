@@ -101,7 +101,14 @@ describe('searchNearbyPlaces', () => {
       json: async () => ({ results: [], status: 'ZERO_RESULTS' }),
     });
 
-    await searchNearbyPlaces('test-key', 35.68, 139.76, 5000, '駅', 'train_station');
+    await searchNearbyPlaces(
+      'test-key',
+      35.68,
+      139.76,
+      5000,
+      '駅',
+      'train_station',
+    );
 
     const calledUrl = mockFetch.mock.calls[0][0] as string;
     expect(calledUrl).toContain('type=train_station');

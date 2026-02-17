@@ -156,11 +156,7 @@ export async function getPlacesByIds(
       types: JSON.parse(row.types) as string[],
       photoReferences: JSON.parse(row.photoReferences) as string[],
       isOpenNow:
-        row.isOpenNow === null
-          ? undefined
-          : row.isOpenNow === 1
-            ? true
-            : false,
+        row.isOpenNow === null ? undefined : row.isOpenNow === 1 ? true : false,
       lat: row.lat ?? undefined,
       lng: row.lng ?? undefined,
       businessStatus: row.businessStatus ?? undefined,
@@ -185,8 +181,7 @@ export async function upsertPlaces(
   const ttl = CACHE_TTL.place_detail;
 
   for (const place of places) {
-    const photoReferences =
-      place.photos?.map((p) => p.photo_reference) ?? [];
+    const photoReferences = place.photos?.map((p) => p.photo_reference) ?? [];
 
     const isOpenNowValue =
       place.opening_hours?.open_now === true

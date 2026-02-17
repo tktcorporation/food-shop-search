@@ -1,15 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import StationSearch from './StationSearch';
-import LocationSearch from './LocationSearch';
 import StoreTypeSelection from './StoreTypeSelection';
 import SearchFilters from './SearchFilters';
 import SearchResults from './SearchResults';
 import CustomKeywordModal from './CustomKeywordModal';
 import useStationSearch from '../../composables/useStationSearch';
-import { useLocationSearch } from '../../composables/useLocationSearch';
 import { keyWordOptions, getKeywordLabel } from '../../utils/keywordOptions';
 import {
-  MapPin,
   Train,
   Loader2,
   SlidersHorizontal,
@@ -17,10 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import ErrorAlert from '../ui/ErrorAlert';
-import type {
-  Restaurant,
-  Location,
-} from '../../composables/useRestaurantSearch/types';
+import type { Restaurant } from '../../composables/useRestaurantSearch/types';
 import type { Station } from '../../composables/useStationSearch/types';
 import {
   SEARCH_DEBOUNCE_MS,
@@ -36,7 +30,7 @@ interface UnifiedSearchResultsScreenProps {
     types: string[],
     minRating: number,
     minReviews: number,
-    searchLocation: Station | Location,
+    searchLocation: Station,
     isOpenNow: boolean,
     searchRadius: number,
     selectedPriceLevels: number[],
@@ -65,14 +59,9 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
     stationCandidates,
     selectedStation,
     selectStation,
+    isInitializing,
+    initError,
   } = useStationSearch();
-  const {
-    currentLocation,
-    isLoading: isLocationLoading,
-    error: locationError,
-    hasPermissionError,
-    getCurrentLocation,
-  } = useLocationSearch();
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>(
     keyWordOptions.map((option) => option.value),
   );
@@ -86,9 +75,6 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
   const [searchRadius, setSearchRadius] = useState<number>(
     DEFAULT_SEARCH_RADIUS,
   );
-  const [searchMethod, setSearchMethod] = useState<'location' | 'station'>(
-    'location',
-  );
 
   // UI state - panels
   const [isStoreTypesOpen, setIsStoreTypesOpen] = useState(false);
@@ -100,14 +86,12 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
 
   // API呼び出しが必要な検索（キーワード・位置・半径変更時）
   const triggerSearch = useCallback(() => {
-    const searchLocation =
-      searchMethod === 'location' ? currentLocation : selectedStation;
-    if (searchLocation) {
+    if (selectedStation) {
       searchNearbyRestaurants(
         selectedKeywords,
         minRating,
         minReviews,
-        searchLocation,
+        selectedStation,
         isOpenNow,
         searchRadius,
         selectedPriceLevels,
@@ -115,8 +99,6 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
       hasSearchedRef.current = true;
     }
   }, [
-    searchMethod,
-    currentLocation,
     selectedStation,
     selectedKeywords,
     minRating,
@@ -129,9 +111,7 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
 
   // API呼び出しが必要なパラメータ変更時（デバウンス付き）
   useEffect(() => {
-    const searchLocation =
-      searchMethod === 'location' ? currentLocation : selectedStation;
-    if (!searchLocation) return;
+    if (!selectedStation) return;
 
     if (searchDebounceRef.current) {
       clearTimeout(searchDebounceRef.current);
@@ -150,13 +130,7 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
       }
     };
     // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    selectedKeywords,
-    selectedStation,
-    currentLocation,
-    searchRadius,
-    searchMethod,
-  ]);
+  }, [selectedKeywords, selectedStation, searchRadius]);
 
   // フィルターのみの変更時
   useEffect(() => {
@@ -171,18 +145,6 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
     });
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [minRating, minReviews, isOpenNow, selectedPriceLevels]);
-
-  useEffect(() => {
-    if (
-      searchMethod === 'location' &&
-      !currentLocation &&
-      !isLocationLoading &&
-      !hasPermissionError
-    ) {
-      getCurrentLocation();
-    }
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchMethod, currentLocation, isLocationLoading, hasPermissionError]);
 
   const handleAddCustomKeyword = (keyword: string) => {
     if (!customKeywords.includes(keyword)) {
@@ -222,39 +184,17 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
         {/* Location Bar */}
         <div className="p-4 border-b border-primary-100">
           <div className="flex items-center gap-3">
-            {/* Search Method Toggle */}
-            <button
-              onClick={() => setSearchMethod('location')}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
-                searchMethod === 'location'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-primary-50 text-text-muted hover:bg-primary-100'
-              }`}
-            >
-              <MapPin size={18} />
-              <span className="hidden sm:inline">現在地</span>
-            </button>
-            <button
-              onClick={() => setSearchMethod('station')}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
-                searchMethod === 'station'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-primary-50 text-text-muted hover:bg-primary-100'
-              }`}
-            >
+            <div className="flex items-center gap-1.5 px-3 py-2 bg-primary-600 text-white rounded-full text-sm font-medium">
               <Train size={18} />
               <span className="hidden sm:inline">駅名</span>
-            </button>
+            </div>
 
-            {/* Location Display */}
             <div className="flex-1 min-w-0">
-              {searchMethod === 'location' ? (
-                <LocationSearch
-                  isLoading={isLocationLoading}
-                  error={locationError}
-                  currentLocation={currentLocation}
-                  onGetCurrentLocation={getCurrentLocation}
-                />
+              {isInitializing ? (
+                <div className="flex items-center gap-2 text-text-muted text-sm">
+                  <Loader2 size={16} className="animate-spin" />
+                  <span>最寄り駅を検索中...</span>
+                </div>
               ) : (
                 <StationSearch
                   station={station}
@@ -265,6 +205,9 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
               )}
             </div>
           </div>
+          {initError && (
+            <p className="mt-2 text-sm text-red-600">{initError}</p>
+          )}
         </div>
 
         {/* Store Types - Core Feature (Always Visible) */}

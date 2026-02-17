@@ -39,15 +39,18 @@ Manual flow: user types station name -> Autocomplete (types: train_station|subwa
 ## Station Filtering
 
 ### Autocomplete (text search)
+
 - Change types from `transit_station|train_station|airport|subway_station` to `train_station|subway_station`
 
 ### NearbySearch (proximity search)
+
 - Add `type=train_station` parameter alongside keyword "駅"
 - Filter results to only include places with train_station or subway_station in their types
 
 ## Cache Architecture
 
 ### Existing table: `api_cache`
+
 No schema change. Stores search result lists (place_id arrays instead of full restaurant data).
 
 ### New table: `place_cache`
@@ -90,16 +93,17 @@ New: `ラーメン-ChIJ...stationPlaceId-1000` (station place_id, stable)
 
 ### TTL
 
-| Data | TTL | Reason |
-|------|-----|--------|
-| place_cache (restaurant info) | 14 days | Name, address, photos rarely change |
-| api_cache (search result lists) | 48 hours | Allow new restaurants to surface |
-| nearby_stations | 7 days | Stations don't move |
-| station_predictions | 24 hours | Low volatility |
+| Data                            | TTL      | Reason                              |
+| ------------------------------- | -------- | ----------------------------------- |
+| place_cache (restaurant info)   | 14 days  | Name, address, photos rarely change |
+| api_cache (search result lists) | 48 hours | Allow new restaurants to surface    |
+| nearby_stations                 | 7 days   | Stations don't move                 |
+| station_predictions             | 24 hours | Low volatility                      |
 
 ## Files to Change
 
 ### Worker (backend)
+
 - `worker/src/db/schema.ts` — add place_cache table
 - `worker/src/services/cache.ts` — add getPlacesByIds / upsertPlaces functions
 - `worker/src/routes/restaurants.ts` — use place_id cache, normalize cache key by station
@@ -108,6 +112,7 @@ New: `ラーメン-ChIJ...stationPlaceId-1000` (station place_id, stable)
 - `drizzle/` — new migration
 
 ### Frontend
+
 - `src/components/UnifiedSearchResultsScreen/index.tsx` — remove location/station toggle, auto-select nearest station
 - `src/composables/useStationSearch.ts` — add auto-init with nearest station
 - `src/programs/searchRestaurants.ts` — pass station placeId for cache key normalization

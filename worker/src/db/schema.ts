@@ -26,8 +26,12 @@ export const placeCache = sqliteTable(
     name: text('name').notNull(),
     vicinity: text('vicinity').notNull(),
     rating: integer('rating', { mode: 'number' }).notNull().default(0),
-    userRatingsTotal: integer('user_ratings_total', { mode: 'number' }).notNull().default(0),
-    priceLevel: integer('price_level', { mode: 'number' }).notNull().default(-1),
+    userRatingsTotal: integer('user_ratings_total', { mode: 'number' })
+      .notNull()
+      .default(0),
+    priceLevel: integer('price_level', { mode: 'number' })
+      .notNull()
+      .default(-1),
     types: text('types').notNull(), // JSON array
     photoReferences: text('photo_references').notNull(), // JSON array of photo_reference strings
     isOpenNow: integer('is_open_now', { mode: 'number' }),
