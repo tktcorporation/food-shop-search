@@ -1,4 +1,10 @@
-import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core';
+import {
+  sqliteTable,
+  text,
+  integer,
+  real,
+  index,
+} from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 
 export const apiCache = sqliteTable(
@@ -25,7 +31,7 @@ export const placeCache = sqliteTable(
     placeId: text('place_id').primaryKey(),
     name: text('name').notNull(),
     vicinity: text('vicinity').notNull(),
-    rating: integer('rating', { mode: 'number' }).notNull().default(0),
+    rating: real('rating').notNull().default(0),
     userRatingsTotal: integer('user_ratings_total', { mode: 'number' })
       .notNull()
       .default(0),
@@ -35,8 +41,8 @@ export const placeCache = sqliteTable(
     types: text('types').notNull(), // JSON array
     photoReferences: text('photo_references').notNull(), // JSON array of photo_reference strings
     isOpenNow: integer('is_open_now', { mode: 'number' }),
-    lat: integer('lat', { mode: 'number' }),
-    lng: integer('lng', { mode: 'number' }),
+    lat: real('lat'),
+    lng: real('lng'),
     businessStatus: text('business_status'),
     createdAt: integer('created_at', { mode: 'number' })
       .notNull()

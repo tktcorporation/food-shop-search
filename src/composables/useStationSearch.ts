@@ -28,7 +28,9 @@ const useStationSearch = () => {
         setStation(nearest.name);
         setSelectedStation(nearest);
       } else {
-        setInitError('最寄り駅を取得できませんでした。駅名を入力してください。');
+        setInitError(
+          '最寄り駅を取得できませんでした。駅名を入力してください。',
+        );
       }
       setIsInitializing(false);
     });
@@ -37,7 +39,10 @@ const useStationSearch = () => {
   // テキスト入力による駅検索
   const handleStationInput = useCallback(
     (input: string) => {
-      if (!input.trim() || (selectedStation && selectedStation.name === input)) {
+      if (
+        !input.trim() ||
+        (selectedStation && selectedStation.name === input)
+      ) {
         return;
       }
 
