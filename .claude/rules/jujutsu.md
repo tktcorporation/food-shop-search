@@ -23,6 +23,17 @@ jj bookmark create <name>  # ブックマーク（≒ブランチ）を作成
 jj git push         # リモートにプッシュ
 ```
 
+## 初期化
+
+IMPORTANT: jj コマンド実行時に「There is no jj repo」エラーが出た場合、以下を実行して初期化すること：
+
+```bash
+jj git init --colocate
+jj bookmark track main --remote=origin
+```
+
+初期化後、中断した作業を jj コマンドで続行する。
+
 ## Git との共存
 
 - jj は Git リポジトリと colocated モードで動作している
