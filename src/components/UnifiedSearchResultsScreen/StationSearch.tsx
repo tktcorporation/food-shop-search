@@ -52,6 +52,8 @@ const StationSearch: React.FC<StationSearchProps> = ({
             onBlur={() => setTimeout(() => setIsFocused(false), 200)}
             className="w-full pl-3 pr-9 py-2 text-base border border-primary-200 rounded-lg focus:border-primary-500 focus:outline-hidden"
             placeholder="駅名を入力"
+            autoComplete="off"
+            data-1p-ignore
           />
           {station ? (
             <button

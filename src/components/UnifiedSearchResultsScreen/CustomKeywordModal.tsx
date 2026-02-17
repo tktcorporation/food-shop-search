@@ -78,6 +78,8 @@ const CustomKeywordModal: React.FC<CustomKeywordModalProps> = ({
                   className="input"
                   placeholder="例: ラーメン、カレー、イタリアン"
                   autoFocus
+                  autoComplete="off"
+                  data-1p-ignore
                 />
                 <p className="text-xs text-text-muted mt-2">
                   Google Maps上で検索されるキーワードを入力してください
