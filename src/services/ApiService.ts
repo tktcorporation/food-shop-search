@@ -8,6 +8,7 @@ export interface ApiService {
     keywords: string[];
     location: { lat: number; lng: number };
     radius: number;
+    stationPlaceId: string;
   }) => Effect.Effect<Restaurant[], PlaceSearchError>;
 
   readonly searchStations: (

@@ -26,7 +26,7 @@ export interface SearchParams {
   keywords: string[];
   minRating: number;
   minReviews: number;
-  searchLocation: Station | Location;
+  searchLocation: Station;
   isOpenNow: boolean;
   searchRadius: number;
   selectedPriceLevels: number[];

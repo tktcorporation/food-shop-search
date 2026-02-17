@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { Effect } from 'effect';
-import type { Restaurant, Location } from './useRestaurantSearch/types';
+import type { Restaurant } from './useRestaurantSearch/types';
 import type { Station } from './useStationSearch/types';
 import { filterRestaurants, sortByDistance } from './useRestaurantSearch/utils';
 import { searchRestaurantsProgram } from '../programs/searchRestaurants';
@@ -42,7 +42,7 @@ const useRestaurantSearch = () => {
       keywords: string[],
       minRating: number,
       minReviews: number,
-      searchLocation: Station | Location,
+      searchLocation: Station,
       isOpenNow: boolean,
       searchRadius: number,
       selectedPriceLevels: number[],

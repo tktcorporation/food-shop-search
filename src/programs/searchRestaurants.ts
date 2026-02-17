@@ -10,8 +10,8 @@ import type {
  * レストラン検索の Effect プログラム。
  * Worker API を呼び出し、サーバー側でキーワード並列検索・重複排除・距離計算・写真URL解決を行う。
  *
- * 1. 検索位置の解決 (LatLng or 駅ジオコーディング)
- * 2. API呼び出し
+ * 1. 駅からジオコーディングして位置を取得
+ * 2. stationPlaceId と共に API呼び出し
  */
 export const searchRestaurantsProgram = (
   params: SearchParams,
@@ -20,20 +20,15 @@ export const searchRestaurantsProgram = (
     const api = yield* ApiService;
     const { keywords, searchLocation, searchRadius } = params;
 
-    // 検索位置の解決
-    let location: { lat: number; lng: number };
-    if ('lat' in searchLocation) {
-      location = { lat: searchLocation.lat, lng: searchLocation.lng };
-    } else {
-      const geocoded = yield* api.geocodeForward(
-        `${searchLocation.name}駅,${searchLocation.prefecture}`,
-      );
-      location = { lat: geocoded.lat, lng: geocoded.lng };
-    }
+    // 駅からジオコーディングして位置を取得
+    const geocoded = yield* api.geocodeForward(
+      `${searchLocation.name}駅,${searchLocation.prefecture}`,
+    );
 
     return yield* api.searchRestaurants({
       keywords,
-      location,
+      location: { lat: geocoded.lat, lng: geocoded.lng },
       radius: searchRadius,
+      stationPlaceId: searchLocation.placeId,
     });
   });
