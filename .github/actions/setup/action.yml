@@ -1,0 +1,21 @@
+name: 'Setup'
+description: 'Checkout, install Node.js via mise, and install npm dependencies'
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: jdx/mise-action@v2
+      with:
+        install_args: node
+
+    - name: Cache node_modules
+      uses: actions/cache@v4
+      with:
+        path: node_modules
+        key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+        restore-keys: |
+          node-modules-${{ runner.os }}-
+
+    - name: Install dependencies
+      shell: bash
+      run: npm ci
