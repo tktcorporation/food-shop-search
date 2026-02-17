@@ -12,6 +12,13 @@ import { searchNearbyPlaces, getPhotoUrl } from '../services/google-maps';
 import { haversineDistance } from '../lib/haversine';
 import type { RestaurantSearchRequest, Restaurant } from '../types';
 
+/**
+ * Google API 呼び出し時に使用する固定半径。
+ * キャッシュを半径非依存にするため、常にこの値で検索し、
+ * レスポンス時にリクエストされた半径で距離フィルタリングする。
+ */
+const SEARCH_MAX_RADIUS = 500;
+
 type Bindings = {
   DB: D1Database;
   GOOGLE_MAPS_API_KEY: string;
@@ -92,11 +99,12 @@ restaurantRoutes.post('/restaurants/search', async (c) => {
 
   const db = createDb(c.env.DB);
   const apiKey = c.env.GOOGLE_MAPS_API_KEY;
-  const { keywords, location, radius, stationPlaceId } = body;
+  const { keywords, location, stationPlaceId } = body;
 
   // Start all keyword fetches in parallel
   const pending = keywords.map(async (keyword) => {
-    const cacheKey = `${keyword}-${stationPlaceId}-${radius}`;
+    // キャッシュキーに半径を含めない（常に SEARCH_MAX_RADIUS で検索するため）
+    const cacheKey = `${keyword}-${stationPlaceId}`;
 
     // Check search result cache (place_id list)
     const cachedPlaceIds = await getCache<string[]>(
@@ -111,12 +119,12 @@ restaurantRoutes.post('/restaurants/search', async (c) => {
       return { keyword, placeMap, error: undefined };
     }
 
-    // Cache miss - call Google Maps API
+    // Cache miss - call Google Maps API（常に最大半径で検索）
     const result = await searchNearbyPlaces(
       apiKey,
       location.lat,
       location.lng,
-      radius,
+      SEARCH_MAX_RADIUS,
       keyword,
     );
 

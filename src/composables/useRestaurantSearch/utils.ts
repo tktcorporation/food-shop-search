@@ -33,8 +33,9 @@ export const filterRestaurants = (
         return false;
       }
 
-      if (searchRadius <= 100 && place.distance !== undefined) {
-        return meetsBasicCriteria && place.distance <= searchRadius;
+      // 距離フィルター（バックエンドは常に最大半径で検索するためフロントで絞り込む）
+      if (place.distance !== undefined && place.distance > searchRadius) {
+        return false;
       }
 
       return meetsBasicCriteria;
