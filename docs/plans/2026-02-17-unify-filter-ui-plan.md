@@ -13,6 +13,7 @@
 ### Task 1: キーワードサマリー関数の作成
 
 **Files:**
+
 - Create: `src/utils/formatFilterSummary.ts`
 - Create: `src/utils/formatFilterSummary.test.ts`
 
@@ -35,27 +36,55 @@ describe('formatKeywordSummary', () => {
   });
 
   it('returns comma-separated labels when 2-3 keywords selected', () => {
-    expect(formatKeywordSummary(['和食', 'ラーメン'], getKeywordLabel)).toBe('和食、ラーメン');
-    expect(formatKeywordSummary(['和食', 'ラーメン', 'カフェ'], getKeywordLabel)).toBe('和食、ラーメン、カフェ');
+    expect(formatKeywordSummary(['和食', 'ラーメン'], getKeywordLabel)).toBe(
+      '和食、ラーメン',
+    );
+    expect(
+      formatKeywordSummary(['和食', 'ラーメン', 'カフェ'], getKeywordLabel),
+    ).toBe('和食、ラーメン、カフェ');
   });
 
   it('returns first 3 labels + count when more than 3 keywords selected', () => {
     const keywords = ['和食', 'ラーメン', 'カフェ', '焼肉', 'ステーキ'];
-    expect(formatKeywordSummary(keywords, getKeywordLabel)).toBe('和食、ラーメン、カフェ 他2件');
+    expect(formatKeywordSummary(keywords, getKeywordLabel)).toBe(
+      '和食、ラーメン、カフェ 他2件',
+    );
   });
 
   it('shows actual labels even when all keywords are selected (no すべて)', () => {
     const allKeywords = [
-      '和食', '中華料理', '韓国料理', 'イタリアン', 'フレンチ', 'タイ料理', 'ベトナム料理', 'インド料理',
-      '定食', 'ファストフード', 'ファミレス', 'カフェ',
-      'ラーメン', 'うどん,そば', '天ぷら', 'とんかつ', '焼き鳥', '海鮮', '焼肉', 'ステーキ', 'ハンバーグ',
+      '和食',
+      '中華料理',
+      '韓国料理',
+      'イタリアン',
+      'フレンチ',
+      'タイ料理',
+      'ベトナム料理',
+      'インド料理',
+      '定食',
+      'ファストフード',
+      'ファミレス',
+      'カフェ',
+      'ラーメン',
+      'うどん,そば',
+      '天ぷら',
+      'とんかつ',
+      '焼き鳥',
+      '海鮮',
+      '焼肉',
+      'ステーキ',
+      'ハンバーグ',
     ];
-    expect(formatKeywordSummary(allKeywords, getKeywordLabel)).toBe('和食、中華料理、韓国料理 他18件');
+    expect(formatKeywordSummary(allKeywords, getKeywordLabel)).toBe(
+      '和食、中華料理、韓国料理 他18件',
+    );
   });
 
   it('uses getKeywordLabel to resolve custom keywords', () => {
     const customLabel = (v: string) => (v === 'custom' ? 'カスタム' : v);
-    expect(formatKeywordSummary(['custom', '和食'], customLabel)).toBe('カスタム、和食');
+    expect(formatKeywordSummary(['custom', '和食'], customLabel)).toBe(
+      'カスタム、和食',
+    );
   });
 });
 ```
@@ -104,6 +133,7 @@ jj commit -m "feat: キーワードサマリーのフォーマット関数を追
 ### Task 2: コンポーネントのサマリー表示を差し替え
 
 **Files:**
+
 - Modify: `src/components/UnifiedSearchResultsScreen/index.tsx:8,220-231,266-272`
 
 **Step 1: import を追加**
@@ -168,6 +198,7 @@ import { formatKeywordSummary } from '../../utils/formatFilterSummary';
 **Step 4: 不要になった変数を確認**
 
 `isAllSelected` 変数（行169-170）がサマリー以外で使われているか確認。
+
 - 行215: バッジ表示の条件 `!isAllSelected && selectedKeywords.length > 0` → **まだ使用中**
 - `allKeywordsCount`（行169）も `isAllSelected` の計算に必要 → **維持**
 
