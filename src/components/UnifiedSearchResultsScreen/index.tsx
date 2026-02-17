@@ -6,12 +6,13 @@ import SearchResults from './SearchResults';
 import CustomKeywordModal from './CustomKeywordModal';
 import useStationSearch from '../../composables/useStationSearch';
 import { keyWordOptions, getKeywordLabel } from '../../utils/keywordOptions';
+import { formatKeywordSummary } from '../../utils/formatFilterSummary';
 import {
   Train,
   Loader2,
+  Utensils,
   SlidersHorizontal,
   ChevronRight,
-  X,
 } from 'lucide-react';
 import ErrorAlert from '../ui/ErrorAlert';
 import type { Restaurant } from '../../composables/useRestaurantSearch/types';
@@ -158,14 +159,6 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
     setSelectedKeywords((prev) => prev.filter((k) => k !== keyword));
   };
 
-  const toggleKeyword = (keyword: string) => {
-    setSelectedKeywords((prev) =>
-      prev.includes(keyword)
-        ? prev.filter((k) => k !== keyword)
-        : [...prev, keyword],
-    );
-  };
-
   // Count active filters
   const activeFilterCount = [
     minRating > 0,
@@ -210,99 +203,73 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
           )}
         </div>
 
-        {/* Store Types - Core Feature (Always Visible) */}
-        <div className="px-4 py-3 bg-white border-b border-primary-100">
-          <div className="flex items-center gap-3">
-            <div className="shrink-0 flex items-center gap-2">
-              <span className="filter-label whitespace-nowrap">
-                食べたいもの
+        {/* ===== Filters - Unified Collapsible Pattern ===== */}
+
+        {/* 食べたいもの - Primary Filter */}
+        <button
+          onClick={() => setIsStoreTypesOpen(!isStoreTypesOpen)}
+          className="w-full px-4 py-3 flex items-center justify-between border-b border-primary-100 text-sm hover:bg-primary-50/50 transition-colors cursor-pointer"
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <Utensils size={16} className="text-text-muted shrink-0" />
+            <span className="filter-label shrink-0">食べたいもの</span>
+            {!isAllSelected && selectedKeywords.length > 0 && (
+              <span className="bg-primary-600 text-white text-xs px-1.5 py-0.5 rounded-full shrink-0">
+                {selectedKeywords.length}
               </span>
-              {selectedKeywords.length > 0 && (
-                <span className="text-xs text-primary-600 bg-primary-50 px-1.5 py-0.5 rounded-full font-medium whitespace-nowrap">
-                  {isAllSelected ? 'すべて' : `${selectedKeywords.length}件`}
-                </span>
-              )}
-            </div>
-
-            {/* Selected keywords preview */}
-            <div className="flex-1 min-w-0 overflow-hidden">
-              <div className="flex items-center gap-1.5">
-                {selectedKeywords.length === 0 ? (
-                  <span className="text-xs text-text-muted italic">未選択</span>
-                ) : (
-                  <>
-                    {selectedKeywords
-                      .slice(0, isAllSelected ? 4 : 5)
-                      .map((keyword) =>
-                        isAllSelected ? (
-                          <span
-                            key={keyword}
-                            className="inline-flex items-center px-2 py-0.5 bg-primary-50 text-primary-700 rounded-full text-xs font-medium whitespace-nowrap"
-                          >
-                            {getKeywordLabel(keyword)}
-                          </span>
-                        ) : (
-                          <button
-                            key={keyword}
-                            onClick={() => toggleKeyword(keyword)}
-                            className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full text-xs font-medium whitespace-nowrap hover:bg-primary-200 transition-colors"
-                          >
-                            {getKeywordLabel(keyword)}
-                            <X size={12} className="opacity-60" />
-                          </button>
-                        ),
-                      )}
-                    {selectedKeywords.length > (isAllSelected ? 4 : 5) && (
-                      <span className="text-xs text-text-muted shrink-0 whitespace-nowrap">
-                        …他
-                        {selectedKeywords.length - (isAllSelected ? 4 : 5)}件
-                      </span>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Edit Button */}
-            <button
-              onClick={() => setIsStoreTypesOpen(true)}
-              className="shrink-0 flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-            >
-              編集
-              <ChevronRight size={14} />
-            </button>
+            )}
+            <span className="text-xs text-text-muted truncate">
+              {formatKeywordSummary(selectedKeywords, getKeywordLabel)}
+            </span>
           </div>
-        </div>
+          <ChevronRight
+            size={16}
+            className={`text-text-muted transition-transform shrink-0 ${isStoreTypesOpen ? 'rotate-90' : ''}`}
+          />
+        </button>
 
-        {/* Filters Toggle - Secondary */}
+        {/* 食べたいもの Panel */}
+        {isStoreTypesOpen && (
+          <div className="p-4 bg-white border-b border-primary-100 animate-fadeIn">
+            <StoreTypeSelection
+              selectedKeywords={selectedKeywords}
+              setSelectedKeywords={setSelectedKeywords}
+              customKeywords={customKeywords}
+              onAddCustomKeyword={() => setIsModalOpen(true)}
+              onRemoveCustomKeyword={handleRemoveCustomKeyword}
+            />
+          </div>
+        )}
+
+        {/* 条件 - Secondary Filter */}
         <button
           onClick={() => setIsFiltersOpen(!isFiltersOpen)}
-          className="w-full px-4 py-3 flex items-center justify-between bg-primary-50/50 border-b border-primary-100 text-sm hover:bg-primary-50 transition-colors"
+          className="w-full px-4 py-3 flex items-center justify-between border-b border-primary-100 text-sm hover:bg-primary-50/50 transition-colors cursor-pointer"
         >
-          <div className="flex items-center gap-2 text-text-muted">
-            <SlidersHorizontal size={16} />
-            <span className="filter-label">フィルター</span>
+          <div className="flex items-center gap-2 min-w-0">
+            <SlidersHorizontal size={16} className="text-text-muted shrink-0" />
+            <span className="filter-label shrink-0">条件</span>
             {activeFilterCount > 0 && (
-              <span className="bg-primary-600 text-white text-xs px-1.5 py-0.5 rounded-full">
+              <span className="bg-primary-600 text-white text-xs px-1.5 py-0.5 rounded-full shrink-0">
                 {activeFilterCount}
               </span>
             )}
-            {/* Active filter summary */}
-            <span className="text-xs text-text-muted">
+            <span className="text-xs text-text-muted truncate">
               {searchRadius}m
               {selectedPriceLevels.length < 4 &&
                 ` · ${selectedPriceLevels.map((l) => '¥'.repeat(l)).join(' ')}`}
               {minRating > 0 && ` · ${minRating}+`}
+              {minReviews > 0 && ` · ${minReviews}+件`}
               {isOpenNow && ' · 営業中'}
             </span>
           </div>
           <ChevronRight
             size={16}
-            className={`text-text-muted transition-transform ${isFiltersOpen ? 'rotate-90' : ''}`}
+            className={`text-text-muted transition-transform shrink-0 ${isFiltersOpen ? 'rotate-90' : ''}`}
           />
         </button>
 
-        {/* Filters Panel */}
+        {/* 条件 Panel */}
         {isFiltersOpen && (
           <div className="p-4 bg-white border-b border-primary-100 animate-fadeIn">
             <SearchFilters
@@ -346,32 +313,6 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
           />
         )}
       </div>
-
-      {/* ===== Store Types Modal (Full Screen) ===== */}
-      {isStoreTypesOpen && (
-        <div className="fixed inset-0 z-50 bg-surface">
-          <div className="sticky top-0 bg-white border-b border-primary-100 px-4 py-3 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-text">
-              食べたいものを選ぶ
-            </h2>
-            <button
-              onClick={() => setIsStoreTypesOpen(false)}
-              className="p-2 -mr-2 text-text-muted hover:text-text transition-colors"
-            >
-              <X size={24} />
-            </button>
-          </div>
-          <div className="p-4 overflow-y-auto h-[calc(100vh-60px)]">
-            <StoreTypeSelection
-              selectedKeywords={selectedKeywords}
-              setSelectedKeywords={setSelectedKeywords}
-              customKeywords={customKeywords}
-              onAddCustomKeyword={() => setIsModalOpen(true)}
-              onRemoveCustomKeyword={handleRemoveCustomKeyword}
-            />
-          </div>
-        </div>
-      )}
 
       {/* Custom Keyword Modal */}
       <CustomKeywordModal
