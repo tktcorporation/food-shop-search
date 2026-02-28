@@ -20,6 +20,8 @@ export interface Restaurant {
   isOpenNow?: boolean;
   distance?: number;
   business_status?: string;
+  lat?: number;
+  lng?: number;
 }
 
 export interface SearchParams {

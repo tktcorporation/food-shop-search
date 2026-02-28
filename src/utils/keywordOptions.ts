@@ -1,5 +1,13 @@
 export const keywordCategories = [
   {
+    name: '食事',
+    keywords: [
+      { value: 'モーニング', label: 'モーニング' },
+      { value: 'ランチ', label: 'ランチ' },
+      { value: 'ディナー', label: 'ディナー' },
+    ],
+  },
+  {
     name: 'ジャンル',
     keywords: [
       { value: '和食', label: '和食' },

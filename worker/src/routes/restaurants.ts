@@ -58,6 +58,8 @@ function toRestaurantFromCache(
     isOpenNow: place.isOpenNow,
     distance,
     business_status: place.businessStatus,
+    lat: place.lat,
+    lng: place.lng,
   };
 }
 

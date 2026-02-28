@@ -1,5 +1,6 @@
 import UnifiedSearchResultsScreen from './components/UnifiedSearchResultsScreen';
 import useRestaurantSearch from './composables/useRestaurantSearch';
+import { useLocationSearch } from './composables/useLocationSearch';
 import { ExternalLink } from 'lucide-react';
 
 function App() {
@@ -11,6 +12,8 @@ function App() {
     reapplyFilters,
   } = useRestaurantSearch();
 
+  const { currentLocation, getCurrentLocation } = useLocationSearch();
+
   return (
     <div className="min-h-screen bg-surface">
       <UnifiedSearchResultsScreen
@@ -19,6 +22,8 @@ function App() {
         reapplyFilters={reapplyFilters}
         isLoading={isLoading}
         error={error}
+        currentLocation={currentLocation}
+        getCurrentLocation={getCurrentLocation}
       />
       {/* Footer */}
       <footer className="flex items-center justify-center py-4 bg-primary-50 border-t border-primary-100">
