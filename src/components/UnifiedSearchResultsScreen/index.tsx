@@ -17,6 +17,7 @@ import {
 import ErrorAlert from '../ui/ErrorAlert';
 import type { Restaurant } from '../../composables/useRestaurantSearch/types';
 import type { Station } from '../../composables/useStationSearch/types';
+import type { LocationData } from '../../programs/getLocation';
 import {
   SEARCH_DEBOUNCE_MS,
   DEFAULT_MIN_RATING,
@@ -45,6 +46,8 @@ interface UnifiedSearchResultsScreenProps {
   }) => void;
   isLoading: boolean;
   error: string | null;
+  currentLocation?: LocationData | null;
+  getCurrentLocation?: () => void;
 }
 
 const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
@@ -53,6 +56,8 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
   reapplyFilters,
   isLoading,
   error: searchError,
+  currentLocation,
+  getCurrentLocation,
 }) => {
   const {
     station,
@@ -310,6 +315,8 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
             searchRadius={searchRadius}
             isOpenNow={isOpenNow}
             selectedPriceLevels={selectedPriceLevels}
+            currentLocation={currentLocation}
+            getCurrentLocation={getCurrentLocation}
           />
         )}
       </div>
