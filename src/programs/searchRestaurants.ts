@@ -20,14 +20,22 @@ export const searchRestaurantsProgram = (
     const api = yield* ApiService;
     const { keywords, searchLocation, searchRadius } = params;
 
-    // 駅からジオコーディングして位置を取得
-    const geocoded = yield* api.geocodeForward(
-      `${searchLocation.name}駅,${searchLocation.prefecture}`,
-    );
+    // 座標が既にある場合はそのまま使用、なければジオコーディング
+    let location: { lat: number; lng: number };
+    if (searchLocation.lat != null && searchLocation.lng != null) {
+      location = { lat: searchLocation.lat, lng: searchLocation.lng };
+    } else {
+      const stationName = searchLocation.name.endsWith('駅')
+        ? searchLocation.name
+        : `${searchLocation.name}駅`;
+      location = yield* api.geocodeForward(
+        `${stationName},${searchLocation.prefecture}`,
+      );
+    }
 
     return yield* api.searchRestaurants({
       keywords,
-      location: { lat: geocoded.lat, lng: geocoded.lng },
+      location,
       radius: searchRadius,
       stationPlaceId: searchLocation.placeId,
     });

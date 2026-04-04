@@ -72,6 +72,8 @@ function placeToStation(
     address: place.vicinity ?? '',
     distance,
     placeId: place.place_id,
+    lat: place.geometry?.location.lat,
+    lng: place.geometry?.location.lng,
   };
 }
 
