@@ -72,6 +72,8 @@ function placeToStation(
     address: place.vicinity ?? '',
     distance,
     placeId: place.place_id,
+    lat: place.geometry?.location.lat,
+    lng: place.geometry?.location.lng,
   };
 }
 
@@ -159,14 +161,9 @@ stationRoutes.post('/stations/nearby', async (c) => {
     places = cached;
   } else {
     // Search for train stations within 5km
-    const result = await searchNearbyPlaces(
-      apiKey,
-      lat,
-      lng,
-      5000,
-      '駅',
-      'train_station',
-    );
+    // type を指定しないことで subway_station のみの駅も漏れなく取得し、
+    // isStation フィルタで train_station / subway_station に絞る
+    const result = await searchNearbyPlaces(apiKey, lat, lng, 5000, '駅');
 
     if (!result.ok) {
       return c.json({ success: false, error: result.error }, 500);

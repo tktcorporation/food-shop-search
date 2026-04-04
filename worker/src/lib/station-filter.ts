@@ -1,4 +1,4 @@
-const STATION_TYPES = ['train_station', 'subway_station', 'transit_station'];
+const STATION_TYPES = ['train_station', 'subway_station'];
 
 /**
  * Check if a place type list includes a station type.

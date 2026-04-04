@@ -10,8 +10,8 @@ describe('isStation', () => {
     expect(isStation(['subway_station', 'transit_station'])).toBe(true);
   });
 
-  it('returns true for transit_station', () => {
-    expect(isStation(['transit_station', 'point_of_interest'])).toBe(true);
+  it('returns false for transit_station only (e.g. bus terminal)', () => {
+    expect(isStation(['transit_station', 'point_of_interest'])).toBe(false);
   });
 
   it('returns false for non-station types', () => {

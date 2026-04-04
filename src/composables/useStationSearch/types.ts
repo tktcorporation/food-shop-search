@@ -4,4 +4,6 @@ export interface Station {
   address: string;
   distance?: number;
   placeId: string;
+  lat?: number;
+  lng?: number;
 }
