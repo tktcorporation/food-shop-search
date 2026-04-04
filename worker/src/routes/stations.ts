@@ -161,13 +161,14 @@ stationRoutes.post('/stations/nearby', async (c) => {
     places = cached;
   } else {
     // Search for train stations within 5km
+    // type を指定しないことで subway_station のみの駅も漏れなく取得し、
+    // isStation フィルタで train_station / subway_station に絞る
     const result = await searchNearbyPlaces(
       apiKey,
       lat,
       lng,
       5000,
       '駅',
-      'train_station',
     );
 
     if (!result.ok) {
