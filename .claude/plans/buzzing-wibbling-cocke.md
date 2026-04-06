@@ -13,6 +13,7 @@ Google Places Autocomplete API は「予測補完」APIであり、「新宿」�
 ### 1. `worker/src/services/google-maps.ts` - Text Search 関数の追加
 
 新関数 `searchStationByText` を追加:
+
 - API: `/maps/api/place/textsearch/json`
 - パラメータ: `query="{input}駅"`, `type=train_station`, `language=ja`
 - 戻り値: `Result<GooglePlaceResult[]>`（既存型を再利用）
@@ -27,6 +28,7 @@ Google Places Autocomplete API は「予測補完」APIであり、「新宿」�
 Text Search API は `vicinity` の代わりに `formatted_address` を返すため。
 
 Text Search レスポンス型を追加:
+
 ```ts
 export interface GoogleTextSearchResponse {
   results: GooglePlaceResult[];
@@ -63,13 +65,13 @@ export interface GoogleTextSearchResponse {
 
 ## 修正ファイル一覧
 
-| ファイル | 変更内容 |
-|---|---|
-| `worker/src/types.ts` | `GooglePlaceResult` に `formatted_address?` 追加、`GoogleTextSearchResponse` 追加 |
-| `worker/src/services/cache.ts` | `station_text_search` TTL追加 |
-| `worker/src/services/google-maps.ts` | `searchStationByText` 関数追加、`types` 簡素化 |
-| `worker/src/routes/stations.ts` | マージロジック実装 |
-| `worker/src/lib/station-filter.ts` | `transit_station` を STATION_TYPES に追加 |
+| ファイル                             | 変更内容                                                                          |
+| ------------------------------------ | --------------------------------------------------------------------------------- |
+| `worker/src/types.ts`                | `GooglePlaceResult` に `formatted_address?` 追加、`GoogleTextSearchResponse` 追加 |
+| `worker/src/services/cache.ts`       | `station_text_search` TTL追加                                                     |
+| `worker/src/services/google-maps.ts` | `searchStationByText` 関数追加、`types` 簡素化                                    |
+| `worker/src/routes/stations.ts`      | マージロジック実装                                                                |
+| `worker/src/lib/station-filter.ts`   | `transit_station` を STATION_TYPES に追加                                         |
 
 ## 検証方法
 

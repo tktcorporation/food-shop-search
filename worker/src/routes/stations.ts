@@ -67,8 +67,7 @@ function placeToStation(
     );
   }
 
-  const addressSource =
-    place.vicinity ?? place.formatted_address ?? '';
+  const addressSource = place.vicinity ?? place.formatted_address ?? '';
 
   return {
     name: place.name,
@@ -114,6 +113,7 @@ stationRoutes.post('/stations/search', async (c) => {
   );
 
   // Fetch uncached results in parallel
+  // oxlint-disable-next-line effect-enforce/no-promise-static-methods -- Worker側はEffectを使用していない
   const [predictionsResult, textSearchResult] = await Promise.all([
     cachedPredictions
       ? Promise.resolve(null)
