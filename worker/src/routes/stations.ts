@@ -127,9 +127,11 @@ stationRoutes.post('/stations/search', async (c) => {
     );
   }
 
-  const stations: Station[] = predictions
-    .filter((p) => isStation(p.types))
-    .map(predictionToStation);
+  // Autocomplete API にはリクエスト時に types=train_station|subway_station を
+  // 指定済みなので、レスポンスは既に駅に限定されている。
+  // ここで isStation フィルタをかけると、Google が types フィールドに
+  // transit_station のみを返したり undefined を返した場合に候補が消えてしまう。
+  const stations: Station[] = predictions.map(predictionToStation);
 
   return c.json({ success: true, data: stations });
 });
