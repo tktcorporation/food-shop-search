@@ -34,8 +34,8 @@ export const searchNearbyStationsProgram = (): Effect.Effect<
   });
 
 /**
- * 位置情報が許可済みの場合のみ、現在地周辺の駅を検索する。
- * 未許可（prompt）の場合は空配列を返し、許可ダイアログを表示しない。
+ * 位置情報が拒否されていない場合に、現在地周辺の駅を検索する。
+ * denied の場合のみ空配列を返し、prompt/granted の場合は通常通り取得を試みる。
  */
 export const searchNearbyStationsIfPermittedProgram = (): Effect.Effect<
   Station[],
@@ -49,7 +49,7 @@ export const searchNearbyStationsIfPermittedProgram = (): Effect.Effect<
     const geolocationService = yield* GeolocationService;
     const permission = yield* geolocationService.queryPermission();
 
-    if (permission !== 'granted') {
+    if (permission === 'denied') {
       return [] as Station[];
     }
 
