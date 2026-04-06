@@ -90,7 +90,10 @@ stationRoutes.post('/stations/search', async (c) => {
 
   const db = createDb(c.env.DB);
   const apiKey = c.env.GOOGLE_MAPS_API_KEY;
-  const input = body.input.trim();
+  // 末尾の「駅」を除去して正規化（「新宿駅」→「新宿」）
+  // Google Autocomplete API に types=train_station|subway_station と併用すると
+  // 「駅」付きの入力では結果が返らないことがあるため
+  const input = body.input.trim().replace(/駅$/, '');
 
   const cacheKey = input;
 
