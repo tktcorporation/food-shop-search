@@ -63,7 +63,7 @@ export async function getAutocompletePredictions(
 ): Promise<Result<GoogleAutocompletePrediction[]>> {
   const params = new URLSearchParams({
     input,
-    types: 'train_station|subway_station',
+    types: 'train_station|subway_station|transit_station',
     components: 'country:jp',
     language: 'ja',
     key: apiKey,
