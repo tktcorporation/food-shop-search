@@ -4,6 +4,7 @@ import { getCache, setCache, CACHE_TTL } from '../services/cache';
 import {
   getAutocompletePredictions,
   searchNearbyPlaces,
+  searchStationByText,
 } from '../services/google-maps';
 import { haversineDistance } from '../lib/haversine';
 import { isStation } from '../lib/station-filter';
@@ -49,15 +50,15 @@ function predictionToStation(
 }
 
 /**
- * Convert a nearby place result to a Station.
+ * Convert a place result (Nearby Search or Text Search) to a Station.
  */
 function placeToStation(
   place: GooglePlaceResult,
-  searchLat: number,
-  searchLng: number,
+  searchLat?: number,
+  searchLng?: number,
 ): Station {
   let distance: number | undefined;
-  if (place.geometry?.location) {
+  if (searchLat != null && searchLng != null && place.geometry?.location) {
     distance = haversineDistance(
       searchLat,
       searchLng,
@@ -66,10 +67,13 @@ function placeToStation(
     );
   }
 
+  const addressSource =
+    place.vicinity ?? place.formatted_address ?? '';
+
   return {
     name: place.name,
-    prefecture: extractPrefecture(place.vicinity ?? ''),
-    address: place.vicinity ?? '',
+    prefecture: extractPrefecture(addressSource),
+    address: addressSource,
     distance,
     placeId: place.place_id,
     lat: place.geometry?.location.lat,
@@ -79,7 +83,8 @@ function placeToStation(
 
 /**
  * POST /api/stations/search
- * Search for stations by name using autocomplete.
+ * Search for stations by name using autocomplete, supplemented with
+ * Text Search to ensure exact station matches (e.g. "新宿駅") appear.
  */
 stationRoutes.post('/stations/search', async (c) => {
   const body = await c.req.json<StationSearchRequest>();
@@ -91,47 +96,84 @@ stationRoutes.post('/stations/search', async (c) => {
   const db = createDb(c.env.DB);
   const apiKey = c.env.GOOGLE_MAPS_API_KEY;
   // 末尾の「駅」を除去して正規化（「新宿駅」→「新宿」）
-  // Google Autocomplete API に types=train_station|subway_station と併用すると
-  // 「駅」付きの入力では結果が返らないことがあるため
   const input = body.input.trim().replace(/駅$/, '');
+  const textSearchQuery = `${input}駅`;
 
-  const cacheKey = input;
-
-  // Check cache
-  const cached = await getCache<GoogleAutocompletePrediction[]>(
+  // --- Autocomplete predictions (cache check) ---
+  const cachedPredictions = await getCache<GoogleAutocompletePrediction[]>(
     db,
     'station_predictions',
-    cacheKey,
+    input,
   );
 
+  // --- Text Search exact match (cache check) ---
+  const cachedTextSearch = await getCache<GooglePlaceResult[]>(
+    db,
+    'station_text_search',
+    input,
+  );
+
+  // Fetch uncached results in parallel
+  const [predictionsResult, textSearchResult] = await Promise.all([
+    cachedPredictions
+      ? Promise.resolve(null)
+      : getAutocompletePredictions(apiKey, input),
+    cachedTextSearch
+      ? Promise.resolve(null)
+      : searchStationByText(apiKey, textSearchQuery),
+  ]);
+
+  // Process autocomplete predictions
   let predictions: GoogleAutocompletePrediction[];
-  if (cached) {
-    predictions = cached;
-  } else {
-    // Call Google Autocomplete API
-    const result = await getAutocompletePredictions(apiKey, input);
-
-    if (!result.ok) {
-      return c.json({ success: false, error: result.error }, 500);
-    }
-
-    predictions = result.data;
-
-    // Store in cache
+  if (cachedPredictions) {
+    predictions = cachedPredictions;
+  } else if (predictionsResult && predictionsResult.ok) {
+    predictions = predictionsResult.data;
     await setCache(
       db,
       'station_predictions',
-      cacheKey,
+      input,
       predictions,
       CACHE_TTL.station_predictions,
     );
+  } else {
+    // Autocomplete failed — return error only if text search also fails
+    predictions = [];
   }
 
-  // Autocomplete API にはリクエスト時に types=train_station|subway_station を
-  // 指定済みなので、レスポンスは既に駅に限定されている。
-  // ここで isStation フィルタをかけると、Google が types フィールドに
-  // transit_station のみを返したり undefined を返した場合に候補が消えてしまう。
-  const stations: Station[] = predictions.map(predictionToStation);
+  // Process text search results (take first match only)
+  let exactMatches: GooglePlaceResult[];
+  if (cachedTextSearch) {
+    exactMatches = cachedTextSearch;
+  } else if (textSearchResult && textSearchResult.ok) {
+    // Keep only the first result — the most relevant exact match
+    exactMatches = textSearchResult.data.slice(0, 1);
+    await setCache(
+      db,
+      'station_text_search',
+      input,
+      exactMatches,
+      CACHE_TTL.station_text_search,
+    );
+  } else {
+    // Text search failed — continue with autocomplete results only
+    exactMatches = [];
+  }
+
+  // Convert to Station[]
+  const autocompleteStations = predictions.map(predictionToStation);
+  const exactStations = exactMatches.map((p) => placeToStation(p));
+
+  // Merge: exact matches first, then autocomplete (deduplicated by place_id)
+  const seenPlaceIds = new Set(exactStations.map((s) => s.placeId));
+  const deduped = autocompleteStations.filter(
+    (s) => !seenPlaceIds.has(s.placeId),
+  );
+  const stations = [...exactStations, ...deduped];
+
+  if (stations.length === 0 && predictionsResult && !predictionsResult.ok) {
+    return c.json({ success: false, error: predictionsResult.error }, 500);
+  }
 
   return c.json({ success: true, data: stations });
 });

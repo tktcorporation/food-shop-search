@@ -8,6 +8,7 @@ export const CACHE_TTL = {
   restaurant_search: 172800, // 48h
   geocode_forward: 604800, // 7d
   station_predictions: 86400, // 24h
+  station_text_search: 86400, // 24h
   nearby_stations: 604800, // 7d
   geocode_reverse: 86400, // 24h
   place_detail: 1209600, // 14d
