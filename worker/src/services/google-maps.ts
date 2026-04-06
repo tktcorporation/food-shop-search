@@ -2,6 +2,7 @@ import type {
   Result,
   GoogleNearbySearchResponse,
   GoogleAutocompleteResponse,
+  GoogleTextSearchResponse,
   GoogleGeocodeResponse,
   GooglePlaceResult,
   GoogleAutocompletePrediction,
@@ -63,7 +64,7 @@ export async function getAutocompletePredictions(
 ): Promise<Result<GoogleAutocompletePrediction[]>> {
   const params = new URLSearchParams({
     input,
-    types: 'train_station|subway_station',
+    types: 'transit_station',
     components: 'country:jp',
     language: 'ja',
     key: apiKey,
@@ -89,6 +90,44 @@ export async function getAutocompletePredictions(
   }
 
   return { ok: true, data: data.predictions };
+}
+
+/**
+ * Search for a station by name using Google Places Text Search REST API.
+ * Used to supplement autocomplete results with exact station matches.
+ */
+export async function searchStationByText(
+  apiKey: string,
+  query: string,
+): Promise<Result<GooglePlaceResult[]>> {
+  const params = new URLSearchParams({
+    query,
+    type: 'train_station',
+    language: 'ja',
+    region: 'jp',
+    key: apiKey,
+  });
+
+  const url = `${MAPS_BASE_URL}/maps/api/place/textsearch/json?${params.toString()}`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    return {
+      ok: false,
+      error: `Google Text Search API request failed: ${response.status} ${response.statusText}`,
+    };
+  }
+
+  const data: GoogleTextSearchResponse = await response.json();
+
+  if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
+    return {
+      ok: false,
+      error: `Google Text Search API error: ${data.status}`,
+    };
+  }
+
+  return { ok: true, data: data.results };
 }
 
 /**

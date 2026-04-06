@@ -76,6 +76,7 @@ export interface GooglePlaceResult {
   place_id: string;
   name: string;
   vicinity: string;
+  formatted_address?: string;
   rating?: number;
   user_ratings_total?: number;
   price_level?: number;
@@ -94,6 +95,11 @@ export interface GoogleNearbySearchResponse {
   results: GooglePlaceResult[];
   status: string;
   next_page_token?: string;
+}
+
+export interface GoogleTextSearchResponse {
+  results: GooglePlaceResult[];
+  status: string;
 }
 
 export interface GoogleAutocompletePrediction {

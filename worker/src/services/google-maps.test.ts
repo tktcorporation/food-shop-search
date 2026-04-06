@@ -153,7 +153,7 @@ describe('getAutocompletePredictions', () => {
     const calledUrl = mockFetch.mock.calls[0][0] as string;
     expect(calledUrl).toContain('autocomplete');
     expect(calledUrl).toContain('country%3Ajp');
-    expect(calledUrl).toContain('train_station');
+    expect(calledUrl).toContain('transit_station');
     expect(calledUrl).not.toContain('airport');
   });
 });
