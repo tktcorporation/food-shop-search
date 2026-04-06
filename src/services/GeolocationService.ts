@@ -5,11 +5,14 @@ import {
   HttpsRequiredError,
 } from '../errors';
 
+export type GeolocationPermissionState = 'granted' | 'denied' | 'prompt';
+
 export interface GeolocationService {
   readonly getCurrentPosition: () => Effect.Effect<
     GeolocationPosition,
     GeolocationError | HttpsRequiredError | GeolocationUnsupportedError
   >;
+  readonly queryPermission: () => Effect.Effect<GeolocationPermissionState>;
 }
 
 export const GeolocationService =
@@ -49,6 +52,21 @@ const geolocationErrorToMessage = (error: GeolocationPositionError): string => {
 export const GeolocationServiceLive = Layer.succeed(
   GeolocationService,
   GeolocationService.of({
+    queryPermission: () =>
+      Effect.async<GeolocationPermissionState>((resume) => {
+        if (typeof navigator === 'undefined' || !navigator.permissions) {
+          resume(Effect.succeed('prompt'));
+          return;
+        }
+        navigator.permissions
+          .query({ name: 'geolocation' })
+          .then((result) => {
+            resume(Effect.succeed(result.state as GeolocationPermissionState));
+          })
+          .catch(() => {
+            resume(Effect.succeed('prompt'));
+          });
+      }),
     getCurrentPosition: () =>
       Effect.gen(function* () {
         if (!checkHttps()) {
@@ -86,7 +104,7 @@ export const GeolocationServiceLive = Layer.succeed(
               {
                 enableHighAccuracy: true,
                 timeout: 10000,
-                maximumAge: 0,
+                maximumAge: 300_000,
               },
             );
           },

@@ -32,3 +32,26 @@ export const searchNearbyStationsProgram = (): Effect.Effect<
 
     return yield* api.searchNearbyStations(latitude, longitude);
   });
+
+/**
+ * 位置情報が許可済みの場合のみ、現在地周辺の駅を検索する。
+ * 未許可（prompt）の場合は空配列を返し、許可ダイアログを表示しない。
+ */
+export const searchNearbyStationsIfPermittedProgram = (): Effect.Effect<
+  Station[],
+  | GeolocationError
+  | HttpsRequiredError
+  | GeolocationUnsupportedError
+  | PlaceSearchError,
+  GeolocationService | ApiService
+> =>
+  Effect.gen(function* () {
+    const geolocationService = yield* GeolocationService;
+    const permission = yield* geolocationService.queryPermission();
+
+    if (permission !== 'granted') {
+      return [] as Station[];
+    }
+
+    return yield* searchNearbyStationsProgram();
+  });

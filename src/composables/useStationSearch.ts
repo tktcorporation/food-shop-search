@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Effect } from 'effect';
 import type { Station } from './useStationSearch/types';
 import { searchStationsProgram } from '../programs/searchStations';
-import { searchNearbyStationsProgram } from '../programs/searchNearbyStations';
+import { searchNearbyStationsIfPermittedProgram } from '../programs/searchNearbyStations';
 import { extractFirstFailure } from '../utils/effectErrors';
 import { AppLive } from '../services';
 import { STATION_SEARCH_DEBOUNCE_MS } from '../constants';
@@ -20,7 +20,10 @@ const useStationSearch = () => {
     if (hasInitialized.current) return;
     hasInitialized.current = true;
 
-    const runnable = Effect.provide(searchNearbyStationsProgram(), AppLive);
+    const runnable = Effect.provide(
+      searchNearbyStationsIfPermittedProgram(),
+      AppLive,
+    );
 
     void Effect.runPromiseExit(runnable).then((exit) => {
       if (exit._tag === 'Success' && exit.value.length > 0) {
