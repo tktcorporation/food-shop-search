@@ -27,7 +27,7 @@
   "dependencies": {
     "drizzle-orm": "^0.45.1",
     "effect": "^3.19.17",
-    "hono": "^4.11.10",
+    "hono": "^4.12.12",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.564.0",
     "motion": "^12.34.0",
