@@ -27,6 +27,9 @@ export const keywordCategories = [
       { value: 'ファストフード', label: 'ファストフード' },
       { value: 'ファミレス', label: 'ファミレス' },
       { value: 'カフェ', label: 'カフェ' },
+      { value: '居酒屋', label: '居酒屋' },
+      { value: 'バー', label: 'バー' },
+      { value: '食べ放題', label: '食べ放題' },
     ],
   },
   {
@@ -34,6 +37,8 @@ export const keywordCategories = [
     keywords: [
       { value: 'ラーメン', label: 'ラーメン' },
       { value: 'うどん,そば', label: 'うどん,そば' },
+      { value: 'カレー', label: 'カレー' },
+      { value: '寿司', label: '寿司' },
       { value: '天ぷら', label: '天ぷら' },
       { value: 'とんかつ', label: 'とんかつ' },
       { value: '焼き鳥', label: '焼き鳥' },
@@ -41,6 +46,22 @@ export const keywordCategories = [
       { value: '焼肉', label: '焼肉' },
       { value: 'ステーキ', label: 'ステーキ' },
       { value: 'ハンバーグ', label: 'ハンバーグ' },
+      { value: 'ピザ', label: 'ピザ' },
+      { value: 'パスタ', label: 'パスタ' },
+      { value: '丼もの', label: '丼もの' },
+      { value: '餃子', label: '餃子' },
+      { value: 'たこ焼き,お好み焼き', label: 'たこ焼き,お好み焼き' },
+    ],
+  },
+  {
+    name: 'パン・スイーツ',
+    keywords: [
+      { value: 'パン', label: 'パン' },
+      { value: 'ケーキ', label: 'ケーキ' },
+      { value: 'スイーツ', label: 'スイーツ' },
+      { value: 'ドーナツ', label: 'ドーナツ' },
+      { value: 'クレープ', label: 'クレープ' },
+      { value: 'アイスクリーム', label: 'アイスクリーム' },
     ],
   },
 ];

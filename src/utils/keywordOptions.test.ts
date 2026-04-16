@@ -7,13 +7,19 @@ import {
 
 describe('keywordOptions', () => {
   describe('keywordCategories', () => {
-    it('has four categories', () => {
-      expect(keywordCategories).toHaveLength(4);
+    it('has five categories', () => {
+      expect(keywordCategories).toHaveLength(5);
     });
 
     it('contains expected category names', () => {
       const names = keywordCategories.map((c) => c.name);
-      expect(names).toEqual(['食事', 'ジャンル', 'スタイル', '料理']);
+      expect(names).toEqual([
+        '食事',
+        'ジャンル',
+        'スタイル',
+        '料理',
+        'パン・スイーツ',
+      ]);
     });
 
     it('each category has at least one keyword', () => {
