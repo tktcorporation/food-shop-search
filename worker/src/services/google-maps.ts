@@ -11,8 +11,20 @@ import type {
 
 const MAPS_BASE_URL = 'https://maps.googleapis.com';
 
+/** Google Nearby Search API の最大ページ数（API上限は3ページ = 60件） */
+const MAX_PAGES = 3;
+
+/** next_page_token が有効になるまでの待機時間 (ms) */
+const PAGE_TOKEN_DELAY_MS = 2000;
+
+function delay(ms: number): Promise<void> {
+  // oxlint-disable-next-line effect-enforce/no-promise-constructor -- Worker側はEffectを使用しない
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 /**
  * Search for nearby places using Google Maps Nearby Search REST API.
+ * Automatically fetches subsequent pages via next_page_token (up to 60 results).
  */
 export async function searchNearbyPlaces(
   apiKey: string,
@@ -22,7 +34,7 @@ export async function searchNearbyPlaces(
   keyword: string,
   type?: string,
 ): Promise<Result<GooglePlaceResult[]>> {
-  const params = new URLSearchParams({
+  const baseParams = new URLSearchParams({
     location: `${lat},${lng}`,
     radius: String(radius),
     keyword,
@@ -30,29 +42,48 @@ export async function searchNearbyPlaces(
     key: apiKey,
   });
   if (type) {
-    params.set('type', type);
+    baseParams.set('type', type);
   }
 
-  const url = `${MAPS_BASE_URL}/maps/api/place/nearbysearch/json?${params.toString()}`;
-  const response = await fetch(url);
+  const allResults: GooglePlaceResult[] = [];
+  let pageToken: string | undefined;
 
-  if (!response.ok) {
-    return {
-      ok: false,
-      error: `Google Nearby Search API request failed: ${response.status} ${response.statusText}`,
-    };
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const params = new URLSearchParams(baseParams);
+    if (pageToken) {
+      params.set('pagetoken', pageToken);
+    }
+
+    const url = `${MAPS_BASE_URL}/maps/api/place/nearbysearch/json?${params.toString()}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      return {
+        ok: false,
+        error: `Google Nearby Search API request failed: ${response.status} ${response.statusText}`,
+      };
+    }
+
+    const data: GoogleNearbySearchResponse = await response.json();
+
+    if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
+      return {
+        ok: false,
+        error: `Google Nearby Search API error: ${data.status}`,
+      };
+    }
+
+    allResults.push(...data.results);
+
+    if (!data.next_page_token) {
+      break;
+    }
+
+    pageToken = data.next_page_token;
+    await delay(PAGE_TOKEN_DELAY_MS);
   }
 
-  const data: GoogleNearbySearchResponse = await response.json();
-
-  if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-    return {
-      ok: false,
-      error: `Google Nearby Search API error: ${data.status}`,
-    };
-  }
-
-  return { ok: true, data: data.results };
+  return { ok: true, data: allResults };
 }
 
 /**
