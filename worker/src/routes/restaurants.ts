@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { Effect } from 'effect';
 import { createDb } from '../db';
 import {
   getCache,
@@ -103,67 +104,71 @@ restaurantRoutes.post('/restaurants/search', async (c) => {
   const apiKey = c.env.GOOGLE_MAPS_API_KEY;
   const { keywords, location, stationPlaceId } = body;
 
-  // Start all keyword fetches in parallel
-  const pending = keywords.map(async (keyword) => {
-    // キャッシュキーに半径を含めない（常に SEARCH_MAX_RADIUS で検索するため）
-    const cacheKey = `${keyword}-${stationPlaceId}`;
+  // キーワードごとの検索を Effect で構築
+  const fetchKeyword = (keyword: string) =>
+    Effect.gen(function* () {
+      const cacheKey = `${keyword}-${stationPlaceId}`;
 
-    // Check search result cache (place_id list)
-    const cachedPlaceIds = await getCache<string[]>(
-      db,
-      'restaurant_search',
-      cacheKey,
-    );
+      // Check search result cache (place_id list)
+      const cachedPlaceIds = yield* Effect.promise(() =>
+        getCache<string[]>(db, 'restaurant_search', cacheKey),
+      );
 
-    if (cachedPlaceIds) {
-      // Fetch details from place_cache
-      const placeMap = await getPlacesByIds(db, cachedPlaceIds);
-      return { keyword, placeMap, error: undefined };
-    }
+      if (cachedPlaceIds) {
+        const placeMap = yield* Effect.promise(() =>
+          getPlacesByIds(db, cachedPlaceIds),
+        );
+        return { keyword, placeMap };
+      }
 
-    // Cache miss - call Google Maps API（常に最大半径で検索）
-    const result = await searchNearbyPlaces(
-      apiKey,
-      location.lat,
-      location.lng,
-      SEARCH_MAX_RADIUS,
-      keyword,
-    );
-
-    if (!result.ok) {
-      return {
+      // Cache miss - call Google Maps API（常に最大半径で検索）
+      const places = yield* searchNearbyPlaces(
+        apiKey,
+        location.lat,
+        location.lng,
+        SEARCH_MAX_RADIUS,
         keyword,
-        placeMap: new Map<string, PlaceCacheRow>(),
-        error: result.error,
-      };
-    }
+      );
 
-    // Upsert each place into place_cache
-    await upsertPlaces(db, result.data);
+      // Upsert each place into place_cache
+      yield* Effect.promise(() => upsertPlaces(db, places));
 
-    // Save place_id list to api_cache
-    const placeIds = result.data.map((p) => p.place_id);
-    await setCache(
-      db,
-      'restaurant_search',
-      cacheKey,
-      placeIds,
-      CACHE_TTL.restaurant_search,
-    );
+      // Save place_id list to api_cache
+      const placeIds = places.map((p) => p.place_id);
+      yield* Effect.promise(() =>
+        setCache(
+          db,
+          'restaurant_search',
+          cacheKey,
+          placeIds,
+          CACHE_TTL.restaurant_search,
+        ),
+      );
 
-    // Build map from fresh data
-    const placeMap = await getPlacesByIds(db, placeIds);
-    return { keyword, placeMap, error: undefined };
+      // Build map from fresh data
+      const placeMap = yield* Effect.promise(() =>
+        getPlacesByIds(db, placeIds),
+      );
+      return { keyword, placeMap };
+    });
+
+  // 全キーワードを並列実行
+  const program = Effect.all(keywords.map(fetchKeyword), {
+    concurrency: 'unbounded',
   });
 
-  const keywordResults = [];
-  for (const p of pending) {
-    const result = await p;
-    if (result.error) {
-      return c.json({ success: false, error: result.error }, 500);
-    }
-    keywordResults.push(result);
+  const exit = await Effect.runPromiseExit(program);
+
+  if (exit._tag === 'Failure') {
+    const error = exit.cause;
+    const message =
+      error._tag === 'Fail'
+        ? error.error.message
+        : 'レストラン検索中にエラーが発生しました';
+    return c.json({ success: false, error: message }, 500);
   }
+
+  const keywordResults = exit.value;
 
   // Combine and deduplicate results by place_id
   const restaurantMap = new Map<string, Restaurant>();

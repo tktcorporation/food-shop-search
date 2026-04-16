@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { Effect } from 'effect';
 import { createDb } from '../db';
 import { getCache, setCache, CACHE_TTL } from '../services/cache';
 import {
@@ -112,23 +113,27 @@ stationRoutes.post('/stations/search', async (c) => {
     input,
   );
 
-  // Fetch uncached results in parallel
-  // oxlint-disable-next-line effect-enforce/no-promise-static-methods -- Worker側はEffectを使用していない
-  const [predictionsResult, textSearchResult] = await Promise.all([
-    cachedPredictions
-      ? Promise.resolve(null)
-      : getAutocompletePredictions(apiKey, input),
-    cachedTextSearch
-      ? Promise.resolve(null)
-      : searchStationByText(apiKey, textSearchQuery),
-  ]);
+  // Fetch uncached results in parallel via Effect.all
+  const predictionsEffect = cachedPredictions
+    ? Effect.succeed(null)
+    : Effect.either(getAutocompletePredictions(apiKey, input));
+
+  const textSearchEffect = cachedTextSearch
+    ? Effect.succeed(null)
+    : Effect.either(searchStationByText(apiKey, textSearchQuery));
+
+  const [predictionsResult, textSearchResult] = await Effect.runPromise(
+    Effect.all([predictionsEffect, textSearchEffect], {
+      concurrency: 'unbounded',
+    }),
+  );
 
   // Process autocomplete predictions
   let predictions: GoogleAutocompletePrediction[];
   if (cachedPredictions) {
     predictions = cachedPredictions;
-  } else if (predictionsResult && predictionsResult.ok) {
-    predictions = predictionsResult.data;
+  } else if (predictionsResult && predictionsResult._tag === 'Right') {
+    predictions = predictionsResult.right;
     await setCache(
       db,
       'station_predictions',
@@ -145,9 +150,9 @@ stationRoutes.post('/stations/search', async (c) => {
   let exactMatches: GooglePlaceResult[];
   if (cachedTextSearch) {
     exactMatches = cachedTextSearch;
-  } else if (textSearchResult && textSearchResult.ok) {
+  } else if (textSearchResult && textSearchResult._tag === 'Right') {
     // Keep only the first result — the most relevant exact match
-    exactMatches = textSearchResult.data.slice(0, 1);
+    exactMatches = textSearchResult.right.slice(0, 1);
     await setCache(
       db,
       'station_text_search',
@@ -171,8 +176,15 @@ stationRoutes.post('/stations/search', async (c) => {
   );
   const stations = [...exactStations, ...deduped];
 
-  if (stations.length === 0 && predictionsResult && !predictionsResult.ok) {
-    return c.json({ success: false, error: predictionsResult.error }, 500);
+  if (
+    stations.length === 0 &&
+    predictionsResult &&
+    predictionsResult._tag === 'Left'
+  ) {
+    return c.json(
+      { success: false, error: predictionsResult.left.message },
+      500,
+    );
   }
 
   return c.json({ success: true, data: stations });
@@ -210,13 +222,20 @@ stationRoutes.post('/stations/nearby', async (c) => {
     // Search for train stations within 5km
     // type を指定しないことで subway_station のみの駅も漏れなく取得し、
     // isStation フィルタで train_station / subway_station に絞る
-    const result = await searchNearbyPlaces(apiKey, lat, lng, 5000, '駅');
+    const exit = await Effect.runPromiseExit(
+      searchNearbyPlaces(apiKey, lat, lng, 5000, '駅'),
+    );
 
-    if (!result.ok) {
-      return c.json({ success: false, error: result.error }, 500);
+    if (exit._tag === 'Failure') {
+      const error = exit.cause;
+      const message =
+        error._tag === 'Fail'
+          ? error.error.message
+          : '近くの駅の検索に失敗しました';
+      return c.json({ success: false, error: message }, 500);
     }
 
-    places = result.data;
+    places = exit.value;
 
     // Store in cache
     await setCache(

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { Effect } from 'effect';
 import {
   searchNearbyPlaces,
   getAutocompletePredictions,
@@ -15,7 +16,7 @@ beforeEach(() => {
 });
 
 describe('searchNearbyPlaces', () => {
-  it('returns ok result on OK status', async () => {
+  it('returns results on OK status', async () => {
     const mockResults = [
       { place_id: 'p1', name: 'Restaurant A', vicinity: 'Tokyo' },
     ];
@@ -24,14 +25,10 @@ describe('searchNearbyPlaces', () => {
       json: async () => ({ results: mockResults, status: 'OK' }),
     });
 
-    const result = await searchNearbyPlaces(
-      'test-key',
-      35.68,
-      139.76,
-      1000,
-      'ramen',
+    const result = await Effect.runPromise(
+      searchNearbyPlaces('test-key', 35.68, 139.76, 1000, 'ramen'),
     );
-    expect(result).toEqual({ ok: true, data: mockResults });
+    expect(result).toEqual(mockResults);
     expect(mockFetch).toHaveBeenCalledOnce();
 
     const calledUrl = mockFetch.mock.calls[0][0] as string;
@@ -40,59 +37,41 @@ describe('searchNearbyPlaces', () => {
     expect(calledUrl).toContain('key=test-key');
   });
 
-  it('returns ok with empty array on ZERO_RESULTS', async () => {
+  it('returns empty array on ZERO_RESULTS', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ results: [], status: 'ZERO_RESULTS' }),
     });
 
-    const result = await searchNearbyPlaces(
-      'test-key',
-      35.68,
-      139.76,
-      1000,
-      'ramen',
+    const result = await Effect.runPromise(
+      searchNearbyPlaces('test-key', 35.68, 139.76, 1000, 'ramen'),
     );
-    expect(result).toEqual({ ok: true, data: [] });
+    expect(result).toEqual([]);
   });
 
-  it('returns error on HTTP error', async () => {
+  it('fails on HTTP error', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: false,
       status: 500,
       statusText: 'Internal Server Error',
     });
 
-    const result = await searchNearbyPlaces(
-      'test-key',
-      35.68,
-      139.76,
-      1000,
-      'ramen',
+    const exit = await Effect.runPromiseExit(
+      searchNearbyPlaces('test-key', 35.68, 139.76, 1000, 'ramen'),
     );
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.error).toContain('request failed: 500');
-    }
+    expect(exit._tag).toBe('Failure');
   });
 
-  it('returns error on API error status', async () => {
+  it('fails on API error status', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ results: [], status: 'REQUEST_DENIED' }),
     });
 
-    const result = await searchNearbyPlaces(
-      'test-key',
-      35.68,
-      139.76,
-      1000,
-      'ramen',
+    const exit = await Effect.runPromiseExit(
+      searchNearbyPlaces('test-key', 35.68, 139.76, 1000, 'ramen'),
     );
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.error).toContain('REQUEST_DENIED');
-    }
+    expect(exit._tag).toBe('Failure');
   });
 
   it('includes type parameter when provided', async () => {
@@ -101,13 +80,15 @@ describe('searchNearbyPlaces', () => {
       json: async () => ({ results: [], status: 'ZERO_RESULTS' }),
     });
 
-    await searchNearbyPlaces(
-      'test-key',
-      35.68,
-      139.76,
-      5000,
-      '駅',
-      'train_station',
+    await Effect.runPromise(
+      searchNearbyPlaces(
+        'test-key',
+        35.68,
+        139.76,
+        5000,
+        '駅',
+        'train_station',
+      ),
     );
 
     const calledUrl = mockFetch.mock.calls[0][0] as string;
@@ -120,15 +101,48 @@ describe('searchNearbyPlaces', () => {
       json: async () => ({ results: [], status: 'ZERO_RESULTS' }),
     });
 
-    await searchNearbyPlaces('test-key', 35.68, 139.76, 1000, 'ramen');
+    await Effect.runPromise(
+      searchNearbyPlaces('test-key', 35.68, 139.76, 1000, 'ramen'),
+    );
 
     const calledUrl = mockFetch.mock.calls[0][0] as string;
     expect(calledUrl).not.toContain('type=');
   });
+
+  it('fetches multiple pages when next_page_token is present', async () => {
+    const page1Results = [{ place_id: 'p1', name: 'A', vicinity: 'Tokyo' }];
+    const page2Results = [{ place_id: 'p2', name: 'B', vicinity: 'Tokyo' }];
+
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          results: page1Results,
+          status: 'OK',
+          next_page_token: 'token123',
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          results: page2Results,
+          status: 'OK',
+        }),
+      });
+
+    const result = await Effect.runPromise(
+      searchNearbyPlaces('test-key', 35.68, 139.76, 1000, 'ramen'),
+    );
+    expect(result).toEqual([...page1Results, ...page2Results]);
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+
+    const secondUrl = mockFetch.mock.calls[1][0] as string;
+    expect(secondUrl).toContain('pagetoken=token123');
+  });
 });
 
 describe('getAutocompletePredictions', () => {
-  it('returns ok result on OK status', async () => {
+  it('returns predictions on OK status', async () => {
     const mockPredictions = [
       {
         place_id: 'p1',
@@ -147,8 +161,10 @@ describe('getAutocompletePredictions', () => {
       }),
     });
 
-    const result = await getAutocompletePredictions('test-key', '新宿');
-    expect(result).toEqual({ ok: true, data: mockPredictions });
+    const result = await Effect.runPromise(
+      getAutocompletePredictions('test-key', '新宿'),
+    );
+    expect(result).toEqual(mockPredictions);
 
     const calledUrl = mockFetch.mock.calls[0][0] as string;
     expect(calledUrl).toContain('autocomplete');
@@ -159,7 +175,7 @@ describe('getAutocompletePredictions', () => {
 });
 
 describe('geocodeForward', () => {
-  it('returns ok result on OK status', async () => {
+  it('returns results on OK status', async () => {
     const mockResults = [
       {
         formatted_address: '東京都新宿区',
@@ -171,13 +187,15 @@ describe('geocodeForward', () => {
       json: async () => ({ results: mockResults, status: 'OK' }),
     });
 
-    const result = await geocodeForward('test-key', '新宿駅');
-    expect(result).toEqual({ ok: true, data: mockResults });
+    const result = await Effect.runPromise(
+      geocodeForward('test-key', '新宿駅'),
+    );
+    expect(result).toEqual(mockResults);
   });
 });
 
 describe('geocodeReverse', () => {
-  it('returns ok result on OK status', async () => {
+  it('returns results on OK status', async () => {
     const mockResults = [
       {
         formatted_address: '東京都千代田区丸の内',
@@ -189,8 +207,10 @@ describe('geocodeReverse', () => {
       json: async () => ({ results: mockResults, status: 'OK' }),
     });
 
-    const result = await geocodeReverse('test-key', 35.6812, 139.7671);
-    expect(result).toEqual({ ok: true, data: mockResults });
+    const result = await Effect.runPromise(
+      geocodeReverse('test-key', 35.6812, 139.7671),
+    );
+    expect(result).toEqual(mockResults);
 
     const calledUrl = mockFetch.mock.calls[0][0] as string;
     expect(calledUrl).toContain('latlng=35.6812');
