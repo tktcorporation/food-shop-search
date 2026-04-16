@@ -122,7 +122,7 @@ restaurantRoutes.post('/restaurants/search', async (c) => {
       }
 
       // Cache miss - call Google Maps API（常に最大半径で検索）
-      const places = yield* searchNearbyPlaces(
+      const { results: places, complete } = yield* searchNearbyPlaces(
         apiKey,
         location.lat,
         location.lng,
@@ -133,17 +133,19 @@ restaurantRoutes.post('/restaurants/search', async (c) => {
       // Upsert each place into place_cache
       yield* Effect.promise(() => upsertPlaces(db, places));
 
-      // Save place_id list to api_cache
+      // 完全な結果のみキャッシュ（不完全な結果は次回再取得させる）
       const placeIds = places.map((p) => p.place_id);
-      yield* Effect.promise(() =>
-        setCache(
-          db,
-          'restaurant_search',
-          cacheKey,
-          placeIds,
-          CACHE_TTL.restaurant_search,
-        ),
-      );
+      if (complete) {
+        yield* Effect.promise(() =>
+          setCache(
+            db,
+            'restaurant_search',
+            cacheKey,
+            placeIds,
+            CACHE_TTL.restaurant_search,
+          ),
+        );
+      }
 
       // Build map from fresh data
       const placeMap = yield* Effect.promise(() =>

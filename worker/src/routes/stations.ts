@@ -235,16 +235,18 @@ stationRoutes.post('/stations/nearby', async (c) => {
       return c.json({ success: false, error: message }, 500);
     }
 
-    places = exit.value;
+    places = exit.value.results;
 
-    // Store in cache
-    await setCache(
-      db,
-      'nearby_stations',
-      cacheKey,
-      places,
-      CACHE_TTL.nearby_stations,
-    );
+    // 完全な結果のみキャッシュ
+    if (exit.value.complete) {
+      await setCache(
+        db,
+        'nearby_stations',
+        cacheKey,
+        places,
+        CACHE_TTL.nearby_stations,
+      );
+    }
   }
 
   // Convert to Station[], filter to actual stations, sort by distance, take top 5

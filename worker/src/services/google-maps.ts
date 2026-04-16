@@ -24,6 +24,12 @@ const PAGE_TOKEN_MAX_RETRIES = 3;
 /** next_page_token リトライ間隔 (ms) */
 const PAGE_TOKEN_RETRY_DELAY_MS = 1000;
 
+/** searchNearbyPlaces の戻り値。complete が false の場合、結果が不完全なためキャッシュすべきでない */
+export interface NearbySearchResult {
+  readonly results: GooglePlaceResult[];
+  readonly complete: boolean;
+}
+
 /**
  * fetch して JSON をパースし、失敗時は GoogleMapsApiError にする共通ヘルパー
  */
@@ -76,7 +82,7 @@ export const searchNearbyPlaces = (
   radius: number,
   keyword: string,
   type?: string,
-): Effect.Effect<GooglePlaceResult[], GoogleMapsApiError> =>
+): Effect.Effect<NearbySearchResult, GoogleMapsApiError> =>
   Effect.gen(function* () {
     const baseParams = new URLSearchParams({
       location: `${lat},${lng}`,
@@ -130,8 +136,8 @@ export const searchNearbyPlaces = (
         );
 
         if (result._tag === 'Left') {
-          // fetch/parse 自体が失敗 → 取得済み結果を返す
-          return allResults;
+          // fetch/parse 自体が失敗 → 取得済み結果を返す（不完全）
+          return { results: allResults, complete: false };
         }
 
         const data = result.right;
@@ -146,8 +152,8 @@ export const searchNearbyPlaces = (
         }
 
         if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-          // 回復不能なエラー → 取得済み結果を返す
-          return allResults;
+          // 回復不能なエラー → 取得済み結果を返す（不完全）
+          return { results: allResults, complete: false };
         }
 
         allResults.push(...data.results);
@@ -163,7 +169,7 @@ export const searchNearbyPlaces = (
       yield* Effect.sleep(PAGE_TOKEN_DELAY_MS);
     }
 
-    return allResults;
+    return { results: allResults, complete: true };
   });
 
 /**

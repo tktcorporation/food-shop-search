@@ -28,7 +28,7 @@ describe('searchNearbyPlaces', () => {
     const result = await Effect.runPromise(
       searchNearbyPlaces('test-key', 35.68, 139.76, 1000, 'ramen'),
     );
-    expect(result).toEqual(mockResults);
+    expect(result).toEqual({ results: mockResults, complete: true });
     expect(mockFetch).toHaveBeenCalledOnce();
 
     const calledUrl = mockFetch.mock.calls[0][0] as string;
@@ -46,7 +46,7 @@ describe('searchNearbyPlaces', () => {
     const result = await Effect.runPromise(
       searchNearbyPlaces('test-key', 35.68, 139.76, 1000, 'ramen'),
     );
-    expect(result).toEqual([]);
+    expect(result).toEqual({ results: [], complete: true });
   });
 
   it('fails on HTTP error', async () => {
@@ -133,7 +133,10 @@ describe('searchNearbyPlaces', () => {
     const result = await Effect.runPromise(
       searchNearbyPlaces('test-key', 35.68, 139.76, 1000, 'ramen'),
     );
-    expect(result).toEqual([...page1Results, ...page2Results]);
+    expect(result).toEqual({
+      results: [...page1Results, ...page2Results],
+      complete: true,
+    });
     expect(mockFetch).toHaveBeenCalledTimes(2);
 
     const secondUrl = mockFetch.mock.calls[1][0] as string;
@@ -173,7 +176,10 @@ describe('searchNearbyPlaces', () => {
     const result = await Effect.runPromise(
       searchNearbyPlaces('test-key', 35.68, 139.76, 1000, 'ramen'),
     );
-    expect(result).toEqual([...page1Results, ...page2Results]);
+    expect(result).toEqual({
+      results: [...page1Results, ...page2Results],
+      complete: true,
+    });
     expect(mockFetch).toHaveBeenCalledTimes(3);
   });
 
@@ -200,8 +206,8 @@ describe('searchNearbyPlaces', () => {
     const result = await Effect.runPromise(
       searchNearbyPlaces('test-key', 35.68, 139.76, 1000, 'ramen'),
     );
-    // Should return page 1 results instead of failing entirely
-    expect(result).toEqual(page1Results);
+    // Should return page 1 results as incomplete instead of failing entirely
+    expect(result).toEqual({ results: page1Results, complete: false });
   });
 });
 
