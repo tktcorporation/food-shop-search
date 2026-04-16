@@ -18,6 +18,12 @@ const MAX_PAGES = 3;
 /** next_page_token が有効になるまでの待機時間 (ms) */
 const PAGE_TOKEN_DELAY_MS = 2000;
 
+/** next_page_token 使用時の INVALID_REQUEST に対するリトライ回数 */
+const PAGE_TOKEN_MAX_RETRIES = 3;
+
+/** next_page_token リトライ間隔 (ms) */
+const PAGE_TOKEN_RETRY_DELAY_MS = 1000;
+
 /**
  * fetch して JSON をパースし、失敗時は GoogleMapsApiError にする共通ヘルパー
  */
@@ -93,19 +99,67 @@ export const searchNearbyPlaces = (
       }
 
       const url = `${MAPS_BASE_URL}/maps/api/place/nearbysearch/json?${params.toString()}`;
-      const data = yield* fetchGoogleApi<GoogleNearbySearchResponse>(
-        url,
-        'Google Nearby Search API',
-      );
-      yield* validateStatus(data.status, 'Google Nearby Search API');
 
-      allResults.push(...data.results);
+      // 1ページ目は通常通りfetch & validate
+      if (!pageToken) {
+        const data = yield* fetchGoogleApi<GoogleNearbySearchResponse>(
+          url,
+          'Google Nearby Search API',
+        );
+        yield* validateStatus(data.status, 'Google Nearby Search API');
 
-      if (!data.next_page_token) {
+        allResults.push(...data.results);
+
+        if (!data.next_page_token) {
+          break;
+        }
+
+        pageToken = data.next_page_token;
+        yield* Effect.sleep(PAGE_TOKEN_DELAY_MS);
+        continue;
+      }
+
+      // 2ページ目以降: INVALID_REQUEST はリトライ、それ以外のエラーは取得済み結果を返す
+      let fetched = false;
+      for (let retry = 0; retry <= PAGE_TOKEN_MAX_RETRIES; retry++) {
+        const result = yield* Effect.either(
+          fetchGoogleApi<GoogleNearbySearchResponse>(
+            url,
+            'Google Nearby Search API',
+          ),
+        );
+
+        if (result._tag === 'Left') {
+          // fetch/parse 自体が失敗 → 取得済み結果を返す
+          return allResults;
+        }
+
+        const data = result.right;
+
+        if (
+          data.status === 'INVALID_REQUEST' &&
+          retry < PAGE_TOKEN_MAX_RETRIES
+        ) {
+          // トークンがまだ有効化されていない → リトライ
+          yield* Effect.sleep(PAGE_TOKEN_RETRY_DELAY_MS);
+          continue;
+        }
+
+        if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
+          // 回復不能なエラー → 取得済み結果を返す
+          return allResults;
+        }
+
+        allResults.push(...data.results);
+        pageToken = data.next_page_token;
+        fetched = true;
         break;
       }
 
-      pageToken = data.next_page_token;
+      if (!fetched || !pageToken) {
+        break;
+      }
+
       yield* Effect.sleep(PAGE_TOKEN_DELAY_MS);
     }
 

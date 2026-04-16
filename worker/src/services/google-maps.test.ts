@@ -139,6 +139,70 @@ describe('searchNearbyPlaces', () => {
     const secondUrl = mockFetch.mock.calls[1][0] as string;
     expect(secondUrl).toContain('pagetoken=token123');
   });
+
+  it('retries on INVALID_REQUEST for paginated requests and succeeds', async () => {
+    const page1Results = [{ place_id: 'p1', name: 'A', vicinity: 'Tokyo' }];
+    const page2Results = [{ place_id: 'p2', name: 'B', vicinity: 'Tokyo' }];
+
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          results: page1Results,
+          status: 'OK',
+          next_page_token: 'token456',
+        }),
+      })
+      // First attempt: INVALID_REQUEST (token not yet valid)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          results: [],
+          status: 'INVALID_REQUEST',
+        }),
+      })
+      // Retry succeeds
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          results: page2Results,
+          status: 'OK',
+        }),
+      });
+
+    const result = await Effect.runPromise(
+      searchNearbyPlaces('test-key', 35.68, 139.76, 1000, 'ramen'),
+    );
+    expect(result).toEqual([...page1Results, ...page2Results]);
+    expect(mockFetch).toHaveBeenCalledTimes(3);
+  });
+
+  it('returns partial results when paginated request fails with non-transient error', async () => {
+    const page1Results = [{ place_id: 'p1', name: 'A', vicinity: 'Tokyo' }];
+
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          results: page1Results,
+          status: 'OK',
+          next_page_token: 'token789',
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          results: [],
+          status: 'REQUEST_DENIED',
+        }),
+      });
+
+    const result = await Effect.runPromise(
+      searchNearbyPlaces('test-key', 35.68, 139.76, 1000, 'ramen'),
+    );
+    // Should return page 1 results instead of failing entirely
+    expect(result).toEqual(page1Results);
+  });
 });
 
 describe('getAutocompletePredictions', () => {
