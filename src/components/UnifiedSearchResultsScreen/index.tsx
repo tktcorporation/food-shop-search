@@ -178,7 +178,7 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
   return (
     <div className="max-w-4xl mx-auto pb-20">
       {/* ===== Header ===== */}
-      <div className="sticky top-0 z-20 bg-surface">
+      <div className="sticky top-0 z-20 bg-surface max-h-dvh overflow-y-auto overscroll-contain">
         {/* Location Bar */}
         <div className="p-4 border-b border-primary-100">
           <div className="flex items-center gap-3">

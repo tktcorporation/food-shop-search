@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { Effect } from 'effect';
 import { createDb } from '../db';
 import { getCache, setCache, CACHE_TTL } from '../services/cache';
 import { geocodeForward, geocodeReverse } from '../services/google-maps';
@@ -43,13 +44,18 @@ geocodeRoutes.post('/geocode/forward', async (c) => {
   if (cached) {
     results = cached;
   } else {
-    const result = await geocodeForward(apiKey, address);
+    const exit = await Effect.runPromiseExit(geocodeForward(apiKey, address));
 
-    if (!result.ok) {
-      return c.json({ success: false, error: result.error }, 500);
+    if (exit._tag === 'Failure') {
+      const error = exit.cause;
+      const message =
+        error._tag === 'Fail'
+          ? error.error.message
+          : '位置を取得できませんでした';
+      return c.json({ success: false, error: message }, 500);
     }
 
-    results = result.data;
+    results = exit.value;
 
     // Store in cache
     await setCache(
@@ -107,13 +113,18 @@ geocodeRoutes.post('/geocode/reverse', async (c) => {
   if (cached) {
     results = cached;
   } else {
-    const result = await geocodeReverse(apiKey, lat, lng);
+    const exit = await Effect.runPromiseExit(geocodeReverse(apiKey, lat, lng));
 
-    if (!result.ok) {
-      return c.json({ success: false, error: result.error }, 500);
+    if (exit._tag === 'Failure') {
+      const error = exit.cause;
+      const message =
+        error._tag === 'Fail'
+          ? error.error.message
+          : '住所を取得できませんでした';
+      return c.json({ success: false, error: message }, 500);
     }
 
-    results = result.data;
+    results = exit.value;
 
     // Store in cache
     await setCache(
