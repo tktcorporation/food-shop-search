@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Effect } from 'effect';
-import type { Station } from './useStationSearch/types';
+import type { Station } from '@shared';
 import { searchStationsProgram } from '../programs/searchStations';
 import { searchNearbyStationsProgram } from '../programs/searchNearbyStations';
 import { extractFirstFailure } from '../utils/effectErrors';
@@ -50,7 +50,7 @@ const useStationSearch = () => {
 
       void Effect.runPromiseExit(runnable).then((exit) => {
         if (exit._tag === 'Success') {
-          setStationCandidates(exit.value);
+          setStationCandidates([...exit.value]);
         } else {
           const firstFailure = extractFirstFailure(exit.cause);
           if (firstFailure) {

@@ -4,7 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Star } from 'lucide-react';
 import { getKeywordLabel } from '../utils/keywordOptions';
-import type { Restaurant } from '../composables/useRestaurantSearch/types';
+import type { Restaurant } from '@shared';
 
 // Leaflet default marker icon fix (bundler compatibility)
 const defaultIcon = L.icon({

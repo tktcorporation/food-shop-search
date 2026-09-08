@@ -6,12 +6,10 @@ import type {
   GeolocationUnsupportedError,
 } from '../errors';
 import { GeolocationService, ApiService } from '../services';
+import type { LocationWithAddress } from '@shared';
 
-export interface LocationData {
-  lat: number;
-  lng: number;
-  address: string;
-}
+/** @deprecated Prefer LocationWithAddress from @shared */
+export type LocationData = LocationWithAddress;
 
 /**
  * 現在地取得の Effect プログラム。
@@ -20,7 +18,7 @@ export interface LocationData {
  * 2. Worker API で逆ジオコーディングして住所を取得
  */
 export const getLocationProgram = (): Effect.Effect<
-  LocationData,
+  LocationWithAddress,
   | GeolocationError
   | HttpsRequiredError
   | GeolocationUnsupportedError
@@ -31,7 +29,6 @@ export const getLocationProgram = (): Effect.Effect<
     const geolocationService = yield* GeolocationService;
     const api = yield* ApiService;
 
-    // ブラウザから位置情報を取得
     const position = yield* geolocationService.getCurrentPosition();
     const { latitude, longitude } = position.coords;
 

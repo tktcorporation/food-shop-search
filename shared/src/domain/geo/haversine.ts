@@ -1,8 +1,8 @@
 const toRad = (deg: number): number => deg * (Math.PI / 180);
 
 /**
- * Calculate the distance between two geographic coordinates using the Haversine formula.
- * Returns distance in meters.
+ * 2点間の距離をハーバーサイン公式で計算する（メートル）。
+ * FE / Worker 共通の SSOT。
  */
 export const haversineDistance = (
   lat1: number,
@@ -10,7 +10,7 @@ export const haversineDistance = (
   lat2: number,
   lng2: number,
 ): number => {
-  const R = 6371000; // Earth's radius in meters
+  const R = 6371000;
   const dLat = toRad(lat2 - lat1);
   const dLng = toRad(lng2 - lng1);
   const a =

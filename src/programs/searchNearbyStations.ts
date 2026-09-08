@@ -6,7 +6,7 @@ import type {
   PlaceSearchError,
 } from '../errors';
 import { GeolocationService, ApiService } from '../services';
-import type { Station } from '../composables/useStationSearch/types';
+import type { Station } from '@shared';
 
 /**
  * 現在地周辺の駅を検索する Effect プログラム。
@@ -15,7 +15,7 @@ import type { Station } from '../composables/useStationSearch/types';
  * 2. Worker API で近くの駅を検索
  */
 export const searchNearbyStationsProgram = (): Effect.Effect<
-  Station[],
+  ReadonlyArray<Station>,
   | GeolocationError
   | HttpsRequiredError
   | GeolocationUnsupportedError

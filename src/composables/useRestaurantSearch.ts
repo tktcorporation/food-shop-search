@@ -1,19 +1,15 @@
 import { useState, useCallback, useRef } from 'react';
 import { Effect } from 'effect';
-import type { Restaurant } from './useRestaurantSearch/types';
-import type { Station } from './useStationSearch/types';
-import { filterRestaurants, sortByDistance } from './useRestaurantSearch/utils';
+import {
+  filterRestaurants,
+  sortByDistance,
+  type Restaurant,
+  type Station,
+  type RestaurantFilterParams,
+} from '@shared';
 import { searchRestaurantsProgram } from '../programs/searchRestaurants';
 import { extractErrorMessage } from '../utils/effectErrors';
 import { AppLive } from '../services';
-
-interface FilterParams {
-  minRating: number;
-  minReviews: number;
-  isOpenNow: boolean;
-  searchRadius: number;
-  selectedPriceLevels: number[];
-}
 
 /** 検索結果のインメモリキャッシュキーを生成 */
 function buildCacheKey(stationPlaceId: string, keywords: string[]): string {
@@ -28,13 +24,12 @@ const useRestaurantSearch = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const lastFilterParamsRef = useRef<FilterParams | null>(null);
+  const lastFilterParamsRef = useRef<RestaurantFilterParams | null>(null);
   /** 検索結果のインメモリキャッシュ（駅+キーワード → レストラン配列） */
   const searchCacheRef = useRef(new Map<string, Restaurant[]>());
 
-  // フィルターのみ再適用（API呼び出しなし）
   const reapplyFilters = useCallback(
-    (filterParams: FilterParams) => {
+    (filterParams: RestaurantFilterParams) => {
       lastFilterParamsRef.current = filterParams;
       const filtered = filterRestaurants(allRestaurants, filterParams);
       const sorted = sortByDistance(filtered);
@@ -43,7 +38,6 @@ const useRestaurantSearch = () => {
     [allRestaurants],
   );
 
-  // Effect プログラムによる検索実行
   const searchNearbyRestaurants = useCallback(
     (
       keywords: string[],
@@ -54,7 +48,7 @@ const useRestaurantSearch = () => {
       searchRadius: number,
       selectedPriceLevels: number[],
     ) => {
-      const filterParams: FilterParams = {
+      const filterParams: RestaurantFilterParams = {
         minRating,
         minReviews,
         isOpenNow,
@@ -63,7 +57,6 @@ const useRestaurantSearch = () => {
       };
       lastFilterParamsRef.current = filterParams;
 
-      // インメモリキャッシュをチェック
       const cacheKey = buildCacheKey(searchLocation.placeId, keywords);
       const cached = searchCacheRef.current.get(cacheKey);
       if (cached) {
@@ -76,7 +69,6 @@ const useRestaurantSearch = () => {
       setIsLoading(true);
       setError(null);
 
-      // Effect プログラムを構築して AppLive レイヤーで提供
       const program = searchRestaurantsProgram({
         keywords,
         minRating,
@@ -91,8 +83,7 @@ const useRestaurantSearch = () => {
 
       void Effect.runPromiseExit(runnable).then((exit) => {
         if (exit._tag === 'Success') {
-          const detailedResults = exit.value;
-          // キャッシュに保存
+          const detailedResults = [...exit.value];
           searchCacheRef.current.set(cacheKey, detailedResults);
           setAllRestaurants(detailedResults);
           const filtered = filterRestaurants(detailedResults, filterParams);

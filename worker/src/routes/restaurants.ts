@@ -1,5 +1,12 @@
 import { Hono } from 'hono';
 import { Effect } from 'effect';
+import {
+  RestaurantSearchRequest,
+  haversineDistance,
+  type Restaurant,
+} from '../../../shared/src';
+import type { Bindings } from '../bindings';
+import { parseJsonBody } from '../http/parse-body';
 import { createDb } from '../db';
 import {
   getCache,
@@ -10,8 +17,6 @@ import {
   type PlaceCacheRow,
 } from '../services/cache';
 import { searchNearbyPlaces, getPhotoUrl } from '../services/google-maps';
-import { haversineDistance } from '../lib/haversine';
-import type { RestaurantSearchRequest, Restaurant } from '../types';
 
 /**
  * Google API 呼び出し時に使用する固定半径。
@@ -19,11 +24,6 @@ import type { RestaurantSearchRequest, Restaurant } from '../types';
  * レスポンス時にリクエストされた半径で距離フィルタリングする。
  */
 const SEARCH_MAX_RADIUS = 500;
-
-type Bindings = {
-  DB: D1Database;
-  GOOGLE_MAPS_API_KEY: string;
-};
 
 export const restaurantRoutes = new Hono<{ Bindings: Bindings }>();
 
@@ -65,51 +65,20 @@ function toRestaurantFromCache(
 }
 
 restaurantRoutes.post('/restaurants/search', async (c) => {
-  const body = await c.req.json<RestaurantSearchRequest>();
-
-  if (
-    !body.keywords ||
-    !Array.isArray(body.keywords) ||
-    body.keywords.length === 0
-  ) {
-    return c.json(
-      { success: false, error: 'keywords must be a non-empty array' },
-      400,
-    );
+  const parsed = await parseJsonBody(c, RestaurantSearchRequest);
+  if (!parsed.ok) {
+    return parsed.response;
   }
 
-  if (
-    !body.location ||
-    body.location.lat == null ||
-    body.location.lng == null
-  ) {
-    return c.json(
-      { success: false, error: 'location with lat and lng is required' },
-      400,
-    );
-  }
-
-  if (!body.radius || body.radius <= 0) {
-    return c.json(
-      { success: false, error: 'radius must be a positive number' },
-      400,
-    );
-  }
-
-  if (!body.stationPlaceId) {
-    return c.json({ success: false, error: 'stationPlaceId is required' }, 400);
-  }
-
+  const { keywords, location, stationPlaceId } = parsed.data;
   const db = createDb(c.env.DB);
   const apiKey = c.env.GOOGLE_MAPS_API_KEY;
-  const { keywords, location, stationPlaceId } = body;
 
   // キーワードごとの検索を Effect で構築
   const fetchKeyword = (keyword: string) =>
     Effect.gen(function* () {
       const cacheKey = `${keyword}-${stationPlaceId}`;
 
-      // Check search result cache (place_id list)
       const cachedPlaceIds = yield* Effect.promise(() =>
         getCache<string[]>(db, 'restaurant_search', cacheKey),
       );
@@ -121,7 +90,6 @@ restaurantRoutes.post('/restaurants/search', async (c) => {
         return { keyword, placeMap };
       }
 
-      // Cache miss - call Google Maps API（常に最大半径で検索）
       const { results: places, complete } = yield* searchNearbyPlaces(
         apiKey,
         location.lat,
@@ -130,10 +98,8 @@ restaurantRoutes.post('/restaurants/search', async (c) => {
         keyword,
       );
 
-      // Upsert each place into place_cache
       yield* Effect.promise(() => upsertPlaces(db, places));
 
-      // 完全な結果のみキャッシュ（不完全な結果は次回再取得させる）
       const placeIds = places.map((p) => p.place_id);
       if (complete) {
         yield* Effect.promise(() =>
@@ -147,14 +113,12 @@ restaurantRoutes.post('/restaurants/search', async (c) => {
         );
       }
 
-      // Build map from fresh data
       const placeMap = yield* Effect.promise(() =>
         getPlacesByIds(db, placeIds),
       );
       return { keyword, placeMap };
     });
 
-  // 全キーワードを並列実行
   const program = Effect.all(keywords.map(fetchKeyword), {
     concurrency: 'unbounded',
   });
@@ -172,16 +136,18 @@ restaurantRoutes.post('/restaurants/search', async (c) => {
 
   const keywordResults = exit.value;
 
-  // Combine and deduplicate results by place_id
+  // Combine and deduplicate results by place_id（不変にマージ）
   const restaurantMap = new Map<string, Restaurant>();
 
   for (const { keyword, placeMap } of keywordResults) {
     for (const [placeId, place] of placeMap) {
       const existing = restaurantMap.get(placeId);
       if (existing) {
-        // Merge search keywords
         if (!existing.searchKeywords.includes(keyword)) {
-          existing.searchKeywords.push(keyword);
+          restaurantMap.set(placeId, {
+            ...existing,
+            searchKeywords: [...existing.searchKeywords, keyword],
+          });
         }
       } else {
         restaurantMap.set(

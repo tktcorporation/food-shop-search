@@ -15,8 +15,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import ErrorAlert from '../ui/ErrorAlert';
-import type { Restaurant } from '../../composables/useRestaurantSearch/types';
-import type { Station } from '../../composables/useStationSearch/types';
+import type { Restaurant, Station } from '@shared';
 import type { LocationData } from '../../programs/getLocation';
 import {
   SEARCH_DEBOUNCE_MS,

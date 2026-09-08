@@ -76,37 +76,37 @@ npx ziku push -m "..."  # ローカル改善をテンプレへ還元
 ## プロジェクト構造
 
 ```
+shared/src/                          # FE/Worker 共通ドメイン (SSOT)
+├── schema/                          # Effect Schema（Location/Restaurant/Station/API）
+├── domain/                          # 純関数ドメインロジック
+│   ├── geo/haversine.ts
+│   ├── restaurant/{filter,sort}.ts
+│   └── station/{normalize,from-google,is-station}.ts
+└── http/decode.ts                   # upstream-form デコードヘルパー
+
 src/                                 # フロントエンド (React)
 ├── components/                      # Reactコンポーネント
-│   ├── Map.tsx                      # Google Maps表示
-│   ├── RouletteScreen.tsx           # ルーレット機能
+│   ├── MapView.tsx                  # Leaflet 地図表示
 │   └── UnifiedSearchResultsScreen/  # 統合検索結果画面
-├── composables/                     # ビジネスロジック用フック
-│   ├── useLocationSearch.ts         # 現在地検索
-│   ├── useStationSearch.ts          # 駅検索
-│   ├── useRestaurantSearch.ts       # レストラン検索
-│   └── useOperatingHours.ts         # 営業時間フィルター
-├── hooks/                           # React固有のフック (useAnalytics等)
-├── utils/                           # ユーティリティ (cacheManager, keywordOptions等)
-├── App.tsx                          # メインアプリケーション
-└── index.css                        # グローバルスタイル (Tailwind)
+├── composables/                     # React アダプタ（状態 + Effect 実行）
+│   ├── useLocationSearch.ts
+│   ├── useStationSearch.ts
+│   ├── useNearbyStationSearch.ts
+│   └── useRestaurantSearch.ts
+├── programs/                        # Effect ユースケース
+├── services/                        # Effect Layer（ApiService 等）
+├── hooks/                           # React固有フック
+├── App.tsx
+└── index.css
 
 worker/src/                          # バックエンド (Hono / Cloudflare Workers)
 ├── index.ts                         # Honoアプリ エントリーポイント
-├── types.ts                         # Worker型定義 (Bindings等)
-├── routes/                          # APIルート
-│   ├── stations.ts                  # 駅検索API
-│   ├── restaurants.ts               # レストラン検索API
-│   └── geocode.ts                   # ジオコーディングAPI
-├── services/                        # 外部サービス連携
-│   ├── google-maps.ts               # Google Maps API呼び出し
-│   └── cache.ts                     # D1キャッシュサービス
-├── lib/                             # ユーティリティ
-│   ├── haversine.ts                 # 距離計算
-│   └── station-filter.ts            # 駅フィルタリング
-└── db/                              # データベース
-    ├── schema.ts                    # Drizzle スキーマ定義
-    └── index.ts                     # DB接続
+├── bindings.ts                      # Cloudflare Bindings SSOT
+├── http/parse-body.ts               # Schema.decode による upstream-form
+├── types.ts                         # Google Maps 生レスポンス型（インフラ）
+├── routes/                          # APIルート（薄い境界）
+├── services/                        # google-maps / D1 cache
+└── db/                              # Drizzle スキーマ
 
 drizzle/                             # D1マイグレーションファイル
 wrangler.toml                        # Cloudflare Workers設定
@@ -114,22 +114,28 @@ wrangler.toml                        # Cloudflare Workers設定
 
 ## 重要な設計パターン
 
+### Functional DDD / Upstream-form / SSOT
+
+- **SSOT**: ドメイン型・API契約・純ロジックは `shared/` に集約。FE/Worker で型を再定義しない
+- **Upstream-form**: HTTP/JSON 境界で `Schema.decodeUnknown` し、内部は常にドメイン型を扱う
+- **Functional DDD**: ドメインは純関数、副作用は Effect + Layer（programs / services / routes）
+
 ### Composables vs Hooks
 
-- **composables/**: ビジネスロジック（`useRestaurantSearch`, `useStationSearch`等）
-- **hooks/**: React固有・外部サービス統合（`useAnalytics`等）
+- **composables/**: React 状態と Effect 実行の橋渡し（`useRestaurantSearch` 等）
+- **hooks/**: React固有・外部サービス統合（`useAnalytics` 等）
 
 ### Google Maps API
 
 IMPORTANT: **APIキーの取り扱いに注意！**
 
-- フロントエンド: `.env` の `VITE_GOOGLE_MAPS_API_KEY` / ライブラリ: `@react-google-maps/api`
+- フロントエンド: Worker API 経由（ブラウザに API キーを露出させない）
 - バックエンド: Wrangler secrets で管理 / Worker から直接 API 呼び出し
-- `.env`ファイルは絶対にコミットしないこと
+- `.env` / `.dev.vars` ファイルは絶対にコミットしないこと
 
 ### キャッシュ戦略
 
-- **フロントエンド**: `src/utils/cacheManager.ts` でブラウザ側キャッシュ
+- **フロントエンド**: composable 内のインメモリキャッシュ（駅+キーワード単位）
 - **バックエンド**: `worker/src/services/cache.ts` + D1 でサーバー側キャッシュ（place_id単位）
 
 ## コーディング規約
