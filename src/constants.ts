@@ -26,7 +26,7 @@ export const DEFAULT_MIN_RATING = 3.5;
 export const DEFAULT_MIN_REVIEWS = 100;
 
 /** デフォルトの検索半径 (メートル) */
-export const DEFAULT_SEARCH_RADIUS = 100;
+export const DEFAULT_SEARCH_RADIUS = 300;
 
 /** デフォルトの価格帯選択 */
 export const DEFAULT_PRICE_LEVELS = [1, 2, 3, 4];

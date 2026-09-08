@@ -51,6 +51,21 @@ describe('filterRestaurants', () => {
     expect(result).toHaveLength(0);
   });
 
+  it('includes restaurants with unknown price_level (-1)', () => {
+    const restaurants = [makeRestaurant({ price_level: -1 })];
+    const result = filterRestaurants(restaurants, defaultFilters);
+    expect(result).toHaveLength(1);
+  });
+
+  it('includes restaurants with unknown price_level even when price filter is narrowed', () => {
+    const restaurants = [makeRestaurant({ price_level: -1 })];
+    const result = filterRestaurants(restaurants, {
+      ...defaultFilters,
+      selectedPriceLevels: [1],
+    });
+    expect(result).toHaveLength(1);
+  });
+
   it('filters out non-OPERATIONAL restaurants', () => {
     const restaurants = [
       makeRestaurant({ business_status: 'CLOSED_PERMANENTLY' }),

@@ -125,9 +125,11 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
               ({restaurant.user_ratings_total})
             </span>
           </div>
-          <span className="text-text-muted">
-            {'¥'.repeat(restaurant.price_level)}
-          </span>
+          {restaurant.price_level > 0 && (
+            <span className="text-text-muted">
+              {'¥'.repeat(restaurant.price_level)}
+            </span>
+          )}
           {restaurant.isOpenNow !== undefined && !businessStatusInfo && (
             <span
               className={`text-xs font-medium ${restaurant.isOpenNow ? 'text-success' : 'text-text-muted'}`}
