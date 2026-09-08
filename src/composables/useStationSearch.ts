@@ -74,6 +74,7 @@ const useStationSearch = () => {
     setStation(candidate.name);
     setSelectedStation(candidate);
     setStationCandidates([]);
+    setInitError(null);
   };
 
   return {
