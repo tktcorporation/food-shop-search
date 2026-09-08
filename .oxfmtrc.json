@@ -6,5 +6,17 @@
   "tabWidth": 2,
   "useTabs": false,
   "endOfLine": "lf",
-  "jsxSingleQuote": false
+  "jsxSingleQuote": false,
+  "ignorePatterns": [
+    "tools/**",
+    "scripts/docs-lifecycle/**",
+    ".claude/hooks/**",
+    ".claude/skills/**",
+    ".claude/rules/**",
+    ".claude/guides/**",
+    ".claude/output-styles/**",
+    ".devcontainer/**",
+    ".codex/**",
+    ".ziku/**"
+  ]
 }

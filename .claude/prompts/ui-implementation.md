@@ -193,6 +193,6 @@ UI実装を依頼する前に、以下を確認してください：
 
 ## 参考リソース
 
-- **.claude/rules/ui-ux-design.md** - 完全なデザインガイドライン（自動読み込み）
+- **.claude/rules/project/ui-ux-design.md** - 完全なデザインガイドライン（自動読み込み）
 - **tailwind.config.js** - カラーパレット定義
 - **src/index.css** - グローバルスタイル（.btn など）

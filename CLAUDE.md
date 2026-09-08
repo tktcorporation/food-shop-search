@@ -12,7 +12,8 @@
 - **フォーマット**: oxfmt (OXC toolchain)
 - **型チェック**: tsgo (TypeScript Go / TypeScript 7 native preview)
 - **テスト**: Vitest
-- **VCS**: jj (Jujutsu) - 詳細は `.claude/rules/jujutsu.md` 参照
+- **VCS**: Git
+- **テンプレ同期**: ziku（`npx ziku pull` / `npx ziku push`）— 詳細は `.claude/guides/tools/ziku.md`
 
 ## 環境管理
 
@@ -22,6 +23,8 @@ IMPORTANT: このプロジェクトは **mise** を使用してNode.jsバージ�
 mise install        # Node.js 22 LTSを自動インストール
 npm install         # 依存関係のインストール
 ```
+
+共有ツールは `.config/mise/conf.d/shared.toml`、プロジェクト固有は `.mise.toml`。
 
 ## よく使うコマンド
 
@@ -56,11 +59,10 @@ npm run db:migrate:remote # リモートD1にマイグレーション適用
 npm run deploy            # 本番デプロイ
 npm run deploy:preview    # プレビューデプロイ
 
-# VCS (jj) - git コマンドは使わない
-jj status           # 変更状況を確認
-jj diff             # 差分表示
-jj commit -m "..."  # コミット
-jj git push         # リモートにプッシュ
+# テンプレ同期 (ziku)
+npx ziku status       # 同期状況を確認
+npx ziku pull         # テンプレート最新を取り込み
+npx ziku push -m "..."  # ローカル改善をテンプレへ還元
 ```
 
 - oxlint設定: `.oxlintrc.json` / 抑制: `// oxlint-disable-next-line rule-name`
@@ -138,7 +140,7 @@ IMPORTANT: **APIキーの取り扱いに注意！**
 
 ### UI/UX
 
-IMPORTANT: UI実装時は `.claude/rules/` 配下のルールファイルが自動適用されます（`ui-constraints.md`, `ui-ux-design.md`, `design-tokens.md`, `app-design-direction.md`）。
+IMPORTANT: UI実装時は `.claude/rules/project/` 配下のルールファイルが自動適用されます（`ui-constraints.md`, `ui-ux-design.md`, `design-tokens.md`, `app-design-direction.md`）。
 
 - Tailwind CSS ユーティリティファースト、モバイルファースト
 - カスタムカラーは `tailwind.config.js` で定義済み

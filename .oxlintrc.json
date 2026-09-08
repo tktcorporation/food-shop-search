@@ -39,5 +39,14 @@
       }
     }
   ],
-  "ignorePatterns": ["dist", "node_modules"]
+  "ignorePatterns": [
+    "dist",
+    "node_modules",
+    "tools/**",
+    "scripts/docs-lifecycle/**",
+    ".claude/hooks/**",
+    ".claude/skills/**/scripts/**",
+    ".devcontainer/**",
+    ".codex/**"
+  ]
 }
