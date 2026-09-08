@@ -9,4 +9,14 @@ export default defineConfig({
       '/api': 'http://localhost:8787',
     },
   },
+  test: {
+    // ziku 同期の bun テスト（tools / scripts）はルート Vitest の対象外
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      'tools/**',
+      'scripts/docs-lifecycle/**',
+      '.claude/**',
+    ],
+  },
 });
