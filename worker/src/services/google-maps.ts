@@ -1,4 +1,4 @@
-import { Effect, Schema } from 'effect';
+import { Effect, Option, Schema } from 'effect';
 import { GoogleMapsApiError } from '../errors';
 import {
   GoogleNearbySearchResponse,
@@ -9,6 +9,7 @@ import {
   type GoogleAutocompletePrediction,
   type GoogleGeocodeResult,
 } from '../schema/google';
+import { PhotoCdnUrl } from '../../../shared/src/schema/photo';
 
 const MAPS_BASE_URL = 'https://maps.googleapis.com';
 
@@ -317,14 +318,23 @@ export function buildPhotoRequestUrl(
 }
 
 /**
+ * Candidate URL を PhotoCdnUrl として parse。不合格なら none。
+ */
+const parsePhotoCdnUrl = (candidate: string): Option.Option<PhotoCdnUrl> => {
+  const decoded = Schema.decodeUnknownOption(PhotoCdnUrl)(candidate);
+  return decoded;
+};
+
+/**
  * Resolve a Place Photo to a key-free CDN URL by following the redirect.
  * Billed once per successful resolution; cache the result to avoid repeat charges.
+ * 解決できない場合は none（店舗写真なしは正当なドメイン状態）。
  */
 export const resolvePhotoUrl = (
   apiKey: string,
   photoReference: string,
   maxWidth: number = 400,
-): Effect.Effect<string | null, never> =>
+): Effect.Effect<Option.Option<PhotoCdnUrl>, never> =>
   Effect.gen(function* () {
     const url = buildPhotoRequestUrl(apiKey, photoReference, maxWidth);
 
@@ -334,33 +344,24 @@ export const resolvePhotoUrl = (
     }).pipe(Effect.catchAll(() => Effect.succeed(null as Response | null)));
 
     if (!response) {
-      return null;
+      return Option.none();
     }
 
     // Place Photo returns 302/301 to lh3.googleusercontent.com (etc.)
     if (response.status >= 300 && response.status < 400) {
       const location = response.headers.get('Location');
-      if (
-        location &&
-        location.startsWith('http') &&
-        !location.includes('maps.googleapis.com')
-      ) {
-        return location;
+      if (location) {
+        const parsed = parsePhotoCdnUrl(location);
+        if (Option.isSome(parsed)) {
+          return parsed;
+        }
       }
     }
 
     // Some runtimes may auto-follow; accept final CDN URL if present
-    if (
-      response.url &&
-      response.url.startsWith('http') &&
-      !response.url.includes('maps.googleapis.com') &&
-      !response.url.includes('key=')
-    ) {
-      return response.url;
+    if (response.url) {
+      return parsePhotoCdnUrl(response.url);
     }
 
-    return null;
+    return Option.none();
   });
-
-/** @deprecated Use buildPhotoRequestUrl / resolvePhotoUrl instead */
-export const getPhotoUrl = buildPhotoRequestUrl;

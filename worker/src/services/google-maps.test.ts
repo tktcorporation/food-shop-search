@@ -346,14 +346,17 @@ describe('resolvePhotoUrl', () => {
     const result = await Effect.runPromise(
       resolvePhotoUrl('test-key', 'photo-ref-123'),
     );
-    expect(result).toBe('https://lh3.googleusercontent.com/places/abc');
+    expect(result._tag).toBe('Some');
+    if (result._tag === 'Some') {
+      expect(result.value).toBe('https://lh3.googleusercontent.com/places/abc');
+    }
     expect(mockFetch).toHaveBeenCalledWith(
       expect.stringContaining('photo_reference=photo-ref-123'),
       expect.objectContaining({ redirect: 'manual' }),
     );
   });
 
-  it('returns null when redirect is missing', async () => {
+  it('returns none when redirect is missing', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: false,
       status: 403,
@@ -364,6 +367,25 @@ describe('resolvePhotoUrl', () => {
     const result = await Effect.runPromise(
       resolvePhotoUrl('test-key', 'photo-ref-123'),
     );
-    expect(result).toBeNull();
+    expect(result._tag).toBe('None');
+  });
+
+  it('returns none when Location still points at Place Photo API', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 302,
+      headers: {
+        get: (name: string) =>
+          name === 'Location'
+            ? 'https://maps.googleapis.com/maps/api/place/photo?key=x'
+            : null,
+      },
+      url: 'https://maps.googleapis.com/maps/api/place/photo?x=1',
+    });
+
+    const result = await Effect.runPromise(
+      resolvePhotoUrl('test-key', 'photo-ref-123'),
+    );
+    expect(result._tag).toBe('None');
   });
 });
