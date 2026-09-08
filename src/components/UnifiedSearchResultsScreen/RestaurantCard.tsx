@@ -1,23 +1,8 @@
 import React from 'react';
 import { Star, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import type { Restaurant } from '@shared';
 import { getKeywordLabel } from '../../utils/keywordOptions';
 import { useAnalytics } from '../../hooks/useAnalytics';
-
-interface Restaurant {
-  place_id: string;
-  name: string;
-  vicinity: string;
-  rating: number;
-  user_ratings_total: number;
-  price_level: number;
-  types: string[];
-  photoUrls: string[];
-  /** サーバー側の営業状態判定 */
-  isOpenNow?: boolean;
-  distance?: number;
-  searchKeywords: string[];
-  business_status?: string;
-}
 
 interface RestaurantCardProps {
   restaurant: Restaurant;

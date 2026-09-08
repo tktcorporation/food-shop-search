@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isStation } from './station-filter';
+import { isStation } from './is-station';
 
 describe('isStation', () => {
   it('returns true for train_station', () => {

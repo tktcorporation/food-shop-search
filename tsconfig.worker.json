@@ -13,7 +13,12 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "types": ["@cloudflare/workers-types"]
+    "types": ["@cloudflare/workers-types"],
+
+    "paths": {
+      "@shared": ["./shared/src/index.ts"],
+      "@shared/*": ["./shared/src/*"]
+    }
   },
-  "include": ["worker/src"]
+  "include": ["worker/src", "shared/src"]
 }

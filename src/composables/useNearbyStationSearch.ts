@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import type { Station } from './useStationSearch/types';
+import type { Station } from '@shared';
 import { searchNearbyStationsProgram } from '../programs/searchNearbyStations';
 import { useEffectRunner } from '../hooks/useEffectRunner';
 
@@ -18,7 +18,7 @@ interface UseNearbyStationSearchResult {
 const useNearbyStationSearch = (
   onStationFound?: (station: Station) => void,
 ): UseNearbyStationSearchResult => {
-  const runner = useEffectRunner<Station[]>({
+  const runner = useEffectRunner<ReadonlyArray<Station>>({
     initialData: [],
     errorFallback: '近くの駅を見つけることができませんでした。',
     onSuccess: (stations) => {
@@ -34,7 +34,7 @@ const useNearbyStationSearch = (
 
   return useMemo(
     () => ({
-      nearbyStations: runner.data ?? [],
+      nearbyStations: [...(runner.data ?? [])],
       isLoading: runner.isLoading,
       error: runner.error,
     }),

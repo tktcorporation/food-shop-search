@@ -9,12 +9,8 @@ import {
   Loader2,
 } from 'lucide-react';
 import RestaurantCard from './RestaurantCard';
-import type { Restaurant } from '../../composables/useRestaurantSearch/types';
+import { sortRestaurants, type Restaurant, type SortType } from '@shared';
 import type { LocationData } from '../../programs/getLocation';
-import {
-  sortRestaurants,
-  type SortType,
-} from '../../composables/useRestaurantSearch/utils';
 
 const MapView = lazy(() => import('../MapView'));
 

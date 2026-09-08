@@ -1,18 +1,16 @@
 import { Hono } from 'hono';
 import { Effect } from 'effect';
+import {
+  ForwardGeocodeRequest,
+  ReverseGeocodeRequest,
+} from '../../../shared/src';
+import type { Bindings } from '../bindings';
+import { parseJsonBody } from '../http/parse-body';
 import { createDb } from '../db';
 import { getCache, setCache, CACHE_TTL } from '../services/cache';
 import { geocodeForward, geocodeReverse } from '../services/google-maps';
-import type {
-  ForwardGeocodeRequest,
-  ReverseGeocodeRequest,
-  GoogleGeocodeResult,
-} from '../types';
-
-type Bindings = {
-  DB: D1Database;
-  GOOGLE_MAPS_API_KEY: string;
-};
+import type { GoogleGeocodeResult } from '../schema/google';
+import { GeocodeCachePayload } from '../schema/cache';
 
 export const geocodeRoutes = new Hono<{ Bindings: Bindings }>();
 
@@ -21,26 +19,23 @@ export const geocodeRoutes = new Hono<{ Bindings: Bindings }>();
  * Convert an address to coordinates.
  */
 geocodeRoutes.post('/geocode/forward', async (c) => {
-  const body = await c.req.json<ForwardGeocodeRequest>();
-
-  if (!body.address || body.address.trim().length === 0) {
-    return c.json({ success: false, error: 'address is required' }, 400);
+  const parsed = await parseJsonBody(c, ForwardGeocodeRequest);
+  if (!parsed.ok) {
+    return parsed.response;
   }
 
   const db = createDb(c.env.DB);
   const apiKey = c.env.GOOGLE_MAPS_API_KEY;
-  const address = body.address.trim();
+  const address = parsed.data.address;
 
-  const cacheKey = address;
-
-  // Check cache
-  const cached = await getCache<GoogleGeocodeResult[]>(
+  const cached = await getCache(
     db,
     'geocode_forward',
-    cacheKey,
+    address,
+    GeocodeCachePayload,
   );
 
-  let results: GoogleGeocodeResult[];
+  let results: readonly GoogleGeocodeResult[];
   if (cached) {
     results = cached;
   } else {
@@ -57,11 +52,10 @@ geocodeRoutes.post('/geocode/forward', async (c) => {
 
     results = exit.value;
 
-    // Store in cache
     await setCache(
       db,
       'geocode_forward',
-      cacheKey,
+      address,
       results,
       CACHE_TTL.geocode_forward,
     );
@@ -90,26 +84,25 @@ geocodeRoutes.post('/geocode/forward', async (c) => {
  * Convert coordinates to an address.
  */
 geocodeRoutes.post('/geocode/reverse', async (c) => {
-  const body = await c.req.json<ReverseGeocodeRequest>();
-
-  if (body.lat == null || body.lng == null) {
-    return c.json({ success: false, error: 'lat and lng are required' }, 400);
+  const parsed = await parseJsonBody(c, ReverseGeocodeRequest);
+  if (!parsed.ok) {
+    return parsed.response;
   }
 
   const db = createDb(c.env.DB);
   const apiKey = c.env.GOOGLE_MAPS_API_KEY;
-  const { lat, lng } = body;
+  const { lat, lng } = parsed.data;
 
   const cacheKey = `${lat}-${lng}`;
 
-  // Check cache
-  const cached = await getCache<GoogleGeocodeResult[]>(
+  const cached = await getCache(
     db,
     'geocode_reverse',
     cacheKey,
+    GeocodeCachePayload,
   );
 
-  let results: GoogleGeocodeResult[];
+  let results: readonly GoogleGeocodeResult[];
   if (cached) {
     results = cached;
   } else {
@@ -126,7 +119,6 @@ geocodeRoutes.post('/geocode/reverse', async (c) => {
 
     results = exit.value;
 
-    // Store in cache
     await setCache(
       db,
       'geocode_reverse',

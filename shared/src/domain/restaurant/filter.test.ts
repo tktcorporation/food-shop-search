@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { filterRestaurants, sortByDistance } from './utils';
-import type { Restaurant } from './types';
+import { filterRestaurants } from './filter';
+import { sortByDistance } from './sort';
+import type {
+  Restaurant,
+  RestaurantFilterParams,
+} from '../../schema/restaurant';
 
 const makeRestaurant = (overrides: Partial<Restaurant> = {}): Restaurant => ({
   place_id: 'test-id',
@@ -15,7 +19,7 @@ const makeRestaurant = (overrides: Partial<Restaurant> = {}): Restaurant => ({
   ...overrides,
 });
 
-const defaultFilters = {
+const defaultFilters: RestaurantFilterParams = {
   minRating: 3.5,
   minReviews: 100,
   isOpenNow: false,
@@ -93,7 +97,7 @@ describe('filterRestaurants', () => {
     expect(result[0].distance).toBe(50);
   });
 
-  it('does not filter by distance when searchRadius > 100', () => {
+  it('keeps restaurants within larger searchRadius', () => {
     const restaurants = [makeRestaurant({ distance: 200 })];
     const result = filterRestaurants(restaurants, {
       ...defaultFilters,

@@ -1,94 +1,113 @@
-import { Context, Effect, Layer } from 'effect';
+import { Context, Effect, Layer, Schema } from 'effect';
 import { PlaceSearchError, GeocodeError } from '../errors';
-import type { Restaurant } from '../composables/useRestaurantSearch/types';
-import type { Station } from '../composables/useStationSearch/types';
+import {
+  RestaurantListResponse,
+  StationListResponse,
+  ForwardGeocodeResponse,
+  ReverseGeocodeResponse,
+  RestaurantSearchRequest,
+  decodeUnknown,
+  formatParseError,
+  type Restaurant,
+  type Station,
+  type ForwardGeocodeResult,
+  type ReverseGeocodeResult,
+} from '@shared';
 
 export interface ApiService {
-  readonly searchRestaurants: (params: {
-    keywords: string[];
-    location: { lat: number; lng: number };
-    radius: number;
-    stationPlaceId: string;
-  }) => Effect.Effect<Restaurant[], PlaceSearchError>;
+  readonly searchRestaurants: (
+    params: typeof RestaurantSearchRequest.Type,
+  ) => Effect.Effect<ReadonlyArray<Restaurant>, PlaceSearchError>;
 
   readonly searchStations: (
     input: string,
-  ) => Effect.Effect<Station[], PlaceSearchError>;
+  ) => Effect.Effect<ReadonlyArray<Station>, PlaceSearchError>;
 
   readonly searchNearbyStations: (
     lat: number,
     lng: number,
-  ) => Effect.Effect<Station[], PlaceSearchError>;
+  ) => Effect.Effect<ReadonlyArray<Station>, PlaceSearchError>;
 
   readonly geocodeForward: (
     address: string,
-  ) => Effect.Effect<
-    { lat: number; lng: number; formatted_address: string },
-    GeocodeError
-  >;
+  ) => Effect.Effect<ForwardGeocodeResult, GeocodeError>;
 
   readonly geocodeReverse: (
     lat: number,
     lng: number,
-  ) => Effect.Effect<
-    { lat: number; lng: number; address: string },
-    GeocodeError
-  >;
+  ) => Effect.Effect<ReverseGeocodeResult, GeocodeError>;
 }
 
 export const ApiService = Context.GenericTag<ApiService>('ApiService');
 
-/** fetch をラップして JSON を取得し、エラーハンドリングを行うヘルパー */
-const fetchJson = <T, E>(
+/**
+ * fetch → JSON → Schema.decode（upstream-form）でドメイン型を得る。
+ */
+const fetchAndDecode = <A, I, E>(
   url: string,
   body: unknown,
+  responseSchema: Schema.Schema<
+    { success: true; data: A } | { success: false; error: string },
+    I
+  >,
   onError: (message: string) => Effect.Effect<never, E>,
-): Effect.Effect<T, E> =>
-  Effect.tryPromise({
-    try: async () => {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
+): Effect.Effect<A, E> =>
+  Effect.gen(function* () {
+    const response = yield* Effect.tryPromise({
+      try: () =>
+        fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        }),
+      catch: (error) => error,
+    }).pipe(
+      Effect.catchAll((error) => {
+        const message =
+          error instanceof Error
+            ? error.message
+            : 'APIリクエストに失敗しました。';
+        return onError(message);
+      }),
+    );
 
-      if (!response.ok) {
-        const text = await response.text().catch(() => 'Unknown error');
-        // oxlint-disable-next-line effect-enforce/no-throw-statement -- tryPromise の try 内で Effect のエラーチャネルに変換される
-        throw new Error(`HTTP ${response.status}: ${text}`);
-      }
+    if (!response.ok) {
+      const text = yield* Effect.promise(() =>
+        response.text().catch(() => 'Unknown error'),
+      );
+      return yield* onError(`HTTP ${response.status}: ${text}`);
+    }
 
-      const data = (await response.json()) as {
-        success: boolean;
-        data?: T;
-        error?: string;
-      };
+    const raw = yield* Effect.tryPromise({
+      try: () => response.json(),
+      catch: (error) => error,
+    }).pipe(
+      Effect.catchAll((error) => {
+        const message =
+          error instanceof Error ? error.message : 'Invalid JSON response';
+        return onError(message);
+      }),
+    );
 
-      if (!data.success || !data.data) {
-        // oxlint-disable-next-line effect-enforce/no-throw-statement -- tryPromise の try 内で Effect のエラーチャネルに変換される
-        throw new Error(data.error ?? 'API returned unsuccessful response');
-      }
+    const decoded = yield* decodeUnknown(responseSchema)(raw).pipe(
+      Effect.catchAll((parseError) => onError(formatParseError(parseError))),
+    );
 
-      return data.data;
-    },
-    catch: (error) => error,
-  }).pipe(
-    Effect.catchAll((error) => {
-      const message =
-        error instanceof Error
-          ? error.message
-          : 'APIリクエストに失敗しました。';
-      return onError(message);
-    }),
-  );
+    if (!decoded.success) {
+      return yield* onError(decoded.error);
+    }
+
+    return decoded.data;
+  });
 
 export const ApiServiceLive = Layer.succeed(
   ApiService,
   ApiService.of({
     searchRestaurants: (params) =>
-      fetchJson<Restaurant[], PlaceSearchError>(
+      fetchAndDecode(
         '/api/restaurants/search',
         params,
+        RestaurantListResponse,
         (message) =>
           Effect.fail(
             new PlaceSearchError({
@@ -99,9 +118,10 @@ export const ApiServiceLive = Layer.succeed(
       ),
 
     searchStations: (input) =>
-      fetchJson<Station[], PlaceSearchError>(
+      fetchAndDecode(
         '/api/stations/search',
         { input },
+        StationListResponse,
         (message) =>
           Effect.fail(
             new PlaceSearchError({
@@ -112,9 +132,10 @@ export const ApiServiceLive = Layer.succeed(
       ),
 
     searchNearbyStations: (lat, lng) =>
-      fetchJson<Station[], PlaceSearchError>(
+      fetchAndDecode(
         '/api/stations/nearby',
         { lat, lng },
+        StationListResponse,
         (message) =>
           Effect.fail(
             new PlaceSearchError({
@@ -125,21 +146,23 @@ export const ApiServiceLive = Layer.succeed(
       ),
 
     geocodeForward: (address) =>
-      fetchJson<
-        { lat: number; lng: number; formatted_address: string },
-        GeocodeError
-      >('/api/geocode/forward', { address }, (message) =>
-        Effect.fail(
-          new GeocodeError({
-            message: `位置を取得できませんでした: ${message}`,
-          }),
-        ),
+      fetchAndDecode(
+        '/api/geocode/forward',
+        { address },
+        ForwardGeocodeResponse,
+        (message) =>
+          Effect.fail(
+            new GeocodeError({
+              message: `位置を取得できませんでした: ${message}`,
+            }),
+          ),
       ),
 
     geocodeReverse: (lat, lng) =>
-      fetchJson<{ lat: number; lng: number; address: string }, GeocodeError>(
+      fetchAndDecode(
         '/api/geocode/reverse',
         { lat, lng },
+        ReverseGeocodeResponse,
         (message) =>
           Effect.fail(
             new GeocodeError({

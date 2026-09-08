@@ -2,7 +2,7 @@ import { useCallback, useState, useRef } from 'react';
 import type React from 'react';
 import { Search, X } from 'lucide-react';
 import useNearbyStationSearch from '../../composables/useNearbyStationSearch';
-import type { Station } from '../../composables/useStationSearch/types';
+import type { Station } from '@shared';
 
 interface StationSearchProps {
   station: string;

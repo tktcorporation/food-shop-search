@@ -1,7 +1,7 @@
 import { Effect } from 'effect';
 import type { PlaceSearchError } from '../errors';
 import { ApiService } from '../services';
-import type { Station } from '../composables/useStationSearch/types';
+import type { Station } from '@shared';
 
 /**
  * 駅検索の Effect プログラム。
@@ -9,7 +9,7 @@ import type { Station } from '../composables/useStationSearch/types';
  */
 export const searchStationsProgram = (
   input: string,
-): Effect.Effect<Station[], PlaceSearchError, ApiService> =>
+): Effect.Effect<ReadonlyArray<Station>, PlaceSearchError, ApiService> =>
   Effect.gen(function* () {
     const api = yield* ApiService;
     return yield* api.searchStations(input);
