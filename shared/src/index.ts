@@ -2,6 +2,7 @@
 export * from './schema/location';
 export * from './schema/station';
 export * from './schema/restaurant';
+export * from './schema/photo';
 export * from './schema/api';
 
 // Upstream-form helpers
@@ -11,6 +12,7 @@ export * from './http/decode';
 export * from './domain/geo/haversine';
 export * from './domain/restaurant/filter';
 export * from './domain/restaurant/sort';
+export * from './domain/restaurant/from-place-cache';
 export * from './domain/station/is-station';
 export * from './domain/station/normalize';
 export * from './domain/station/from-google';

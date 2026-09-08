@@ -1,5 +1,6 @@
 import { Schema } from 'effect';
 import { Station } from './station';
+import { PhotoCdnUrl } from './photo';
 
 /** レストラン（ドメインエンティティ / API DTO） */
 export const Restaurant = Schema.Struct({
@@ -10,7 +11,8 @@ export const Restaurant = Schema.Struct({
   user_ratings_total: Schema.Number,
   price_level: Schema.Number,
   types: Schema.Array(Schema.String),
-  photoUrls: Schema.Array(Schema.String),
+  /** キー無し CDN URL のみ（Place Photo API URL は不合格） */
+  photoUrls: Schema.Array(PhotoCdnUrl),
   searchKeywords: Schema.Array(Schema.String),
   isOpenNow: Schema.optional(Schema.Boolean),
   distance: Schema.optional(Schema.Number),

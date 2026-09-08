@@ -1,9 +1,12 @@
 import { Hono } from 'hono';
-import { Effect } from 'effect';
+import { Effect, Schema } from 'effect';
 import {
   RestaurantSearchRequest,
-  haversineDistance,
-  type Restaurant,
+  Restaurant,
+  restaurantFromPlaceCache,
+  mergeRestaurantKeyword,
+  withRestaurantPhotos,
+  type Restaurant as RestaurantEntity,
 } from '../../../shared/src';
 import type { Bindings } from '../bindings';
 import { parseJsonBody } from '../http/parse-body';
@@ -14,56 +17,25 @@ import {
   getPlacesByIds,
   upsertPlaces,
   CACHE_TTL,
-  type PlaceCacheRow,
 } from '../services/cache';
 import { RestaurantSearchCachePayload } from '../schema/cache';
-import { searchNearbyPlaces, getPhotoUrl } from '../services/google-maps';
+import { searchNearbyPlaces } from '../services/google-maps';
+import { resolveCachedPhotoUrls } from '../services/photos';
 
 /**
  * Google API 呼び出し時に使用する固定半径。
  * キャッシュを半径非依存にするため、常にこの値で検索し、
- * レスポンス時にリクエストされた半径で距離フィルタリングする。
+ * クライアント側でリクエスト半径による距離フィルタを行う。
+ * （RestaurantSearchRequest.radius は FE フィルタ用で Worker では未使用）
  */
 const SEARCH_MAX_RADIUS = 500;
 
+/** 写真 CDN URL 解決の同時実行数 */
+const PHOTO_RESOLVE_CONCURRENCY = 5;
+
+const RestaurantList = Schema.Array(Restaurant);
+
 export const restaurantRoutes = new Hono<{ Bindings: Bindings }>();
-
-/**
- * Convert a PlaceCacheRow to our Restaurant type.
- */
-function toRestaurantFromCache(
-  place: PlaceCacheRow,
-  apiKey: string,
-  keyword: string,
-  searchLat: number,
-  searchLng: number,
-): Restaurant {
-  const photoUrls = place.photoReferences.map((ref) =>
-    getPhotoUrl(apiKey, ref, 400),
-  );
-
-  let distance: number | undefined;
-  if (place.lat != null && place.lng != null) {
-    distance = haversineDistance(searchLat, searchLng, place.lat, place.lng);
-  }
-
-  return {
-    place_id: place.placeId,
-    name: place.name,
-    vicinity: place.vicinity,
-    rating: place.rating,
-    user_ratings_total: place.userRatingsTotal,
-    price_level: place.priceLevel,
-    types: place.types,
-    photoUrls,
-    searchKeywords: [keyword],
-    isOpenNow: place.isOpenNow,
-    distance,
-    business_status: place.businessStatus,
-    lat: place.lat,
-    lng: place.lng,
-  };
-}
 
 restaurantRoutes.post('/restaurants/search', async (c) => {
   const parsed = await parseJsonBody(c, RestaurantSearchRequest);
@@ -75,7 +47,6 @@ restaurantRoutes.post('/restaurants/search', async (c) => {
   const db = createDb(c.env.DB);
   const apiKey = c.env.GOOGLE_MAPS_API_KEY;
 
-  // キーワードごとの検索を Effect で構築
   const fetchKeyword = (keyword: string) =>
     Effect.gen(function* () {
       const cacheKey = `${keyword}-${stationPlaceId}`;
@@ -127,7 +98,62 @@ restaurantRoutes.post('/restaurants/search', async (c) => {
 
   const program = Effect.all(keywords.map(fetchKeyword), {
     concurrency: 'unbounded',
-  });
+  }).pipe(
+    Effect.flatMap((keywordResults) => {
+      // Domains first; photo_reference は解決パイプラインの入力に閉じる
+      const pending = new Map<
+        string,
+        {
+          restaurant: RestaurantEntity;
+          photoReferences: readonly string[];
+        }
+      >();
+
+      for (const { keyword, placeMap } of keywordResults) {
+        for (const [placeId, place] of placeMap) {
+          const existing = pending.get(placeId);
+          if (existing) {
+            pending.set(placeId, {
+              restaurant: mergeRestaurantKeyword(existing.restaurant, keyword),
+              photoReferences: existing.photoReferences,
+            });
+          } else {
+            pending.set(placeId, {
+              restaurant: restaurantFromPlaceCache(
+                place,
+                keyword,
+                location.lat,
+                location.lng,
+              ),
+              photoReferences: place.photoReferences,
+            });
+          }
+        }
+      }
+
+      return Effect.all(
+        Array.from(pending.values()).map(({ restaurant, photoReferences }) =>
+          Effect.gen(function* () {
+            const photoUrls = yield* resolveCachedPhotoUrls(
+              db,
+              apiKey,
+              photoReferences,
+            );
+            return withRestaurantPhotos(restaurant, photoUrls);
+          }),
+        ),
+        { concurrency: PHOTO_RESOLVE_CONCURRENCY },
+      );
+    }),
+    Effect.flatMap((restaurants) =>
+      Schema.encode(RestaurantList)(restaurants).pipe(
+        Effect.mapError(
+          (error) =>
+            new Error(`Restaurant response encode failed: ${String(error)}`),
+        ),
+      ),
+    ),
+  );
 
   const exit = await Effect.runPromiseExit(program);
 
@@ -135,42 +161,16 @@ restaurantRoutes.post('/restaurants/search', async (c) => {
     const error = exit.cause;
     const message =
       error._tag === 'Fail'
-        ? error.error.message
+        ? error.error instanceof Error
+          ? error.error.message
+          : typeof error.error === 'object' &&
+              error.error !== null &&
+              'message' in error.error
+            ? String((error.error as { message: unknown }).message)
+            : 'レストラン検索中にエラーが発生しました'
         : 'レストラン検索中にエラーが発生しました';
     return c.json({ success: false, error: message }, 500);
   }
 
-  const keywordResults = exit.value;
-
-  // Combine and deduplicate results by place_id（不変にマージ）
-  const restaurantMap = new Map<string, Restaurant>();
-
-  for (const { keyword, placeMap } of keywordResults) {
-    for (const [placeId, place] of placeMap) {
-      const existing = restaurantMap.get(placeId);
-      if (existing) {
-        if (!existing.searchKeywords.includes(keyword)) {
-          restaurantMap.set(placeId, {
-            ...existing,
-            searchKeywords: [...existing.searchKeywords, keyword],
-          });
-        }
-      } else {
-        restaurantMap.set(
-          placeId,
-          toRestaurantFromCache(
-            place,
-            apiKey,
-            keyword,
-            location.lat,
-            location.lng,
-          ),
-        );
-      }
-    }
-  }
-
-  const restaurants = Array.from(restaurantMap.values());
-
-  return c.json({ success: true, data: restaurants });
+  return c.json({ success: true, data: exit.value });
 });

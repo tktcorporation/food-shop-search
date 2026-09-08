@@ -9,11 +9,13 @@ describe('CACHE_TTL', () => {
     expect(CACHE_TTL.nearby_stations).toBe(604800); // 7d
     expect(CACHE_TTL.geocode_reverse).toBe(86400); // 24h
     expect(CACHE_TTL.place_detail).toBe(1209600); // 14d
+    expect(CACHE_TTL.place_photo).toBe(1209600); // 14d
   });
 
-  it('place_detail is the longest TTL', () => {
+  it('place_detail and place_photo are the longest TTL', () => {
     const values = Object.values(CACHE_TTL);
     expect(Math.max(...values)).toBe(CACHE_TTL.place_detail);
+    expect(CACHE_TTL.place_photo).toBe(CACHE_TTL.place_detail);
   });
 
   it('station_predictions and geocode_reverse are the shortest TTL', () => {

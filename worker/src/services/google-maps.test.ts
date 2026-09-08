@@ -5,7 +5,8 @@ import {
   getAutocompletePredictions,
   geocodeForward,
   geocodeReverse,
-  getPhotoUrl,
+  buildPhotoRequestUrl,
+  resolvePhotoUrl,
 } from './google-maps';
 
 const mockFetch = vi.fn();
@@ -209,6 +210,32 @@ describe('searchNearbyPlaces', () => {
     // Should return page 1 results as incomplete instead of failing entirely
     expect(result).toEqual({ results: page1Results, complete: false });
   });
+
+  it('respects maxPages=1 and skips token wait when no further pages are needed', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        results: [{ place_id: 'p1', name: 'A', vicinity: 'Tokyo' }],
+        status: 'OK',
+        next_page_token: 'token-more',
+      }),
+    });
+
+    const result = await Effect.runPromise(
+      searchNearbyPlaces(
+        'test-key',
+        35.68,
+        139.76,
+        1000,
+        'ramen',
+        undefined,
+        1,
+      ),
+    );
+    expect(result.results).toHaveLength(1);
+    expect(result.complete).toBe(true);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('getAutocompletePredictions', () => {
@@ -287,9 +314,9 @@ describe('geocodeReverse', () => {
   });
 });
 
-describe('getPhotoUrl', () => {
+describe('buildPhotoRequestUrl', () => {
   it('constructs a valid photo URL', () => {
-    const url = getPhotoUrl('test-key', 'photo-ref-123', 400);
+    const url = buildPhotoRequestUrl('test-key', 'photo-ref-123', 400);
     expect(url).toContain('photo_reference=photo-ref-123');
     expect(url).toContain('maxwidth=400');
     expect(url).toContain('key=test-key');
@@ -297,7 +324,68 @@ describe('getPhotoUrl', () => {
   });
 
   it('uses default maxWidth of 400', () => {
-    const url = getPhotoUrl('test-key', 'photo-ref-123');
+    const url = buildPhotoRequestUrl('test-key', 'photo-ref-123');
     expect(url).toContain('maxwidth=400');
+  });
+});
+
+describe('resolvePhotoUrl', () => {
+  it('returns CDN URL from redirect Location header', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 302,
+      headers: {
+        get: (name: string) =>
+          name === 'Location'
+            ? 'https://lh3.googleusercontent.com/places/abc'
+            : null,
+      },
+      url: 'https://maps.googleapis.com/maps/api/place/photo?x=1',
+    });
+
+    const result = await Effect.runPromise(
+      resolvePhotoUrl('test-key', 'photo-ref-123'),
+    );
+    expect(result._tag).toBe('Some');
+    if (result._tag === 'Some') {
+      expect(result.value).toBe('https://lh3.googleusercontent.com/places/abc');
+    }
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining('photo_reference=photo-ref-123'),
+      expect.objectContaining({ redirect: 'manual' }),
+    );
+  });
+
+  it('returns none when redirect is missing', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 403,
+      headers: { get: () => null },
+      url: 'https://maps.googleapis.com/maps/api/place/photo?x=1',
+    });
+
+    const result = await Effect.runPromise(
+      resolvePhotoUrl('test-key', 'photo-ref-123'),
+    );
+    expect(result._tag).toBe('None');
+  });
+
+  it('returns none when Location still points at Place Photo API', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 302,
+      headers: {
+        get: (name: string) =>
+          name === 'Location'
+            ? 'https://maps.googleapis.com/maps/api/place/photo?key=x'
+            : null,
+      },
+      url: 'https://maps.googleapis.com/maps/api/place/photo?x=1',
+    });
+
+    const result = await Effect.runPromise(
+      resolvePhotoUrl('test-key', 'photo-ref-123'),
+    );
+    expect(result._tag).toBe('None');
   });
 });

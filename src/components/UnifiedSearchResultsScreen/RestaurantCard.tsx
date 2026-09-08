@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Star, Image as ImageIcon, AlertCircle } from 'lucide-react';
-import type { Restaurant } from '@shared';
 import { getKeywordLabel } from '../../utils/keywordOptions';
 import { useAnalytics } from '../../hooks/useAnalytics';
+import type { Restaurant } from '@shared';
 
 interface RestaurantCardProps {
   restaurant: Restaurant;
@@ -30,6 +30,7 @@ const getBusinessStatusInfo = (status?: string) => {
 const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
   const { trackEvent } = useAnalytics();
   const businessStatusInfo = getBusinessStatusInfo(restaurant.business_status);
+  const [imageFailed, setImageFailed] = useState(false);
 
   const openInGoogleMaps = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -54,6 +55,8 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
     return `${(meters / 1000).toFixed(1)}km`;
   };
 
+  const showImage = Boolean(restaurant.photoUrls?.[0]) && !imageFailed;
+
   return (
     <div
       onClick={openInGoogleMaps}
@@ -61,14 +64,14 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
         transition-all duration-200 hover:border-primary-200 hover:shadow-md
         ${businessStatusInfo ? 'opacity-70' : ''}`}
     >
-      {/* Image Section */}
       <div className="relative aspect-4/3 bg-primary-50">
-        {restaurant.photoUrls?.[0] ? (
+        {showImage ? (
           <img
             src={restaurant.photoUrls[0]}
             alt={restaurant.name}
             className="w-full h-full object-cover"
             loading="lazy"
+            onError={() => setImageFailed(true)}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -76,7 +79,6 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
           </div>
         )}
 
-        {/* Business Status Badge */}
         {businessStatusInfo && (
           <div
             className={`absolute top-2 left-2 px-2 py-0.5 rounded text-xs font-medium flex items-center gap-1 ${businessStatusInfo.className}`}
@@ -86,7 +88,6 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
           </div>
         )}
 
-        {/* Distance Badge */}
         {restaurant.distance !== undefined && (
           <div className="absolute top-2 right-2 bg-white/90 px-2 py-0.5 rounded text-xs font-medium text-text">
             {formatDistance(restaurant.distance)}
@@ -94,14 +95,11 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
         )}
       </div>
 
-      {/* Content Section */}
       <div className="p-3">
-        {/* Name */}
         <h3 className="font-semibold text-text line-clamp-1 mb-1.5">
           {restaurant.name}
         </h3>
 
-        {/* Rating & Price */}
         <div className="flex items-center gap-2 mb-1.5 text-sm">
           <div className="flex items-center gap-0.5">
             <Star className="text-primary-500" size={14} fill="currentColor" />
@@ -110,11 +108,9 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
               ({restaurant.user_ratings_total})
             </span>
           </div>
-          {restaurant.price_level > 0 && (
-            <span className="text-text-muted">
-              {'¥'.repeat(restaurant.price_level)}
-            </span>
-          )}
+          <span className="text-text-muted">
+            {'¥'.repeat(restaurant.price_level)}
+          </span>
           {restaurant.isOpenNow !== undefined && !businessStatusInfo && (
             <span
               className={`text-xs font-medium ${restaurant.isOpenNow ? 'text-success' : 'text-text-muted'}`}
@@ -124,12 +120,10 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant }) => {
           )}
         </div>
 
-        {/* Address */}
         <p className="text-xs text-text-muted line-clamp-1 mb-2">
           {restaurant.vicinity}
         </p>
 
-        {/* Search Keywords */}
         {restaurant.searchKeywords && restaurant.searchKeywords.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {restaurant.searchKeywords.slice(0, 3).map((keyword, index) => (
