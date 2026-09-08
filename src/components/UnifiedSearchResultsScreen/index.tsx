@@ -5,7 +5,7 @@ import SearchFilters from './SearchFilters';
 import SearchResults from './SearchResults';
 import CustomKeywordModal from './CustomKeywordModal';
 import useStationSearch from '../../composables/useStationSearch';
-import { getKeywordLabel } from '../../utils/keywordOptions';
+import { keyWordOptions, getKeywordLabel } from '../../utils/keywordOptions';
 import { formatKeywordSummary } from '../../utils/formatFilterSummary';
 import {
   Train,
@@ -23,8 +23,6 @@ import {
   DEFAULT_MIN_REVIEWS,
   DEFAULT_SEARCH_RADIUS,
   DEFAULT_PRICE_LEVELS,
-  DEFAULT_KEYWORDS,
-  MAX_SELECTED_KEYWORDS,
 } from '../../constants';
 
 interface UnifiedSearchResultsScreenProps {
@@ -69,9 +67,9 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
     isInitializing,
     initError,
   } = useStationSearch();
-  const [selectedKeywords, setSelectedKeywords] = useState<string[]>([
-    ...DEFAULT_KEYWORDS,
-  ]);
+  const [selectedKeywords, setSelectedKeywords] = useState<string[]>(
+    keyWordOptions.map((option) => option.value),
+  );
   const [minRating, setMinRating] = useState<number>(DEFAULT_MIN_RATING);
   const [minReviews, setMinReviews] = useState<number>(DEFAULT_MIN_REVIEWS);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -154,13 +152,10 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
   }, [minRating, minReviews, isOpenNow, searchRadius, selectedPriceLevels]);
 
   const handleAddCustomKeyword = (keyword: string) => {
-    if (customKeywords.includes(keyword)) return;
-    setCustomKeywords((prev) => [...prev, keyword]);
-    setSelectedKeywords((prev) =>
-      prev.includes(keyword) || prev.length >= MAX_SELECTED_KEYWORDS
-        ? prev
-        : [...prev, keyword],
-    );
+    if (!customKeywords.includes(keyword)) {
+      setCustomKeywords((prev) => [...prev, keyword]);
+      setSelectedKeywords((prev) => [...prev, keyword]);
+    }
   };
 
   const handleRemoveCustomKeyword = (keyword: string) => {
@@ -175,6 +170,9 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
     isOpenNow,
     selectedPriceLevels.length < 4,
   ].filter(Boolean).length;
+
+  const allKeywordsCount = keyWordOptions.length + customKeywords.length;
+  const isAllSelected = selectedKeywords.length === allKeywordsCount;
 
   return (
     <div className="max-w-4xl mx-auto pb-20">
@@ -219,7 +217,7 @@ const UnifiedSearchResultsScreen: React.FC<UnifiedSearchResultsScreenProps> = ({
           <div className="flex items-center gap-2 min-w-0">
             <Utensils size={16} className="text-text-muted shrink-0" />
             <span className="filter-label shrink-0">食べたいもの</span>
-            {selectedKeywords.length > 0 && (
+            {!isAllSelected && selectedKeywords.length > 0 && (
               <span className="bg-primary-600 text-white text-xs px-1.5 py-0.5 rounded-full shrink-0">
                 {selectedKeywords.length}
               </span>

@@ -138,18 +138,6 @@ describe('upstream-form decode', () => {
     }
   });
 
-  it('rejects more than 8 keywords', async () => {
-    const exit = await Effect.runPromiseExit(
-      Schema.decodeUnknown(RestaurantSearchRequest)({
-        keywords: Array.from({ length: 9 }, (_, i) => `kw${i}`),
-        location: { lat: 1, lng: 2 },
-        radius: 300,
-        stationPlaceId: 'id',
-      }),
-    );
-    expect(exit._tag).toBe('Failure');
-  });
-
   it('rejects non-positive radius', async () => {
     const exit = await Effect.runPromiseExit(
       Schema.decodeUnknown(RestaurantSearchRequest)({

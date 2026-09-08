@@ -27,10 +27,7 @@ import { resolveCachedPhotoUrls } from '../services/photos';
  */
 const SEARCH_MAX_RADIUS = 500;
 
-/** キーワード並列 Nearby Search の同時実行数（課金バースト抑制） */
-const KEYWORD_SEARCH_CONCURRENCY = 3;
-
-/** 写真 CDN URL 解決の同時実行数 */
+/** 写真 CDN URL 解決の同時実行数（新規処理のため上限のみ） */
 const PHOTO_RESOLVE_CONCURRENCY = 5;
 
 export const restaurantRoutes = new Hono<{ Bindings: Bindings }>();
@@ -128,7 +125,7 @@ restaurantRoutes.post('/restaurants/search', async (c) => {
     });
 
   const program = Effect.all(keywords.map(fetchKeyword), {
-    concurrency: KEYWORD_SEARCH_CONCURRENCY,
+    concurrency: 'unbounded',
   }).pipe(
     Effect.flatMap((keywordResults) => {
       // Combine and deduplicate by place_id

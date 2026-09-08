@@ -132,15 +132,7 @@ describe('searchNearbyPlaces', () => {
       });
 
     const result = await Effect.runPromise(
-      searchNearbyPlaces(
-        'test-key',
-        35.68,
-        139.76,
-        1000,
-        'ramen',
-        undefined,
-        3,
-      ),
+      searchNearbyPlaces('test-key', 35.68, 139.76, 1000, 'ramen'),
     );
     expect(result).toEqual({
       results: [...page1Results, ...page2Results],
@@ -183,15 +175,7 @@ describe('searchNearbyPlaces', () => {
       });
 
     const result = await Effect.runPromise(
-      searchNearbyPlaces(
-        'test-key',
-        35.68,
-        139.76,
-        1000,
-        'ramen',
-        undefined,
-        3,
-      ),
+      searchNearbyPlaces('test-key', 35.68, 139.76, 1000, 'ramen'),
     );
     expect(result).toEqual({
       results: [...page1Results, ...page2Results],
@@ -221,21 +205,13 @@ describe('searchNearbyPlaces', () => {
       });
 
     const result = await Effect.runPromise(
-      searchNearbyPlaces(
-        'test-key',
-        35.68,
-        139.76,
-        1000,
-        'ramen',
-        undefined,
-        3,
-      ),
+      searchNearbyPlaces('test-key', 35.68, 139.76, 1000, 'ramen'),
     );
     // Should return page 1 results as incomplete instead of failing entirely
     expect(result).toEqual({ results: page1Results, complete: false });
   });
 
-  it('stops at one page by default even when next_page_token is present', async () => {
+  it('respects maxPages=1 and skips token wait when no further pages are needed', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
@@ -246,7 +222,15 @@ describe('searchNearbyPlaces', () => {
     });
 
     const result = await Effect.runPromise(
-      searchNearbyPlaces('test-key', 35.68, 139.76, 1000, 'ramen'),
+      searchNearbyPlaces(
+        'test-key',
+        35.68,
+        139.76,
+        1000,
+        'ramen',
+        undefined,
+        1,
+      ),
     );
     expect(result.results).toHaveLength(1);
     expect(result.complete).toBe(true);

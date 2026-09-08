@@ -165,7 +165,7 @@ stationRoutes.post('/stations/nearby', async (c) => {
   if (cached) {
     places = cached;
   } else {
-    // 近隣駅は上位5件のみ返すため、Nearby 1ページで十分
+    // 近隣駅検索（上位5件）。ページングは既定どおり体験を維持
     const exit = await Effect.runPromiseExit(
       searchNearbyPlaces(apiKey, lat, lng, 5000, '駅'),
     );

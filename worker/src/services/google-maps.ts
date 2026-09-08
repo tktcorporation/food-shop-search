@@ -14,10 +14,9 @@ const MAPS_BASE_URL = 'https://maps.googleapis.com';
 
 /**
  * Google Nearby Search API のデフォルト最大ページ数。
- * 課金抑制のため 1 ページ（最大20件）を既定とする。
- * API上限は 3 ページ = 60件。
+ * API上限は 3 ページ = 60件（体験を維持するため既定は上限まで取得）。
  */
-const DEFAULT_MAX_PAGES = 1;
+const DEFAULT_MAX_PAGES = 3;
 
 /** next_page_token が有効になるまでの待機時間 (ms) */
 const PAGE_TOKEN_DELAY_MS = 2000;
