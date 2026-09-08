@@ -17,7 +17,8 @@ import {
   type PlaceCacheRow,
 } from '../services/cache';
 import { RestaurantSearchCachePayload } from '../schema/cache';
-import { searchNearbyPlaces, getPhotoUrl } from '../services/google-maps';
+import { searchNearbyPlaces } from '../services/google-maps';
+import { resolveCachedPhotoUrls } from '../services/photos';
 
 /**
  * Google API 呼び出し時に使用する固定半径。
@@ -26,22 +27,23 @@ import { searchNearbyPlaces, getPhotoUrl } from '../services/google-maps';
  */
 const SEARCH_MAX_RADIUS = 500;
 
+/** キーワード並列 Nearby Search の同時実行数（課金バースト抑制） */
+const KEYWORD_SEARCH_CONCURRENCY = 3;
+
+/** 写真 CDN URL 解決の同時実行数 */
+const PHOTO_RESOLVE_CONCURRENCY = 5;
+
 export const restaurantRoutes = new Hono<{ Bindings: Bindings }>();
 
 /**
- * Convert a PlaceCacheRow to our Restaurant type.
+ * Convert a PlaceCacheRow to our Restaurant type (photos resolved separately).
  */
-function toRestaurantFromCache(
+function toRestaurantBase(
   place: PlaceCacheRow,
-  apiKey: string,
   keyword: string,
   searchLat: number,
   searchLng: number,
-): Restaurant {
-  const photoUrls = place.photoReferences.map((ref) =>
-    getPhotoUrl(apiKey, ref, 400),
-  );
-
+): Omit<Restaurant, 'photoUrls'> & { photoReferences: string[] } {
   let distance: number | undefined;
   if (place.lat != null && place.lng != null) {
     distance = haversineDistance(searchLat, searchLng, place.lat, place.lng);
@@ -55,7 +57,7 @@ function toRestaurantFromCache(
     user_ratings_total: place.userRatingsTotal,
     price_level: place.priceLevel,
     types: place.types,
-    photoUrls,
+    photoReferences: place.photoReferences,
     searchKeywords: [keyword],
     isOpenNow: place.isOpenNow,
     distance,
@@ -126,8 +128,63 @@ restaurantRoutes.post('/restaurants/search', async (c) => {
     });
 
   const program = Effect.all(keywords.map(fetchKeyword), {
-    concurrency: 'unbounded',
-  });
+    concurrency: KEYWORD_SEARCH_CONCURRENCY,
+  }).pipe(
+    Effect.flatMap((keywordResults) => {
+      // Combine and deduplicate by place_id
+      type PendingRestaurant = Omit<Restaurant, 'photoUrls'> & {
+        photoReferences: string[];
+      };
+      const restaurantMap = new Map<string, PendingRestaurant>();
+
+      for (const { keyword, placeMap } of keywordResults) {
+        for (const [placeId, place] of placeMap) {
+          const existing = restaurantMap.get(placeId);
+          if (existing) {
+            if (!existing.searchKeywords.includes(keyword)) {
+              restaurantMap.set(placeId, {
+                ...existing,
+                searchKeywords: [...existing.searchKeywords, keyword],
+              });
+            }
+          } else {
+            restaurantMap.set(
+              placeId,
+              toRestaurantBase(place, keyword, location.lat, location.lng),
+            );
+          }
+        }
+      }
+
+      // Resolve photos to key-free CDN URLs (cached in D1)
+      return Effect.all(
+        Array.from(restaurantMap.values()).map((pending) =>
+          Effect.gen(function* () {
+            const photoUrls = yield* Effect.promise(() =>
+              resolveCachedPhotoUrls(db, apiKey, pending.photoReferences),
+            );
+            return {
+              place_id: pending.place_id,
+              name: pending.name,
+              vicinity: pending.vicinity,
+              rating: pending.rating,
+              user_ratings_total: pending.user_ratings_total,
+              price_level: pending.price_level,
+              types: pending.types,
+              photoUrls,
+              searchKeywords: pending.searchKeywords,
+              isOpenNow: pending.isOpenNow,
+              distance: pending.distance,
+              business_status: pending.business_status,
+              lat: pending.lat,
+              lng: pending.lng,
+            } satisfies Restaurant;
+          }),
+        ),
+        { concurrency: PHOTO_RESOLVE_CONCURRENCY },
+      );
+    }),
+  );
 
   const exit = await Effect.runPromiseExit(program);
 
@@ -140,37 +197,5 @@ restaurantRoutes.post('/restaurants/search', async (c) => {
     return c.json({ success: false, error: message }, 500);
   }
 
-  const keywordResults = exit.value;
-
-  // Combine and deduplicate results by place_id（不変にマージ）
-  const restaurantMap = new Map<string, Restaurant>();
-
-  for (const { keyword, placeMap } of keywordResults) {
-    for (const [placeId, place] of placeMap) {
-      const existing = restaurantMap.get(placeId);
-      if (existing) {
-        if (!existing.searchKeywords.includes(keyword)) {
-          restaurantMap.set(placeId, {
-            ...existing,
-            searchKeywords: [...existing.searchKeywords, keyword],
-          });
-        }
-      } else {
-        restaurantMap.set(
-          placeId,
-          toRestaurantFromCache(
-            place,
-            apiKey,
-            keyword,
-            location.lat,
-            location.lng,
-          ),
-        );
-      }
-    }
-  }
-
-  const restaurants = Array.from(restaurantMap.values());
-
-  return c.json({ success: true, data: restaurants });
+  return c.json({ success: true, data: exit.value });
 });

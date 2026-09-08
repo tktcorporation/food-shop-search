@@ -1,6 +1,9 @@
 import { Schema } from 'effect';
 import { Station } from './station';
 
+/** 1検索あたりのキーワード上限（Nearby Search 課金抑制） — api.ts と一致 */
+const MAX_KEYWORDS = 8;
+
 /** レストラン（ドメインエンティティ / API DTO） */
 export const Restaurant = Schema.Struct({
   place_id: Schema.String,
@@ -32,7 +35,10 @@ export type RestaurantFilterParams = typeof RestaurantFilterParams.Type;
 
 /** レストラン検索コマンド（FE → program 境界） */
 export const RestaurantSearchParams = Schema.Struct({
-  keywords: Schema.Array(Schema.String).pipe(Schema.minItems(1)),
+  keywords: Schema.Array(Schema.String).pipe(
+    Schema.minItems(1),
+    Schema.maxItems(MAX_KEYWORDS),
+  ),
   minRating: Schema.Number,
   minReviews: Schema.Number,
   searchLocation: Station,

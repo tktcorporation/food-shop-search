@@ -32,9 +32,24 @@ import {
 export const stationRoutes = new Hono<{ Bindings: Bindings }>();
 
 /**
+ * Autocomplete 結果に入力に対する完全一致駅名があるか。
+ * ある場合は高価な Text Search を省略できる。
+ */
+function hasExactStationMatch(
+  predictions: readonly GoogleAutocompletePrediction[],
+  input: string,
+): boolean {
+  const exactName = `${input}駅`;
+  return predictions.some((p) => {
+    const main = p.structured_formatting.main_text;
+    return main === exactName || main === input;
+  });
+}
+
+/**
  * POST /api/stations/search
  * Search for stations by name using autocomplete, supplemented with
- * Text Search to ensure exact station matches (e.g. "新宿駅") appear.
+ * Text Search only when autocomplete lacks an exact station match.
  */
 stationRoutes.post('/stations/search', async (c) => {
   const parsed = await parseJsonBody(c, StationSearchRequest);
@@ -61,50 +76,54 @@ stationRoutes.post('/stations/search', async (c) => {
     StationTextSearchCachePayload,
   );
 
-  const predictionsEffect = cachedPredictions
-    ? Effect.succeed(null)
-    : Effect.either(getAutocompletePredictions(apiKey, input));
-
-  const textSearchEffect = cachedTextSearch
-    ? Effect.succeed(null)
-    : Effect.either(searchStationByText(apiKey, textSearchQuery));
-
-  const [predictionsResult, textSearchResult] = await Effect.runPromise(
-    Effect.all([predictionsEffect, textSearchEffect], {
-      concurrency: 'unbounded',
-    }),
-  );
-
+  // Autocomplete を先に解決（Text Search 要否の判定に使う）
   let predictions: readonly GoogleAutocompletePrediction[];
+  let predictionsError: string | null = null;
+
   if (cachedPredictions) {
     predictions = cachedPredictions;
-  } else if (predictionsResult && predictionsResult._tag === 'Right') {
-    predictions = predictionsResult.right;
-    await setCache(
-      db,
-      'station_predictions',
-      input,
-      predictions,
-      CACHE_TTL.station_predictions,
-    );
   } else {
-    predictions = [];
+    const predictionsResult = await Effect.runPromise(
+      Effect.either(getAutocompletePredictions(apiKey, input)),
+    );
+    if (predictionsResult._tag === 'Right') {
+      predictions = predictionsResult.right;
+      await setCache(
+        db,
+        'station_predictions',
+        input,
+        predictions,
+        CACHE_TTL.station_predictions,
+      );
+    } else {
+      predictions = [];
+      predictionsError = predictionsResult.left.message;
+    }
   }
 
   let exactMatches: readonly GooglePlaceResult[];
+
   if (cachedTextSearch) {
     exactMatches = cachedTextSearch;
-  } else if (textSearchResult && textSearchResult._tag === 'Right') {
-    exactMatches = textSearchResult.right.slice(0, 1);
-    await setCache(
-      db,
-      'station_text_search',
-      input,
-      exactMatches,
-      CACHE_TTL.station_text_search,
-    );
-  } else {
+  } else if (hasExactStationMatch(predictions, input)) {
+    // Autocomplete に完全一致がある → Text Search をスキップ（課金抑制）
     exactMatches = [];
+  } else {
+    const textSearchResult = await Effect.runPromise(
+      Effect.either(searchStationByText(apiKey, textSearchQuery)),
+    );
+    if (textSearchResult._tag === 'Right') {
+      exactMatches = textSearchResult.right.slice(0, 1);
+      await setCache(
+        db,
+        'station_text_search',
+        input,
+        exactMatches,
+        CACHE_TTL.station_text_search,
+      );
+    } else {
+      exactMatches = [];
+    }
   }
 
   const stations = mergeStationsByPlaceId(
@@ -112,15 +131,8 @@ stationRoutes.post('/stations/search', async (c) => {
     predictions.map(stationFromPrediction),
   );
 
-  if (
-    stations.length === 0 &&
-    predictionsResult &&
-    predictionsResult._tag === 'Left'
-  ) {
-    return c.json(
-      { success: false, error: predictionsResult.left.message },
-      500,
-    );
+  if (stations.length === 0 && predictionsError) {
+    return c.json({ success: false, error: predictionsError }, 500);
   }
 
   return c.json({ success: true, data: stations });
@@ -153,6 +165,7 @@ stationRoutes.post('/stations/nearby', async (c) => {
   if (cached) {
     places = cached;
   } else {
+    // 近隣駅は上位5件のみ返すため、Nearby 1ページで十分
     const exit = await Effect.runPromiseExit(
       searchNearbyPlaces(apiKey, lat, lng, 5000, '駅'),
     );

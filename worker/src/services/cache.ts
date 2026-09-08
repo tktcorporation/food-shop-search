@@ -14,6 +14,8 @@ export const CACHE_TTL = {
   nearby_stations: 604800, // 7d
   geocode_reverse: 86400, // 24h
   place_detail: 1209600, // 14d
+  /** Place Photo → CDN URL 解決結果（再課金防止） */
+  place_photo: 1209600, // 14d
 } as const;
 
 export type CacheType = keyof typeof CACHE_TTL;

@@ -2,6 +2,8 @@
  * アプリケーション全体で使用される定数
  */
 
+import { MAX_KEYWORDS_PER_SEARCH } from '@shared';
+
 // ============================================
 // UI 関連
 // ============================================
@@ -30,3 +32,17 @@ export const DEFAULT_SEARCH_RADIUS = 300;
 
 /** デフォルトの価格帯選択 */
 export const DEFAULT_PRICE_LEVELS = [1, 2, 3, 4];
+
+/**
+ * 初期選択キーワード（全選択は Nearby Search 課金が膨れるため少数に限定）
+ */
+export const DEFAULT_KEYWORDS = [
+  'ランチ',
+  'カフェ',
+  'ラーメン',
+  '定食',
+  '居酒屋',
+] as const;
+
+/** 同時選択できるキーワード上限（Worker の maxItems と一致） */
+export const MAX_SELECTED_KEYWORDS = MAX_KEYWORDS_PER_SEARCH;

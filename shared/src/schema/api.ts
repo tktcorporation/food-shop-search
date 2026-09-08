@@ -23,8 +23,14 @@ export const ApiResponse = <A, I, R>(dataSchema: Schema.Schema<A, I, R>) =>
 
 // --- Request schemas (Worker HTTP upstream-form) ---
 
+/** 1検索あたりのキーワード上限（Nearby Search 課金抑制） */
+export const MAX_KEYWORDS_PER_SEARCH = 8;
+
 export const RestaurantSearchRequest = Schema.Struct({
-  keywords: Schema.Array(Schema.String).pipe(Schema.minItems(1)),
+  keywords: Schema.Array(Schema.String).pipe(
+    Schema.minItems(1),
+    Schema.maxItems(MAX_KEYWORDS_PER_SEARCH),
+  ),
   location: Location,
   radius: Schema.Number.pipe(Schema.positive()),
   stationPlaceId: Schema.NonEmptyString,

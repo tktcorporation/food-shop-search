@@ -12,8 +12,12 @@ import {
 
 const MAPS_BASE_URL = 'https://maps.googleapis.com';
 
-/** Google Nearby Search API の最大ページ数（API上限は3ページ = 60件） */
-const MAX_PAGES = 3;
+/**
+ * Google Nearby Search API のデフォルト最大ページ数。
+ * 課金抑制のため 1 ページ（最大20件）を既定とする。
+ * API上限は 3 ページ = 60件。
+ */
+const DEFAULT_MAX_PAGES = 1;
 
 /** next_page_token が有効になるまでの待機時間 (ms) */
 const PAGE_TOKEN_DELAY_MS = 2000;
@@ -83,7 +87,7 @@ const validateStatus = (
 
 /**
  * Search for nearby places using Google Maps Nearby Search REST API.
- * Automatically fetches subsequent pages via next_page_token (up to 60 results).
+ * Optionally fetches subsequent pages via next_page_token (up to maxPages).
  */
 export const searchNearbyPlaces = (
   apiKey: string,
@@ -92,8 +96,10 @@ export const searchNearbyPlaces = (
   radius: number,
   keyword: string,
   type?: string,
+  maxPages: number = DEFAULT_MAX_PAGES,
 ): Effect.Effect<NearbySearchResult, GoogleMapsApiError> =>
   Effect.gen(function* () {
+    const pageLimit = Math.min(Math.max(maxPages, 1), 3);
     const baseParams = new URLSearchParams({
       location: `${lat},${lng}`,
       radius: String(radius),
@@ -108,7 +114,7 @@ export const searchNearbyPlaces = (
     const allResults: GooglePlaceResult[] = [];
     let pageToken: string | undefined;
 
-    for (let page = 0; page < MAX_PAGES; page++) {
+    for (let page = 0; page < pageLimit; page++) {
       const params = new URLSearchParams(baseParams);
       if (pageToken) {
         params.set('pagetoken', pageToken);
@@ -127,6 +133,11 @@ export const searchNearbyPlaces = (
         allResults.push(...data.results);
 
         if (!data.next_page_token) {
+          break;
+        }
+
+        // これ以上ページを取らない場合はトークン待機をスキップ
+        if (page + 1 >= pageLimit) {
           break;
         }
 
@@ -170,6 +181,10 @@ export const searchNearbyPlaces = (
       }
 
       if (!fetched || !pageToken) {
+        break;
+      }
+
+      if (page + 1 >= pageLimit) {
         break;
       }
 
@@ -285,9 +300,10 @@ export const geocodeReverse = (
   });
 
 /**
- * Construct a Google Maps Place Photo URL.
+ * Build the Google Place Photo request URL (includes API key).
+ * Prefer resolvePhotoUrl for client-facing URLs — never expose this to browsers.
  */
-export function getPhotoUrl(
+export function buildPhotoRequestUrl(
   apiKey: string,
   photoReference: string,
   maxWidth: number = 400,
@@ -300,3 +316,52 @@ export function getPhotoUrl(
 
   return `${MAPS_BASE_URL}/maps/api/place/photo?${params.toString()}`;
 }
+
+/**
+ * Resolve a Place Photo to a key-free CDN URL by following the redirect.
+ * Billed once per successful resolution; cache the result to avoid repeat charges.
+ */
+export const resolvePhotoUrl = (
+  apiKey: string,
+  photoReference: string,
+  maxWidth: number = 400,
+): Effect.Effect<string | null, never> =>
+  Effect.gen(function* () {
+    const url = buildPhotoRequestUrl(apiKey, photoReference, maxWidth);
+
+    const response = yield* Effect.tryPromise({
+      try: () => fetch(url, { redirect: 'manual' }),
+      catch: () => null as Response | null,
+    }).pipe(Effect.catchAll(() => Effect.succeed(null as Response | null)));
+
+    if (!response) {
+      return null;
+    }
+
+    // Place Photo returns 302/301 to lh3.googleusercontent.com (etc.)
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get('Location');
+      if (
+        location &&
+        location.startsWith('http') &&
+        !location.includes('maps.googleapis.com')
+      ) {
+        return location;
+      }
+    }
+
+    // Some runtimes may auto-follow; accept final CDN URL if present
+    if (
+      response.url &&
+      response.url.startsWith('http') &&
+      !response.url.includes('maps.googleapis.com') &&
+      !response.url.includes('key=')
+    ) {
+      return response.url;
+    }
+
+    return null;
+  });
+
+/** @deprecated Use buildPhotoRequestUrl / resolvePhotoUrl instead */
+export const getPhotoUrl = buildPhotoRequestUrl;
