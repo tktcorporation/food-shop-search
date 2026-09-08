@@ -35,3 +35,6 @@ dist-ssr
 # Claude Code personal settings
 CLAUDE.local.md
 .claude/CLAUDE.local.md
+
+# ziku temporary checkout
+.ziku-temp/
