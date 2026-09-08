@@ -9,7 +9,8 @@ import { parseJsonBody } from '../http/parse-body';
 import { createDb } from '../db';
 import { getCache, setCache, CACHE_TTL } from '../services/cache';
 import { geocodeForward, geocodeReverse } from '../services/google-maps';
-import type { GoogleGeocodeResult } from '../types';
+import type { GoogleGeocodeResult } from '../schema/google';
+import { GeocodeCachePayload } from '../schema/cache';
 
 export const geocodeRoutes = new Hono<{ Bindings: Bindings }>();
 
@@ -25,15 +26,16 @@ geocodeRoutes.post('/geocode/forward', async (c) => {
 
   const db = createDb(c.env.DB);
   const apiKey = c.env.GOOGLE_MAPS_API_KEY;
-  const address = parsed.data.address.trim();
+  const address = parsed.data.address;
 
-  const cached = await getCache<GoogleGeocodeResult[]>(
+  const cached = await getCache(
     db,
     'geocode_forward',
     address,
+    GeocodeCachePayload,
   );
 
-  let results: GoogleGeocodeResult[];
+  let results: readonly GoogleGeocodeResult[];
   if (cached) {
     results = cached;
   } else {
@@ -93,13 +95,14 @@ geocodeRoutes.post('/geocode/reverse', async (c) => {
 
   const cacheKey = `${lat}-${lng}`;
 
-  const cached = await getCache<GoogleGeocodeResult[]>(
+  const cached = await getCache(
     db,
     'geocode_reverse',
     cacheKey,
+    GeocodeCachePayload,
   );
 
-  let results: GoogleGeocodeResult[];
+  let results: readonly GoogleGeocodeResult[];
   if (cached) {
     results = cached;
   } else {

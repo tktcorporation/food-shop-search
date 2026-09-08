@@ -1,9 +1,10 @@
 /**
- * 駅名入力を正規化する（末尾の「駅」を除去してトリム）。
+ * 駅名入力を正規化する（末尾の「駅」を除去）。
+ * trim は Schema.Trim 側で行う前提。
  * 「新宿駅」→「新宿」
  */
 export const normalizeStationInput = (input: string): string =>
-  input.trim().replace(/駅$/, '');
+  input.replace(/駅$/, '');
 
 /**
  * 住所・説明文から都道府県名を抽出する。

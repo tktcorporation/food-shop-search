@@ -1,14 +1,14 @@
-import { Effect } from 'effect';
+import { Effect, Schema } from 'effect';
 import { GoogleMapsApiError } from '../errors';
-import type {
+import {
   GoogleNearbySearchResponse,
   GoogleAutocompleteResponse,
   GoogleTextSearchResponse,
   GoogleGeocodeResponse,
-  GooglePlaceResult,
-  GoogleAutocompletePrediction,
-  GoogleGeocodeResult,
-} from '../types';
+  type GooglePlaceResult,
+  type GoogleAutocompletePrediction,
+  type GoogleGeocodeResult,
+} from '../schema/google';
 
 const MAPS_BASE_URL = 'https://maps.googleapis.com';
 
@@ -26,17 +26,18 @@ const PAGE_TOKEN_RETRY_DELAY_MS = 1000;
 
 /** searchNearbyPlaces の戻り値。complete が false の場合、結果が不完全なためキャッシュすべきでない */
 export interface NearbySearchResult {
-  readonly results: GooglePlaceResult[];
+  readonly results: readonly GooglePlaceResult[];
   readonly complete: boolean;
 }
 
 /**
- * fetch して JSON をパースし、失敗時は GoogleMapsApiError にする共通ヘルパー
+ * fetch → JSON → Schema.decode。失敗時は GoogleMapsApiError。
  */
-const fetchGoogleApi = <T>(
+const fetchGoogleApi = <A, I>(
   url: string,
   label: string,
-): Effect.Effect<T, GoogleMapsApiError> =>
+  schema: Schema.Schema<A, I>,
+): Effect.Effect<A, GoogleMapsApiError> =>
   Effect.gen(function* () {
     const response = yield* Effect.tryPromise({
       try: () => fetch(url),
@@ -51,11 +52,20 @@ const fetchGoogleApi = <T>(
       );
     }
 
-    return yield* Effect.tryPromise({
-      try: () => response.json() as Promise<T>,
+    const raw = yield* Effect.tryPromise({
+      try: () => response.json(),
       catch: () =>
         new GoogleMapsApiError({ message: `${label} JSON parse failed` }),
     });
+
+    return yield* Schema.decodeUnknown(schema)(raw).pipe(
+      Effect.mapError(
+        (error) =>
+          new GoogleMapsApiError({
+            message: `${label} response schema mismatch: ${String(error)}`,
+          }),
+      ),
+    );
   });
 
 /**
@@ -106,11 +116,11 @@ export const searchNearbyPlaces = (
 
       const url = `${MAPS_BASE_URL}/maps/api/place/nearbysearch/json?${params.toString()}`;
 
-      // 1ページ目は通常通りfetch & validate
       if (!pageToken) {
-        const data = yield* fetchGoogleApi<GoogleNearbySearchResponse>(
+        const data = yield* fetchGoogleApi(
           url,
           'Google Nearby Search API',
+          GoogleNearbySearchResponse,
         );
         yield* validateStatus(data.status, 'Google Nearby Search API');
 
@@ -125,18 +135,17 @@ export const searchNearbyPlaces = (
         continue;
       }
 
-      // 2ページ目以降: INVALID_REQUEST はリトライ、それ以外のエラーは取得済み結果を返す
       let fetched = false;
       for (let retry = 0; retry <= PAGE_TOKEN_MAX_RETRIES; retry++) {
         const result = yield* Effect.either(
-          fetchGoogleApi<GoogleNearbySearchResponse>(
+          fetchGoogleApi(
             url,
             'Google Nearby Search API',
+            GoogleNearbySearchResponse,
           ),
         );
 
         if (result._tag === 'Left') {
-          // fetch/parse 自体が失敗 → 取得済み結果を返す（不完全）
           return { results: allResults, complete: false };
         }
 
@@ -146,13 +155,11 @@ export const searchNearbyPlaces = (
           data.status === 'INVALID_REQUEST' &&
           retry < PAGE_TOKEN_MAX_RETRIES
         ) {
-          // トークンがまだ有効化されていない → リトライ
           yield* Effect.sleep(PAGE_TOKEN_RETRY_DELAY_MS);
           continue;
         }
 
         if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-          // 回復不能なエラー → 取得済み結果を返す（不完全）
           return { results: allResults, complete: false };
         }
 
@@ -178,7 +185,7 @@ export const searchNearbyPlaces = (
 export const getAutocompletePredictions = (
   apiKey: string,
   input: string,
-): Effect.Effect<GoogleAutocompletePrediction[], GoogleMapsApiError> =>
+): Effect.Effect<readonly GoogleAutocompletePrediction[], GoogleMapsApiError> =>
   Effect.gen(function* () {
     const params = new URLSearchParams({
       input,
@@ -189,9 +196,10 @@ export const getAutocompletePredictions = (
     });
 
     const url = `${MAPS_BASE_URL}/maps/api/place/autocomplete/json?${params.toString()}`;
-    const data = yield* fetchGoogleApi<GoogleAutocompleteResponse>(
+    const data = yield* fetchGoogleApi(
       url,
       'Google Autocomplete API',
+      GoogleAutocompleteResponse,
     );
     yield* validateStatus(data.status, 'Google Autocomplete API');
 
@@ -200,12 +208,11 @@ export const getAutocompletePredictions = (
 
 /**
  * Search for a station by name using Google Places Text Search REST API.
- * Used to supplement autocomplete results with exact station matches.
  */
 export const searchStationByText = (
   apiKey: string,
   query: string,
-): Effect.Effect<GooglePlaceResult[], GoogleMapsApiError> =>
+): Effect.Effect<readonly GooglePlaceResult[], GoogleMapsApiError> =>
   Effect.gen(function* () {
     const params = new URLSearchParams({
       query,
@@ -216,9 +223,10 @@ export const searchStationByText = (
     });
 
     const url = `${MAPS_BASE_URL}/maps/api/place/textsearch/json?${params.toString()}`;
-    const data = yield* fetchGoogleApi<GoogleTextSearchResponse>(
+    const data = yield* fetchGoogleApi(
       url,
       'Google Text Search API',
+      GoogleTextSearchResponse,
     );
     yield* validateStatus(data.status, 'Google Text Search API');
 
@@ -231,7 +239,7 @@ export const searchStationByText = (
 export const geocodeForward = (
   apiKey: string,
   address: string,
-): Effect.Effect<GoogleGeocodeResult[], GoogleMapsApiError> =>
+): Effect.Effect<readonly GoogleGeocodeResult[], GoogleMapsApiError> =>
   Effect.gen(function* () {
     const params = new URLSearchParams({
       address,
@@ -240,9 +248,10 @@ export const geocodeForward = (
     });
 
     const url = `${MAPS_BASE_URL}/maps/api/geocode/json?${params.toString()}`;
-    const data = yield* fetchGoogleApi<GoogleGeocodeResponse>(
+    const data = yield* fetchGoogleApi(
       url,
       'Google Geocoding API',
+      GoogleGeocodeResponse,
     );
     yield* validateStatus(data.status, 'Google Geocoding API');
 
@@ -256,7 +265,7 @@ export const geocodeReverse = (
   apiKey: string,
   lat: number,
   lng: number,
-): Effect.Effect<GoogleGeocodeResult[], GoogleMapsApiError> =>
+): Effect.Effect<readonly GoogleGeocodeResult[], GoogleMapsApiError> =>
   Effect.gen(function* () {
     const params = new URLSearchParams({
       latlng: `${lat},${lng}`,
@@ -265,9 +274,10 @@ export const geocodeReverse = (
     });
 
     const url = `${MAPS_BASE_URL}/maps/api/geocode/json?${params.toString()}`;
-    const data = yield* fetchGoogleApi<GoogleGeocodeResponse>(
+    const data = yield* fetchGoogleApi(
       url,
       'Google Geocoding API (reverse)',
+      GoogleGeocodeResponse,
     );
     yield* validateStatus(data.status, 'Google Geocoding API (reverse)');
 
@@ -276,7 +286,6 @@ export const geocodeReverse = (
 
 /**
  * Construct a Google Maps Place Photo URL.
- * Returns the URL string directly without following redirects.
  */
 export function getPhotoUrl(
   apiKey: string,

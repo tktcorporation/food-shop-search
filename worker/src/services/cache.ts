@@ -1,7 +1,9 @@
+import { Effect, Schema } from 'effect';
 import { eq, inArray, lt, sql } from 'drizzle-orm';
 import type { Database } from '../db';
 import { apiCache, placeCache } from '../db/schema';
-import type { GooglePlaceResult } from '../types';
+import type { GooglePlaceResult } from '../schema/google';
+import { StringArrayJson } from '../schema/cache';
 
 /** Cache TTL values in seconds */
 export const CACHE_TTL = {
@@ -17,14 +19,15 @@ export const CACHE_TTL = {
 export type CacheType = keyof typeof CACHE_TTL;
 
 /**
- * Retrieve a cached value from D1. Returns null if not found or expired.
- * Increments hitCount on cache hit.
+ * Retrieve a cached value from D1 and Schema.decode する。
+ * 見つからない / 期限切れ / decode 失敗時は null。
  */
-export async function getCache<T>(
+export async function getCache<A, I>(
   db: Database,
   cacheType: CacheType,
   cacheKey: string,
-): Promise<T | null> {
+  schema: Schema.Schema<A, I>,
+): Promise<A | null> {
   const now = Math.floor(Date.now() / 1000);
   const fullKey = `${cacheType}:${cacheKey}`;
 
@@ -40,20 +43,31 @@ export async function getCache<T>(
 
   const row = rows[0];
 
-  // Check expiration
   if (row.expiresAt <= now) {
-    // Expired - delete it and return null
     await db.delete(apiCache).where(eq(apiCache.cacheKey, fullKey));
     return null;
   }
 
-  // Increment hit count
   await db
     .update(apiCache)
     .set({ hitCount: sql`${apiCache.hitCount} + 1` })
     .where(eq(apiCache.cacheKey, fullKey));
 
-  return JSON.parse(row.responseData) as T;
+  let raw: unknown;
+  try {
+    raw = JSON.parse(row.responseData);
+  } catch {
+    return null;
+  }
+
+  const exit = await Effect.runPromiseExit(Schema.decodeUnknown(schema)(raw));
+  if (exit._tag === 'Failure') {
+    // 壊れたキャッシュは破棄してミス扱いにする
+    await db.delete(apiCache).where(eq(apiCache.cacheKey, fullKey));
+    return null;
+  }
+
+  return exit.value;
 }
 
 /**
@@ -120,13 +134,20 @@ export interface PlaceCacheRow {
   businessStatus: string | undefined;
 }
 
+const decodeStringArray = (json: string): string[] => {
+  const exit = Effect.runSyncExit(Schema.decodeUnknown(StringArrayJson)(json));
+  if (exit._tag === 'Failure') {
+    return [];
+  }
+  return [...exit.value];
+};
+
 /**
  * place_id の配列を受け取り、place_cache テーブルから非期限切れのレコードを取得
- * @returns Map<string, PlaceCacheRow>
  */
 export async function getPlacesByIds(
   db: Database,
-  placeIds: string[],
+  placeIds: readonly string[],
 ): Promise<Map<string, PlaceCacheRow>> {
   if (placeIds.length === 0) {
     return new Map();
@@ -137,12 +158,11 @@ export async function getPlacesByIds(
   const rows = await db
     .select()
     .from(placeCache)
-    .where(inArray(placeCache.placeId, placeIds));
+    .where(inArray(placeCache.placeId, [...placeIds]));
 
   const result = new Map<string, PlaceCacheRow>();
 
   for (const row of rows) {
-    // 期限切れチェック
     if (row.expiresAt <= now) {
       continue;
     }
@@ -154,8 +174,8 @@ export async function getPlacesByIds(
       rating: row.rating,
       userRatingsTotal: row.userRatingsTotal,
       priceLevel: row.priceLevel,
-      types: JSON.parse(row.types) as string[],
-      photoReferences: JSON.parse(row.photoReferences) as string[],
+      types: decodeStringArray(row.types),
+      photoReferences: decodeStringArray(row.photoReferences),
       isOpenNow:
         row.isOpenNow === null ? undefined : row.isOpenNow === 1 ? true : false,
       lat: row.lat ?? undefined,
@@ -172,7 +192,7 @@ export async function getPlacesByIds(
  */
 export async function upsertPlaces(
   db: Database,
-  places: GooglePlaceResult[],
+  places: readonly GooglePlaceResult[],
 ): Promise<void> {
   if (places.length === 0) {
     return;
@@ -183,6 +203,7 @@ export async function upsertPlaces(
 
   for (const place of places) {
     const photoReferences = place.photos?.map((p) => p.photo_reference) ?? [];
+    const vicinity = place.vicinity ?? place.formatted_address ?? '';
 
     const isOpenNowValue =
       place.opening_hours?.open_now === true
@@ -196,7 +217,7 @@ export async function upsertPlaces(
       .values({
         placeId: place.place_id,
         name: place.name,
-        vicinity: place.vicinity,
+        vicinity,
         rating: place.rating ?? 0,
         userRatingsTotal: place.user_ratings_total ?? 0,
         priceLevel: place.price_level ?? -1,
@@ -213,7 +234,7 @@ export async function upsertPlaces(
         target: placeCache.placeId,
         set: {
           name: place.name,
-          vicinity: place.vicinity,
+          vicinity,
           rating: place.rating ?? 0,
           userRatingsTotal: place.user_ratings_total ?? 0,
           priceLevel: place.price_level ?? -1,

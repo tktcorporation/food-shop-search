@@ -19,7 +19,15 @@ import {
   searchNearbyPlaces,
   searchStationByText,
 } from '../services/google-maps';
-import type { GoogleAutocompletePrediction, GooglePlaceResult } from '../types';
+import type {
+  GoogleAutocompletePrediction,
+  GooglePlaceResult,
+} from '../schema/google';
+import {
+  StationPredictionsCachePayload,
+  StationTextSearchCachePayload,
+  NearbyStationsCachePayload,
+} from '../schema/cache';
 
 export const stationRoutes = new Hono<{ Bindings: Bindings }>();
 
@@ -39,16 +47,18 @@ stationRoutes.post('/stations/search', async (c) => {
   const input = normalizeStationInput(parsed.data.input);
   const textSearchQuery = `${input}駅`;
 
-  const cachedPredictions = await getCache<GoogleAutocompletePrediction[]>(
+  const cachedPredictions = await getCache(
     db,
     'station_predictions',
     input,
+    StationPredictionsCachePayload,
   );
 
-  const cachedTextSearch = await getCache<GooglePlaceResult[]>(
+  const cachedTextSearch = await getCache(
     db,
     'station_text_search',
     input,
+    StationTextSearchCachePayload,
   );
 
   const predictionsEffect = cachedPredictions
@@ -65,7 +75,7 @@ stationRoutes.post('/stations/search', async (c) => {
     }),
   );
 
-  let predictions: GoogleAutocompletePrediction[];
+  let predictions: readonly GoogleAutocompletePrediction[];
   if (cachedPredictions) {
     predictions = cachedPredictions;
   } else if (predictionsResult && predictionsResult._tag === 'Right') {
@@ -81,7 +91,7 @@ stationRoutes.post('/stations/search', async (c) => {
     predictions = [];
   }
 
-  let exactMatches: GooglePlaceResult[];
+  let exactMatches: readonly GooglePlaceResult[];
   if (cachedTextSearch) {
     exactMatches = cachedTextSearch;
   } else if (textSearchResult && textSearchResult._tag === 'Right') {
@@ -132,13 +142,14 @@ stationRoutes.post('/stations/nearby', async (c) => {
 
   const cacheKey = `${lat.toFixed(2)}-${lng.toFixed(2)}`;
 
-  const cached = await getCache<GooglePlaceResult[]>(
+  const cached = await getCache(
     db,
     'nearby_stations',
     cacheKey,
+    NearbyStationsCachePayload,
   );
 
-  let places: GooglePlaceResult[];
+  let places: readonly GooglePlaceResult[];
   if (cached) {
     places = cached;
   } else {

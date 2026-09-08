@@ -16,6 +16,7 @@ import {
   CACHE_TTL,
   type PlaceCacheRow,
 } from '../services/cache';
+import { RestaurantSearchCachePayload } from '../schema/cache';
 import { searchNearbyPlaces, getPhotoUrl } from '../services/google-maps';
 
 /**
@@ -80,7 +81,12 @@ restaurantRoutes.post('/restaurants/search', async (c) => {
       const cacheKey = `${keyword}-${stationPlaceId}`;
 
       const cachedPlaceIds = yield* Effect.promise(() =>
-        getCache<string[]>(db, 'restaurant_search', cacheKey),
+        getCache(
+          db,
+          'restaurant_search',
+          cacheKey,
+          RestaurantSearchCachePayload,
+        ),
       );
 
       if (cachedPlaceIds) {

@@ -21,8 +21,8 @@ describe('normalizeStationInput', () => {
     expect(normalizeStationInput('新宿駅')).toBe('新宿');
   });
 
-  it('trims whitespace', () => {
-    expect(normalizeStationInput('  渋谷  ')).toBe('渋谷');
+  it('keeps surrounding whitespace for Schema.Trim to handle', () => {
+    expect(normalizeStationInput('  渋谷  ')).toBe('  渋谷  ');
   });
 });
 
